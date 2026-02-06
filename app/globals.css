@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    @apply bg-white text-slate-900;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+  }
+}
+
+@layer components {
+  /* Recharts Customization */
+  .recharts-cartesian-axis-tick text {
+    @apply text-xs fill-slate-600;
+  }
+
+  .recharts-cartesian-grid-horizontal line {
+    @apply stroke-slate-200;
+  }
+
+  .recharts-cartesian-grid-vertical line {
+    @apply stroke-slate-100;
+  }
+
+  .recharts-tooltip-wrapper {
+    @apply outline-none;
+  }
+
+  .recharts-default-tooltip {
+    @apply bg-white border border-slate-200 rounded-lg p-3 shadow-lg;
+  }
+}
