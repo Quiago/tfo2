@@ -6,6 +6,9 @@ import { FactoryScene } from './FactoryScene'
 import { NavigationPanel } from './NavigationPanel'
 import { LoadingScreen } from './LoadingScreen'
 import { InfoBar } from './InfoBar'
+import { MachineInspector } from './MachineInspector'
+import { getMachineInfo, type MachineInfo } from './machine-data'
+import type { MeshClickEvent } from './FactoryModel'
 import type { CameraPreset } from './camera-presets'
 import type { CameraSystemHandle } from './CameraSystem'
 
@@ -20,6 +23,11 @@ interface DigitalTwinNavigatorProps {
   showHotspots?: boolean
   showNavPanel?: boolean
   className?: string
+}
+
+interface InspectorState {
+  machine: MachineInfo
+  meshName: string
 }
 
 export function DigitalTwinNavigator({
@@ -38,6 +46,7 @@ export function DigitalTwinNavigator({
   const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([0, 0, 0])
   const [meshCount, setMeshCount] = useState(0)
   const [transitionLabel, setTransitionLabel] = useState<string | null>(null)
+  const [inspector, setInspector] = useState<InspectorState | null>(null)
   const cameraRef = useRef<CameraSystemHandle>(null)
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -74,6 +83,34 @@ export function DigitalTwinNavigator({
     setMeshCount(count)
   }, [])
 
+  const handleMeshClick = useCallback((event: MeshClickEvent) => {
+    const machine = getMachineInfo(event.meshName)
+    setInspector({ machine, meshName: event.meshName })
+  }, [])
+
+  const handleInspectorClose = useCallback(() => {
+    setInspector(null)
+  }, [])
+
+  const handleInspectorAction = useCallback(
+    (action: 'monitoring' | 'workflows' | 'logs' | 'manual') => {
+      // Placeholder — these will navigate to respective modules
+      console.log(`[DigitalTwin] Action: ${action} for ${inspector?.machine.name}`)
+    },
+    [inspector]
+  )
+
+  // Close inspector on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && inspector) {
+        setInspector(null)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [inspector])
+
   useEffect(() => {
     return () => {
       if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
@@ -106,6 +143,7 @@ export function DigitalTwinNavigator({
           onActiveChange={handleActiveChange}
           onCameraMove={handleCameraMove}
           onMeshCount={handleMeshCount}
+          onMeshClick={handleMeshClick}
           devMode={devMode}
           environment={environment}
           autoTour={autoTour}
@@ -133,6 +171,16 @@ export function DigitalTwinNavigator({
           presets={presets}
           activeId={activeId}
           onSelect={handleNavSelect}
+        />
+      )}
+
+      {/* Machine Inspector Popup */}
+      {inspector && (
+        <MachineInspector
+          machine={inspector.machine}
+          meshName={inspector.meshName}
+          onClose={handleInspectorClose}
+          onAction={handleInspectorAction}
         />
       )}
 

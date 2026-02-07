@@ -2,7 +2,7 @@
 
 import { Suspense, useRef, useCallback } from 'react'
 import { Environment } from '@react-three/drei'
-import { FactoryModel } from './FactoryModel'
+import { FactoryModel, type MeshClickEvent } from './FactoryModel'
 import { CameraSystem, type CameraSystemHandle } from './CameraSystem'
 import { NavigationHotspots } from './NavigationHotspots'
 import type { CameraPreset } from './camera-presets'
@@ -14,6 +14,7 @@ interface FactorySceneProps {
   onActiveChange: (id: string | null) => void
   onCameraMove: (position: [number, number, number]) => void
   onMeshCount: (count: number) => void
+  onMeshClick?: (event: MeshClickEvent) => void
   devMode?: boolean
   environment?: string
   autoTour?: boolean
@@ -30,6 +31,7 @@ export function FactoryScene({
   onActiveChange,
   onCameraMove,
   onMeshCount,
+  onMeshClick,
   devMode = false,
   environment = 'warehouse',
   autoTour = false,
@@ -89,7 +91,7 @@ export function FactoryScene({
 
       {/* Model */}
       <Suspense fallback={null}>
-        <FactoryModel url={modelUrl} onMeshCount={onMeshCount} />
+        <FactoryModel url={modelUrl} onMeshCount={onMeshCount} onMeshClick={onMeshClick} />
       </Suspense>
 
       {/* Hotspots */}

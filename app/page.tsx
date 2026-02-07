@@ -95,26 +95,27 @@ export default function Home() {
                   Digital Twin 3D
                 </h3>
                 <p className="text-slate-600 text-sm mb-4">
-                  3D factory navigator with smooth camera transitions,
-                  hotspot markers, and keyboard controls. Loads GLB models.
+                  Interactive 3D automotive paint shop with KUKA robot arms,
+                  piping systems, and KRC4 controllers. Click any machine
+                  to inspect health, energy, and properties.
                 </p>
 
                 <div className="space-y-2 mb-6 text-xs text-slate-500">
                   <div className="flex items-center gap-2">
                     <span className="text-blue-600">✓</span>
-                    <span>Smooth SmoothDamp camera fly-to</span>
+                    <span>451 meshes — KUKA KR300/KR120/KR210 robots</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-blue-600">✓</span>
-                    <span>8 navigation presets + keyboard shortcuts</span>
+                    <span>Click-to-inspect machine properties & health</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-blue-600">✓</span>
-                    <span>3D hotspot markers with hover labels</span>
+                    <span>Smooth camera fly-to + keyboard navigation</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-blue-600">✓</span>
-                    <span>Dev mode coordinate capture</span>
+                    <span>8 zone presets + 3D hotspot markers</span>
                   </div>
                 </div>
 
