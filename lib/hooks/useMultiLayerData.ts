@@ -1,5 +1,4 @@
 import type {
-    ActionCategory,
     ActionEvent,
     EnergyReading,
     ProductMetric,
@@ -28,6 +27,25 @@ function clamp(value: number, min: number, max: number): number {
 function round(value: number, decimals: number = 2): number {
     const factor = Math.pow(10, decimals);
     return Math.round(value * factor) / factor;
+}
+
+/** Find the index of the nearest timestamp within the first `limit` entries */
+function findNearestIndex(
+    timestamps: number[],
+    target: number,
+    limit: number,
+): number {
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    const cap = Math.min(limit, timestamps.length);
+    for (let i = 0; i < cap; i++) {
+        const dist = Math.abs(timestamps[i] - target);
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestIdx = i;
+        }
+    }
+    return bestIdx;
 }
 
 // =============================================================================
@@ -59,17 +77,16 @@ const CAMERA_ZONES = [
     'Warehouse Bay-A',
 ] as const;
 
-// =============================================================================
-// FIXED EVENT POOLS (per-granularity deterministic event counts)
-// =============================================================================
+/** Complete anomaly event bundle — single realTime ensures all layers sync to same grid point */
+interface PersistedAnomalyBundle {
+    realTime: number;    // Date.now() when triggered — anchor for ALL layers
+    vibration: number;   // Peak vibration value
+    actions: Omit<ActionEvent, 'timestamp'>[];  // AI alert + human review
+}
 
-const EVENT_POOLS: Record<TimeGranularity, { ai: number; human: number }> = {
-    Minute: { ai: 1, human: 1 },      // 2 events total over 120 points
-    Hour: { ai: 2, human: 2 },        // 4 events total over 96 points
-    Day: { ai: 3, human: 7 },         // 10 events total over 90 points
-    Week: { ai: 3, human: 6 },        // 9 events total over 52 points
-    Year: { ai: 5, human: 9 },        // 14 events total over 60 points
-};
+// =============================================================================
+// PRODUCTION TARGETS
+// =============================================================================
 
 // Realistic production targets for Nestle Dubai factory
 // Line-1 baseline: 850 units/min (Nescafé bottles)
@@ -81,181 +98,7 @@ const BASE_TARGETS: Record<TimeGranularity, number> = {
     Year: 312840000,          // 850 * 60 * 24 * 365
 };
 
-// =============================================================================
-// PER-GRANULARITY EVENT RATES
-// =============================================================================
-// Realistic rates per data point. A real factory on Day granularity (90 pts)
-// yields ~3 AI alerts and ~7 human events total.
-
-interface EventRates {
-    ai: number;
-    human: number;
-}
-
-const EVENT_RATES: Record<TimeGranularity, EventRates> = {
-    Minute: { ai: 0.01, human: 0.015 },   // ~1-2 AI, ~1-2 human over 120 pts
-    Hour: { ai: 0.015, human: 0.02 },    // ~1-2 AI, ~2-3 human over 96 pts
-    Day: { ai: 0.03, human: 0.08 },     // ~3 AI,   ~7 human over 90 pts
-    Week: { ai: 0.05, human: 0.12 },     // ~3 AI,   ~6 human over 52 pts
-    Year: { ai: 0.08, human: 0.15 },     // ~5 AI,   ~9 human over 60 pts
-};
-
-// Streaming tick rates: very rare -- most ticks produce zero events
-const STREAMING_EVENT_RATES: EventRates = { ai: 0.01, human: 0.02 };
-
-// =============================================================================
-// NESTLE FACTORY ACTION EVENT TEMPLATES
-// =============================================================================
-
-interface EventTemplate {
-    type: ActionEvent['type'];
-    source: string;
-    title: string;
-    description: string;
-    severity: ActionEvent['severity'];
-    category: ActionCategory;
-}
-
-const AI_EVENT_TEMPLATES: EventTemplate[] = [
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Vibration anomaly on Line-1 Filler -- bearing wear pattern',
-        description:
-            'Accelerometer RMS exceeded 8 mm/s threshold. Pattern consistent with inner race bearing defect. Recommend inspection within 24h.',
-        severity: 'warning',
-        category: 'Alert',
-    },
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Predicted chiller failure in 24h -- cooling efficiency trending down',
-        description:
-            'Chiller coefficient of performance trending downward. Current efficiency 3.2, predicted drop to 2.8. Refrigerant charge or condenser fouling suspected.',
-        severity: 'warning',
-        category: 'Preventive',
-    },
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Humidity alert -- warehouse RH trending toward 68% (mold risk threshold)',
-        description:
-            'Relative humidity in Warehouse Bay-A trending upward. Current 66%, threshold 65%. Risk of cocoa powder moisture absorption and mold growth.',
-        severity: 'warning',
-        category: 'Alert',
-    },
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Pressure drop detected -- compressed air system leak estimated 0.3 kW loss',
-        description:
-            'Compressed air pressure declining by 0.15 bar/hour. Ultrasonic analysis suggests valve seal leakage. Recommend inspection.',
-        severity: 'warning',
-        category: 'Optimization',
-    },
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Line-2 throughput optimization -- packaging line can safely run at 950 units/min',
-        description:
-            'Current demand forecast allows Line-2 speed increase from 850 to 950 units/min without seal quality impact. Estimated +11.8% throughput gain.',
-        severity: 'info',
-        category: 'Optimization',
-    },
-    {
-        type: 'agent',
-        source: 'AI Agent',
-        title: 'AI: Predictive maintenance -- scheduled palletizer component replacement recommended',
-        description:
-            'Gripper pad wear trending toward replacement threshold. Current wear 82%, OEM limit 90%. Recommend parts staging for next maintenance window.',
-        severity: 'info',
-        category: 'Preventive',
-    },
-];
-
-const HUMAN_EVENT_TEMPLATES: EventTemplate[] = [
-    {
-        type: 'maintenance',
-        source: 'CMMS',
-        title: 'Work Order #WO-4521: Line-1 sealer blade replacement scheduled',
-        description:
-            'Preventive maintenance: Replace thermal sealer blade on Line-1. Estimated downtime: 30 min. Parts pre-staged.',
-        severity: 'info',
-        category: 'Preventive',
-    },
-    {
-        type: 'compliance',
-        source: 'ERP',
-        title: 'SOP Check: Line-1 CIP (Clean-in-Place) cycle completed successfully',
-        description:
-            'Clean-in-Place cycle completed successfully. All rinse conductivity readings within spec. Duration: 28 min.',
-        severity: 'info',
-        category: 'Compliance',
-    },
-    {
-        type: 'user',
-        source: 'Shift Lead',
-        title: 'Shift Handover: Night→Day, Line-1 status nominal, 99.2% uptime',
-        description:
-            'Night shift summary: 99.2% uptime, 0 quality holds, 1 minor conveyor jam cleared at 03:15. All lines running nominal.',
-        severity: 'info',
-        category: 'Inspection',
-    },
-    {
-        type: 'maintenance',
-        source: 'CMMS',
-        title: 'Maintenance: Conveyor belt tension adjustment on Line-2',
-        description:
-            'Belt tracking correction performed. Tension set to 12.5 N/mm per OEM spec. Visual inspection: no fraying or edge wear.',
-        severity: 'info',
-        category: 'Preventive',
-    },
-    {
-        type: 'user',
-        source: 'Warehouse',
-        title: 'Inventory: Raw material restock -- cocoa powder received (Lot #NES-CP-20260205)',
-        description:
-            'Received 4 pallets (2400 kg) cocoa powder. Lot #NES-CP-20260205. QC sample submitted. Storage temp verified at 22C, RH 52%.',
-        severity: 'info',
-        category: 'Compliance',
-    },
-    {
-        type: 'compliance',
-        source: 'QA',
-        title: 'Manual Inspection: Packaging seal integrity test -- 50-unit batch passed',
-        description:
-            'Burst test on 50-sample batch: all seals exceeded 2.1 bar threshold. Min observed: 2.4 bar. Log ID: QA-SI-8847.',
-        severity: 'info',
-        category: 'Inspection',
-    },
-    {
-        type: 'compliance',
-        source: 'QA',
-        title: 'Compliance: HACCP checkpoint #3 logged -- metal detection sensitivity verified',
-        description:
-            'Critical Control Point #3 (metal detection) verified. Sensitivity: Fe 1.5mm, Non-Fe 2.0mm, SS 2.5mm. Zero rejects this shift.',
-        severity: 'info',
-        category: 'Compliance',
-    },
-    {
-        type: 'maintenance',
-        source: 'CMMS',
-        title: 'Work Order #WO-4533: Palletizer vacuum gripper pad replacement',
-        description:
-            'Scheduled replacement of vacuum gripper pads on Palletizer-2. Current pads at 85% wear. Parts in stock.',
-        severity: 'info',
-        category: 'Preventive',
-    },
-    {
-        type: 'user',
-        source: 'Shift Lead',
-        title: 'Manual Inspection: Compressed air system leak detection completed -- zero leaks found',
-        description:
-            'Ultrasonic leak detection completed on all piping zones. Zero leaks detected. System pressure stable at 6.8 bar.',
-        severity: 'info',
-        category: 'Inspection',
-    },
-];
+// (Event templates removed — using 3 fixed hardcoded events in generateActionData)
 
 // =============================================================================
 // TIMESTAMP GENERATION
@@ -342,40 +185,17 @@ function generateVideoFrame(
  */
 function generateVibrationValue(
     rand: () => number,
-    index: number,
-    count: number,
     prevVibration: number,
 ): number {
-    const progress = index / count;
     let vibration = prevVibration;
 
     // Mean reversion toward 3.0 mm/s (normal operating point)
     vibration += (3.0 - vibration) * 0.05;
 
-    // Random walk
-    vibration += (rand() - 0.48) * 0.6;
+    // Random walk — wider step for visible variation on chart
+    vibration += (rand() - 0.48) * 1.2;
 
-    // Gradual degradation segment: 40-55% of timeline
-    if (progress > 0.4 && progress < 0.55) {
-        vibration += 0.15;
-    }
-
-    // Spike zone: 65-72% of timeline (bearing wear event)
-    if (progress > 0.65 && progress < 0.72) {
-        vibration += 1.5 + rand() * 3.0;
-    }
-
-    // Post-maintenance recovery: 72-80%
-    if (progress > 0.72 && progress < 0.8) {
-        vibration = 2.5 + rand() * 1.0;
-    }
-
-    // Random spikes (0.8% chance -- reduced from 2%)
-    if (rand() < 0.008) {
-        vibration += 5 + rand() * 8;
-    }
-
-    return clamp(round(vibration, 2), 0.5, 22);
+    return clamp(round(vibration, 2), 1.5, 5.5);
 }
 
 // =============================================================================
@@ -386,84 +206,45 @@ function generateSensorData(
     timestamps: number[],
     rand: () => number,
     predictionStart: number,
-    granularity: TimeGranularity,
+    _granularity: TimeGranularity,
 ): SensorReading[] {
-    let temp = 28; // Nestle Dubai factory initial ambient
+    let temp = 28;
     let vibration = 3.0;
     let frameCounter = 0;
 
-    // Variance multiplier based on time scope
-    const varianceMultiplier: Record<TimeGranularity, number> = {
-        Minute: 0.8,   // Low variance, steady state
-        Hour: 0.9,
-        Day: 1.0,      // Normal
-        Week: 1.1,     // More variation
-        Year: 1.2,     // Maximum variation
-    };
-    const multiplier = varianceMultiplier[granularity];
-
+    // Initial data: completely clean (no anomalies). Anomalies are triggered via Test button.
     return timestamps.map((ts, i) => {
         const inPrediction = i >= predictionStart;
 
-        // Temperature: Dubai ambient 20-45°C (winter 20-30°C, summer 35-50°C)
-        // Machine zones: 28-55°C (fillers/sealers generate heat)
-        const tempDrift = (rand() - 0.48) * 1.0 * multiplier;
-        temp = clamp(temp + tempDrift, 20, 55);
-
-        // Temperature spike zone (70-75%) simulating machine thermal event
-        if (i > timestamps.length * 0.7 && i < timestamps.length * 0.75) {
-            temp += 0.6;
-            temp = Math.min(55, temp);
-        }
-
-        // Predictions: wider variance
+        // Temperature: random walk
+        temp = clamp(temp + (rand() - 0.48) * 1.0, 22, 42);
         if (inPrediction) {
-            temp += (rand() - 0.5) * 2.5;
-            temp = clamp(temp, 18, 58);
+            temp += (rand() - 0.5) * 2.0;
+            temp = clamp(temp, 20, 45);
         }
 
-        // Vibration: bearing condition indicator
-        vibration = generateVibrationValue(rand, i, timestamps.length, vibration);
+        // Vibration: stable random walk
+        vibration = generateVibrationValue(rand, vibration);
         if (inPrediction) {
-            vibration += (rand() - 0.5) * 2.0;
-            vibration = clamp(vibration, 0.5, 22);
+            vibration += (rand() - 0.5) * 1.5;
+            vibration = clamp(vibration, 1.5, 6.0);
         }
 
-        // Humidity: 45-65% RH typical for food production facility
-        // Critical for cocoa powder storage (mold risk >65%)
+        // Humidity
         const humidity = round(
-            50 + rand() * 15 + (inPrediction ? (rand() - 0.5) * 8 : 0),
+            52 + rand() * 8 + (inPrediction ? (rand() - 0.5) * 5 : 0),
             1,
         );
 
-        // Pressure: Compressed air system (6-8 bar nominal)
-        // Critical for pneumatic fillers and actuators
-        const pressureBase = 6.5 + rand() * 1.0;
+        // Pressure
         const pressure = round(
-            clamp(pressureBase + (inPrediction ? (rand() - 0.5) * 0.5 : 0), 4.0, 8.5),
+            clamp(6.5 + rand() * 1.2 + (inPrediction ? (rand() - 0.5) * 0.4 : 0), 5.0, 8.0),
             2,
         );
 
-        // Anomaly: high temp OR high vibration OR pressure issue OR humidity issue OR random (0.5%)
-        const anomaly =
-            temp > 48 ||
-            vibration > 8 ||
-            pressure < 5.5 ||
-            humidity > 65 ||
-            rand() < 0.005;
-
-        const alertLevel: SensorReading['alertLevel'] =
-            temp > 52 || vibration > 12 || pressure < 4.0 || humidity > 70
-                ? 'critical'
-                : temp > 48 || vibration > 8 || pressure < 5.5 || humidity > 65
-                    ? 'warning'
-                    : 'none';
-
         const zone = CAMERA_ZONES[frameCounter % CAMERA_ZONES.length];
-
-        // 80% of points have video frame data
         const videoFrame =
-            rand() < 0.8
+            rand() < 0.85
                 ? generateVideoFrame(frameCounter++, temp, vibration, pressure, zone)
                 : undefined;
 
@@ -474,8 +255,8 @@ function generateSensorData(
             pressure,
             vibration: round(vibration, 2),
             videoFrame,
-            anomaly,
-            alertLevel,
+            anomaly: false,
+            alertLevel: 'none' as const,
         };
     });
 }
@@ -582,185 +363,9 @@ function generateProductData(
     });
 }
 
-/**
- * Generate causally consistent action events driven by sensor + product data.
- *
- * Causal rules (factory-specific):
- * - vibration > 8 mm/s => alert (warning or critical)
- * - temperature > 48°C => warning, > 52°C => critical
- * - pressure < 5.5 bar => warning, < 4.0 bar => critical
- * - humidity > 65% => warning (mold risk), > 70% => critical
- * - vibration + temperature spike together => AI correlated anomaly event
- * - uptime < 85% => throughput warning
- * - Fixed pool of random human and AI events per-granularity (deterministic scatter)
- * - NO events in the prediction zone (events are discrete, not predicted)
- */
-function generateActionData(
-    timestamps: number[],
-    sensors: SensorReading[],
-    products: ProductMetric[],
-    rand: () => number,
-    predictionStart: number,
-    granularity: TimeGranularity,
-): ActionEvent[] {
-    const actions: ActionEvent[] = [];
-    const pools = EVENT_POOLS[granularity];
-
-    // --- Phase 1: Generate all causal events ---
-    timestamps.forEach((ts, i) => {
-        // No discrete events in prediction zone
-        if (i >= predictionStart) return;
-
-        const sensor = sensors[i];
-        const product = products[i];
-        const tsLabel = new Date(ts).toLocaleString();
-        const zone = sensor?.videoFrame?.zone ?? 'Line-1 Filler';
-
-        // --- Causal: High vibration ---
-        if (sensor && sensor.vibration > 8) {
-            const isCritical = sensor.vibration > 12;
-            actions.push({
-                timestamp: ts,
-                type: 'alert',
-                source: 'Vibration Monitor',
-                title: isCritical
-                    ? `CRITICAL: Vibration ${sensor.vibration} mm/s on ${zone}`
-                    : `WARNING: Elevated vibration ${sensor.vibration} mm/s detected`,
-                description: `Accelerometer RMS at ${sensor.vibration} mm/s at ${tsLabel}. Threshold: 8 mm/s warning, 12 mm/s critical. Bearing wear suspected.`,
-                severity: isCritical ? 'critical' : 'warning',
-                isAI: true,
-                category: 'Alert',
-            });
-        }
-
-        // --- Causal: High temperature ---
-        if (sensor && sensor.temperature > 48) {
-            const isCritical = sensor.temperature > 52;
-            actions.push({
-                timestamp: ts,
-                type: 'alert',
-                source: 'Thermal Monitor',
-                title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Temperature ${sensor.temperature}°C on ${zone}`,
-                description: `Machine zone temperature at ${sensor.temperature}°C at ${tsLabel}. ${isCritical ? 'Immediate' : 'Urgent'} cooling assessment required.`,
-                severity: isCritical ? 'critical' : 'warning',
-                isAI: true,
-                category: 'Alert',
-            });
-        }
-
-        // --- Causal: Low pressure (compressed air leak) ---
-        if (sensor && sensor.pressure < 5.5) {
-            const isCritical = sensor.pressure < 4.0;
-            actions.push({
-                timestamp: ts,
-                type: 'alert',
-                source: 'Pressure Monitor',
-                title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Compressed air pressure ${sensor.pressure} bar`,
-                description: `System pressure at ${sensor.pressure} bar at ${tsLabel}. Possible leak in pneumatic circuit. ${isCritical ? 'System shutdown risk.' : 'Recommend inspection.'}`,
-                severity: isCritical ? 'critical' : 'warning',
-                isAI: true,
-                category: 'Alert',
-            });
-        }
-
-        // --- Causal: High humidity (mold risk) ---
-        if (sensor && sensor.humidity > 65) {
-            const isCritical = sensor.humidity > 70;
-            actions.push({
-                timestamp: ts,
-                type: 'alert',
-                source: 'Humidity Monitor',
-                title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Warehouse humidity ${sensor.humidity}% RH`,
-                description: `Relative humidity in storage at ${sensor.humidity}% RH at ${tsLabel}. ${isCritical ? 'Critical mold risk for cocoa powder.' : 'Monitor closely, trending toward mold threshold.'}`,
-                severity: isCritical ? 'critical' : 'warning',
-                isAI: true,
-                category: 'Alert',
-            });
-        }
-
-        // --- Causal: Correlated vibration + thermal event ---
-        if (sensor && sensor.vibration > 8 && sensor.temperature > 46) {
-            actions.push({
-                timestamp: ts,
-                type: 'agent',
-                source: 'AI Agent',
-                title:
-                    'AI: Multi-sensor anomaly -- vibration + thermal event detected',
-                description: `Simultaneous vibration spike (${sensor.vibration} mm/s) and elevated temperature (${sensor.temperature}°C) on ${zone}. Correlation analysis indicates potential bearing degradation or lubrication failure.`,
-                severity: 'critical',
-                isAI: true,
-                category: 'Alert',
-            });
-        }
-
-        // --- Causal: Low uptime ---
-        if (product && product.uptime < 85) {
-            actions.push({
-                timestamp: ts,
-                type: 'alert',
-                source: 'Production Monitor',
-                title: `Production efficiency low: ${round(product.uptime, 1)}% uptime`,
-                description: `Production line uptime dropped below 85% target at ${tsLabel}. Output: ${product.output} vs target: ${product.target}. Investigate downtime cause.`,
-                severity: 'warning',
-                isAI: true,
-                category: 'Optimization',
-            });
-        }
-    });
-
-    // --- Phase 2: Generate fixed-pool random events (deterministically scattered) ---
-    const totalAI = pools.ai;
-    const totalHuman = pools.human;
-
-    // Build list of available indices in historical zone (0 to predictionStart-1)
-    const availableIndices = Array.from(
-        { length: predictionStart },
-        (_, i) => i
-    );
-
-    // Fisher-Yates shuffle using seeded RNG for reproducibility
-    for (let i = availableIndices.length - 1; i > 0; i--) {
-        const j = Math.floor(rand() * (i + 1));
-        [availableIndices[i], availableIndices[j]] = [
-            availableIndices[j],
-            availableIndices[i],
-        ];
-    }
-
-    // Pick N random indices for AI events
-    const aiIndices = new Set(availableIndices.slice(0, totalAI));
-
-    // Pick N random indices for Human events (from remaining)
-    const humanIndices = new Set(
-        availableIndices.slice(totalAI, totalAI + totalHuman)
-    );
-
-    // Inject AI events at selected indices
-    aiIndices.forEach((idx) => {
-        const template =
-            AI_EVENT_TEMPLATES[Math.floor(rand() * AI_EVENT_TEMPLATES.length)];
-        actions.push({
-            ...template,
-            timestamp: timestamps[idx],
-            isAI: true,
-        });
-    });
-
-    // Inject Human events at selected indices
-    humanIndices.forEach((idx) => {
-        const template =
-            HUMAN_EVENT_TEMPLATES[
-            Math.floor(rand() * HUMAN_EVENT_TEMPLATES.length)
-            ];
-        actions.push({
-            ...template,
-            timestamp: timestamps[idx],
-            isAI: false,
-        });
-    });
-
-    // Sort by timestamp to maintain chronological order
-    return actions.sort((a, b) => a.timestamp - b.timestamp);
+/** Initial data: no actions. Actions are injected by the Test Anomaly button. */
+function generateActionData(): ActionEvent[] {
+    return [];
 }
 
 // =============================================================================
@@ -776,44 +381,28 @@ function generateStreamingSensorPoint(
     const prevVib = prevSensor?.vibration ?? 3.0;
     const prevPressure = prevSensor?.pressure ?? 6.5;
 
-    // Temperature: small random walk from previous
+    // Temperature: small random walk
     const temp = clamp(
         round(prevTemp + (Math.random() - 0.48) * 0.8, 2),
-        20,
-        55,
+        22,
+        42,
     );
 
-    // Vibration: mean-reverting walk with occasional spikes
-    let vibration =
-        prevVib + (3.0 - prevVib) * 0.05 + (Math.random() - 0.48) * 0.5;
-    if (Math.random() < 0.01) {
-        vibration += 4 + Math.random() * 6;
-    }
-    vibration = clamp(round(vibration, 2), 0.5, 22);
+    // Vibration: mean-reverting walk (no spikes — anomalies are pre-placed only)
+    const vibration = clamp(
+        round(prevVib + (3.0 - prevVib) * 0.05 + (Math.random() - 0.48) * 1.2, 2),
+        1.5,
+        5.5,
+    );
 
-    // Humidity: storage area RH
-    const humidity = round(50 + Math.random() * 15, 1);
+    // Humidity
+    const humidity = round(52 + Math.random() * 8, 1);
 
-    // Pressure: compressed air system, slight drift
+    // Pressure
     const pressure = round(
-        clamp(prevPressure + (Math.random() - 0.48) * 0.2, 4.0, 8.5),
+        clamp(prevPressure + (Math.random() - 0.48) * 0.2, 5.0, 8.0),
         2,
     );
-
-    // Anomaly: temperature, vibration, pressure, or humidity issues
-    const anomaly =
-        temp > 48 ||
-        vibration > 8 ||
-        pressure < 5.5 ||
-        humidity > 65 ||
-        Math.random() < 0.005;
-
-    const alertLevel: SensorReading['alertLevel'] =
-        temp > 52 || vibration > 12 || pressure < 4.0 || humidity > 70
-            ? 'critical'
-            : temp > 48 || vibration > 8 || pressure < 5.5 || humidity > 65
-                ? 'warning'
-                : 'none';
 
     const zone = CAMERA_ZONES[frameCounter % CAMERA_ZONES.length];
 
@@ -824,11 +413,11 @@ function generateStreamingSensorPoint(
         pressure,
         vibration,
         videoFrame:
-            Math.random() < 0.8
+            Math.random() < 0.85
                 ? generateVideoFrame(frameCounter, temp, vibration, pressure, zone)
                 : undefined,
-        anomaly,
-        alertLevel,
+        anomaly: false,
+        alertLevel: 'none',
     };
 }
 
@@ -880,128 +469,33 @@ function generateStreamingProductPoint(
     };
 }
 
-/**
- * Generate causally-consistent action events from a new streaming data point.
- */
-function generateStreamingActions(
+/** Generate a sensor point with a critical vibration spike (camera-visible anomaly). */
+function generateAnomalySensorPoint(
     timestamp: number,
-    sensor: SensorReading,
-    product: ProductMetric,
-): ActionEvent[] {
-    const actions: ActionEvent[] = [];
-    const tsLabel = new Date(timestamp).toLocaleString();
-    const zone = sensor.videoFrame?.zone ?? 'Line-1 Filler';
+    prevSensor: SensorReading | undefined,
+    frameCounter: number,
+): SensorReading {
+    const prevTemp = prevSensor?.temperature ?? 28;
+    const prevPressure = prevSensor?.pressure ?? 6.5;
 
-    // Causal: high vibration
-    if (sensor.vibration > 8) {
-        const isCritical = sensor.vibration > 12;
-        actions.push({
-            timestamp,
-            type: 'alert',
-            source: 'Vibration Monitor',
-            title: isCritical
-                ? `CRITICAL: Vibration ${sensor.vibration} mm/s on ${zone}`
-                : `WARNING: Elevated vibration ${sensor.vibration} mm/s detected`,
-            description: `Accelerometer RMS at ${sensor.vibration} mm/s at ${tsLabel}. Bearing wear suspected.`,
-            severity: isCritical ? 'critical' : 'warning',
-            isAI: true,
-            category: 'Alert',
-        });
-    }
+    const temp = clamp(round(prevTemp + (Math.random() - 0.48) * 0.8, 2), 22, 42);
+    const humidity = round(52 + Math.random() * 8, 1);
+    const pressure = round(clamp(prevPressure + (Math.random() - 0.48) * 0.2, 5.0, 8.0), 2);
+    const vibration = round(12.5 + Math.random() * 3, 2); // Critical spike
 
-    // Causal: high temperature
-    if (sensor.temperature > 48) {
-        const isCritical = sensor.temperature > 52;
-        actions.push({
-            timestamp,
-            type: 'alert',
-            source: 'Thermal Monitor',
-            title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Temperature ${sensor.temperature}°C on ${zone}`,
-            description: `Machine temperature at ${sensor.temperature}°C at ${tsLabel}.`,
-            severity: isCritical ? 'critical' : 'warning',
-            isAI: true,
-            category: 'Alert',
-        });
-    }
+    const zone = CAMERA_ZONES[frameCounter % CAMERA_ZONES.length];
 
-    // Causal: low pressure
-    if (sensor.pressure < 5.5) {
-        const isCritical = sensor.pressure < 4.0;
-        actions.push({
-            timestamp,
-            type: 'alert',
-            source: 'Pressure Monitor',
-            title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Compressed air pressure ${sensor.pressure} bar`,
-            description: `System pressure at ${sensor.pressure} bar at ${tsLabel}. Possible leak.`,
-            severity: isCritical ? 'critical' : 'warning',
-            isAI: true,
-            category: 'Alert',
-        });
-    }
-
-    // Causal: high humidity
-    if (sensor.humidity > 65) {
-        const isCritical = sensor.humidity > 70;
-        actions.push({
-            timestamp,
-            type: 'alert',
-            source: 'Humidity Monitor',
-            title: `${isCritical ? 'CRITICAL' : 'WARNING'}: Warehouse humidity ${sensor.humidity}% RH`,
-            description: `Relative humidity at ${sensor.humidity}% RH at ${tsLabel}.`,
-            severity: isCritical ? 'critical' : 'warning',
-            isAI: true,
-            category: 'Alert',
-        });
-    }
-
-    // Causal: correlated vibration + thermal
-    if (sensor.vibration > 8 && sensor.temperature > 46) {
-        actions.push({
-            timestamp,
-            type: 'agent',
-            source: 'AI Agent',
-            title:
-                'AI: Multi-sensor anomaly -- vibration + thermal event detected',
-            description: `Simultaneous vibration spike (${sensor.vibration} mm/s) and elevated temperature (${sensor.temperature}°C).`,
-            severity: 'critical',
-            isAI: true,
-            category: 'Alert',
-        });
-    }
-
-    // Causal: low uptime
-    if (product.uptime < 85) {
-        actions.push({
-            timestamp,
-            type: 'alert',
-            source: 'Production Monitor',
-            title: `Production efficiency low: ${product.uptime}% uptime`,
-            description: `Uptime dropped below 85% target at ${tsLabel}. Output: ${product.output} vs target: ${product.target}.`,
-            severity: 'warning',
-            isAI: true,
-            category: 'Optimization',
-        });
-    }
-
-    // Random AI event (1% per streaming tick)
-    if (Math.random() < STREAMING_EVENT_RATES.ai) {
-        const template =
-            AI_EVENT_TEMPLATES[
-            Math.floor(Math.random() * AI_EVENT_TEMPLATES.length)
-            ];
-        actions.push({ ...template, timestamp, isAI: true });
-    }
-
-    // Random human event (2% per streaming tick)
-    if (Math.random() < STREAMING_EVENT_RATES.human) {
-        const template =
-            HUMAN_EVENT_TEMPLATES[
-            Math.floor(Math.random() * HUMAN_EVENT_TEMPLATES.length)
-            ];
-        actions.push({ ...template, timestamp, isAI: false });
-    }
-
-    return actions;
+    return {
+        timestamp,
+        temperature: temp,
+        humidity,
+        pressure,
+        vibration,
+        // Always include video frame — camera detects this anomaly
+        videoFrame: generateVideoFrame(frameCounter, temp, vibration, pressure, zone),
+        anomaly: true,
+        alertLevel: 'critical',
+    };
 }
 
 // =============================================================================
@@ -1010,31 +504,58 @@ function generateStreamingActions(
 
 export function useMultiLayerData(granularity: TimeGranularity) {
     const pointCount = POINT_COUNTS[granularity];
+    // Este es el índice donde termina la historia y empieza la predicción (el "NOW")
     const predictionStart = Math.floor(pointCount * 0.8);
     const frameCounterRef = useRef(0);
 
-    // --- Build initial data set (deterministic via seeded random) ---
+    // Persistent anomaly bundles — survives granularity changes
+    // MUST be declared before buildInitialData which reads them
+    const persistedAnomaliesRef = useRef<PersistedAnomalyBundle[]>([]);
+
+    // --- Build initial data set ---
     const buildInitialData = useCallback(() => {
         const rand = seededRandom(42);
         const ts = generateTimestamps(granularity, pointCount);
         const sensors = generateSensorData(ts, rand, predictionStart, granularity);
         const products = generateProductData(ts, granularity, rand, predictionStart);
         const energy = generateEnergyData(ts, sensors, rand, predictionStart);
-        const actionEvents = generateActionData(
-            ts,
-            sensors,
-            products,
-            rand,
-            predictionStart,
-            granularity,
-        );
 
-        // Track frame counter for streaming continuity
         frameCounterRef.current = sensors.reduce(
             (max, s) =>
                 s.videoFrame ? Math.max(max, s.videoFrame.frameNumber + 1) : max,
             0,
         );
+
+        // Inject persisted anomaly bundles — ONE anchor index per bundle
+        // ensures sensor dot, camera bar, and actions ALL sync to same grid timestamp
+        const actionEvents: ActionEvent[] = [];
+        for (const bundle of persistedAnomaliesRef.current) {
+            const idx = findNearestIndex(ts, bundle.realTime, predictionStart);
+            if (idx >= 0) {
+                const anchorTimestamp = ts[idx];
+
+                // Sensor: inject anomaly reading
+                const s = sensors[idx];
+                sensors[idx] = {
+                    ...s,
+                    vibration: bundle.vibration,
+                    anomaly: true,
+                    alertLevel: 'critical',
+                    videoFrame: generateVideoFrame(
+                        s.videoFrame?.frameNumber ?? frameCounterRef.current++,
+                        s.temperature,
+                        bundle.vibration,
+                        s.pressure,
+                        CAMERA_ZONES[0],
+                    ),
+                };
+
+                // Actions: ALL actions in the bundle share the same anchor timestamp
+                for (const event of bundle.actions) {
+                    actionEvents.push({ ...event, timestamp: anchorTimestamp } as ActionEvent);
+                }
+            }
+        }
 
         return {
             timestamps: ts,
@@ -1045,89 +566,195 @@ export function useMultiLayerData(granularity: TimeGranularity) {
         };
     }, [granularity, pointCount, predictionStart]);
 
-    const initial = buildInitialData();
-
-    const [timestamps, setTimestamps] = useState<number[]>(initial.timestamps);
-    const [sensorData, setSensorData] = useState<SensorReading[]>(
-        initial.sensorData,
-    );
-    const [energyData, setEnergyData] = useState<EnergyReading[]>(
-        initial.energyData,
-    );
-    const [actionData, setActionData] = useState<ActionEvent[]>(
-        initial.actionData,
-    );
-    const [productData, setProductData] = useState<ProductMetric[]>(
-        initial.productData,
-    );
+    const [initialData] = useState(() => buildInitialData());
+    const [timestamps, setTimestamps] = useState<number[]>(initialData.timestamps);
+    const [sensorData, setSensorData] = useState<SensorReading[]>(initialData.sensorData);
+    const [energyData, setEnergyData] = useState<EnergyReading[]>(initialData.energyData);
+    const [actionData, setActionData] = useState<ActionEvent[]>(initialData.actionData);
+    const [productData, setProductData] = useState<ProductMetric[]>(initialData.productData);
     const [isStreaming, setIsStreaming] = useState(true);
 
-    // Ref to track latest sensor data for streaming continuity - must be declared before effects that use it
-    const sensorDataRef = useRef<SensorReading[]>(initial.sensorData);
+    // REFS NECESARIAS PARA EL STREAMING CORRECTO
+    const sensorDataRef = useRef<SensorReading[]>(initialData.sensorData);
+    const timestampsRef = useRef<number[]>(initialData.timestamps); // <--- NUEVO: Para saber el tiempo real
+    const streamingEnabledRef = useRef(true);
 
-    // Re-initialize when granularity changes
+    // Triggers
+    const pendingAnomalyRef = useRef(false);
+    const pendingHumanReviewRef = useRef(false);
+    const anomalyTimestampRef = useRef(0); // Stores the anomaly tick's liveTimestamp for human review reuse
+
+    const triggerAnomaly = useCallback(() => {
+        pendingAnomalyRef.current = true;
+    }, []);
+
+    // 1. Re-inicializar cuando cambia la granularidad
     useEffect(() => {
+        streamingEnabledRef.current = false;
+        pendingAnomalyRef.current = false;
+        pendingHumanReviewRef.current = false;
+
         const fresh = buildInitialData();
         setTimestamps(fresh.timestamps);
         setSensorData(fresh.sensorData);
         setEnergyData(fresh.energyData);
         setActionData(fresh.actionData);
         setProductData(fresh.productData);
-        // CRITICAL: Immediately update ref to prevent stale data in streaming
+        
+        // Actualizamos las referencias inmediatamente
         sensorDataRef.current = fresh.sensorData;
+        timestampsRef.current = fresh.timestamps;
+
+        requestAnimationFrame(() => {
+            streamingEnabledRef.current = true;
+        });
     }, [buildInitialData]);
 
-    // Keep ref in sync with state updates (e.g., from streaming)
+    // 2. Mantener Refs sincronizadas con el estado
     useEffect(() => {
         sensorDataRef.current = sensorData;
-    }, [sensorData]);
+        timestampsRef.current = timestamps;
+    }, [sensorData, timestamps]);
 
-    // --- Streaming: append one new data point every 2 seconds ---
-    // FIXED: Use refs to avoid stale closures and update all state atomically
+    // 3. LÓGICA DE STREAMING CORREGIDA (Aquí es donde ocurre la magia)
     useEffect(() => {
         setIsStreaming(true);
 
         const interval = setInterval(() => {
-            const now = Date.now();
+            if (!streamingEnabledRef.current) return;
 
-            // Get latest sensor from ref (avoids stale closure)
-            const lastSensor = sensorDataRef.current[sensorDataRef.current.length - 1];
+            // --- A. Verificar Triggers ---
+            const isAnomalyTick = pendingAnomalyRef.current;
+            if (isAnomalyTick) {
+                pendingAnomalyRef.current = false;
+                pendingHumanReviewRef.current = true;
+            }
+            const isHumanReviewTick = !isAnomalyTick && pendingHumanReviewRef.current;
+            if (isHumanReviewTick) {
+                pendingHumanReviewRef.current = false;
+            }
 
-            // Generate all new data points OUTSIDE of setState callbacks
-            const newSensor = generateStreamingSensorPoint(
-                now,
-                lastSensor,
-                frameCounterRef.current,
-            );
+            // --- B. Calcular Tiempos (La clave del arreglo) ---
+            const prevTimestamps = timestampsRef.current;
+            const prevSensors = sensorDataRef.current;
+
+            // EL TRUCO: El timestamp que "ahora" es predicción inmediata, se convierte en "presente"
+            const liveTimestamp = prevTimestamps[predictionStart]; 
+            
+            // Calculamos el nuevo timestamp para el final del array (horizonte futuro)
+            const step = INTERVALS_MS[granularity];
+            const horizonTimestamp = prevTimestamps[prevTimestamps.length - 1] + step;
+
+            // --- C. Generar Puntos ---
+            
+            // 1. Punto LIVE (El que insertamos en el medio)
+            const lastHistorySensor = prevSensors[predictionStart - 1]; // Usamos el dato anterior al corte para continuidad
+            const newLiveSensor = isAnomalyTick
+                ? generateAnomalySensorPoint(liveTimestamp, lastHistorySensor, frameCounterRef.current)
+                : generateStreamingSensorPoint(liveTimestamp, lastHistorySensor, frameCounterRef.current);
             frameCounterRef.current += 1;
 
-            // Generate causally-dependent points from the new sensor data
-            const newEnergy = generateStreamingEnergyPoint(now, newSensor);
-            const newProduct = generateStreamingProductPoint(now, granularity);
-            const newActions = generateStreamingActions(now, newSensor, newProduct);
+            const newLiveEnergy = generateStreamingEnergyPoint(liveTimestamp, newLiveSensor);
+            const newLiveProduct = generateStreamingProductPoint(liveTimestamp, granularity);
 
-            // Calculate window start for action filtering
-            const windowStart = now - (pointCount - 1) * INTERVALS_MS[granularity];
+            // 2. Punto HORIZONTE (El futuro lejano ficticio para rellenar)
+            const lastFutureSensor = prevSensors[prevSensors.length - 1];
+            const newHorizonSensor = generateStreamingSensorPoint(horizonTimestamp, lastFutureSensor, frameCounterRef.current);
+            newHorizonSensor.anomaly = false; // El futuro lejano siempre se ve limpio
+            newHorizonSensor.alertLevel = 'none';
 
-            // ATOMIC BATCH: Update all states together (React 18+ batches these)
-            setTimestamps((prev) => [...prev.slice(1), now]);
-            setSensorData((prev) => [...prev.slice(1), newSensor]);
-            setEnergyData((prev) => [...prev.slice(1), newEnergy]);
-            setProductData((prev) => [...prev.slice(1), newProduct]);
+            const newHorizonEnergy = generateStreamingEnergyPoint(horizonTimestamp, newHorizonSensor);
+            const newHorizonProduct = generateStreamingProductPoint(horizonTimestamp, granularity);
 
-            if (newActions.length > 0) {
-                setActionData((prevActions) => {
-                    const filtered = prevActions.filter((a) => a.timestamp >= windowStart);
-                    return [...filtered, ...newActions];
+            // --- D. Acciones (Events) + Persist for cross-granularity ---
+            const newActions: ActionEvent[] = [];
+            if (isAnomalyTick) {
+                const realNow = Date.now();
+                // Store anomaly tick's liveTimestamp so human review uses the SAME one
+                anomalyTimestampRef.current = liveTimestamp;
+                // Create bundle — all actions will share the anomaly's timestamp
+                persistedAnomaliesRef.current.push({
+                    realTime: realNow,
+                    vibration: newLiveSensor.vibration,
+                    actions: [
+                        {
+                            type: 'alert',
+                            source: 'AI Agent',
+                            title: 'AI: Critical vibration anomaly',
+                            description: 'Accelerometer RMS exceeded 12 mm/s. Pattern consistent with inner race bearing defect.',
+                            severity: 'critical',
+                            isAI: true,
+                            category: 'Alert',
+                        },
+                    ],
+                });
+                newActions.push({
+                    timestamp: liveTimestamp,
+                    type: 'alert',
+                    source: 'AI Agent',
+                    title: 'AI: Critical vibration anomaly',
+                    description: 'Accelerometer RMS exceeded 12 mm/s. Pattern consistent with inner race bearing defect.',
+                    severity: 'critical',
+                    isAI: true,
+                    category: 'Alert',
                 });
             }
+            if (isHumanReviewTick) {
+                // Append human review to the last bundle — shares same anchor timestamp
+                const lastBundle = persistedAnomaliesRef.current[persistedAnomaliesRef.current.length - 1];
+                // Use the ANOMALY tick's timestamp, not this tick's — keeps all dots aligned
+                const anchorTs = anomalyTimestampRef.current;
+                const humanAction: Omit<ActionEvent, 'timestamp'> = {
+                    type: 'user',
+                    source: 'Shift Lead',
+                    title: 'Review Order: Line-1 inspection',
+                    description: 'Manual inspection ordered following AI alert.',
+                    severity: 'warning',
+                    isAI: false,
+                    category: 'Inspection',
+                };
+                if (lastBundle) {
+                    lastBundle.actions.push(humanAction);
+                }
+                newActions.push({ ...humanAction, timestamp: anchorTs });
+            }
+
+            // --- E. Actualizar Arrays (Técnica de "Splicing") ---
+            // Cortamos el array en dos, metemos el dato LIVE en medio, y añadimos HORIZONTE al final
+            const updateArray = <T>(prev: T[], liveItem: T, horizonItem: T) => [
+                ...prev.slice(1, predictionStart), // Historia desplazada
+                liveItem,                          // NUESTRO PRESENTE
+                ...prev.slice(predictionStart + 1), // Futuro desplazado
+                horizonItem                        // Nuevo horizonte
+            ];
+
+            setTimestamps(prev => [
+                ...prev.slice(1, predictionStart),
+                liveTimestamp,
+                ...prev.slice(predictionStart + 1),
+                horizonTimestamp
+            ]);
+            
+            setSensorData(prev => updateArray(prev, newLiveSensor, newHorizonSensor));
+            setEnergyData(prev => updateArray(prev, newLiveEnergy, newHorizonEnergy));
+            setProductData(prev => updateArray(prev, newLiveProduct, newHorizonProduct));
+
+            // Actualizar Acciones
+            const windowStart = prevTimestamps[1];
+            setActionData((prevActions) => {
+                const filtered = prevActions.filter((a) => a.timestamp >= windowStart);
+                return [...filtered, ...newActions];
+            });
+
         }, STREAMING_INTERVAL_MS);
 
         return () => {
             clearInterval(interval);
             setIsStreaming(false);
         };
-    }, [granularity, pointCount]);
+    }, [granularity, pointCount, predictionStart]);
+
+    const forecastBoundaryTimestamp = timestamps[predictionStart] ?? Date.now();
 
     return {
         timestamps,
@@ -1137,6 +764,8 @@ export function useMultiLayerData(granularity: TimeGranularity) {
         productData,
         pointCount,
         predictionStart,
+        forecastBoundaryTimestamp,
         isStreaming,
+        triggerAnomaly,
     };
 }

@@ -3,6 +3,6 @@
  * Maintains clean imports across the application
  */
 
-export { useTimeline } from './useTimeline';
-export { useMockData } from './useMockData';
 export { useMultiLayerData } from './useMultiLayerData';
+export { useTimeline } from './useTimeline';
+
