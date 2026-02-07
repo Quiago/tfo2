@@ -1,0 +1,105 @@
+'use client'
+
+import { Suspense, useRef, useCallback } from 'react'
+import { Environment } from '@react-three/drei'
+import { FactoryModel } from './FactoryModel'
+import { CameraSystem, type CameraSystemHandle } from './CameraSystem'
+import { NavigationHotspots } from './NavigationHotspots'
+import type { CameraPreset } from './camera-presets'
+
+interface FactorySceneProps {
+  modelUrl: string
+  presets: CameraPreset[]
+  activeId: string | null
+  onActiveChange: (id: string | null) => void
+  onCameraMove: (position: [number, number, number]) => void
+  onMeshCount: (count: number) => void
+  devMode?: boolean
+  environment?: string
+  autoTour?: boolean
+  autoTourInterval?: number
+  initialPreset?: string
+  showHotspots?: boolean
+  cameraRef?: React.RefObject<CameraSystemHandle | null>
+}
+
+export function FactoryScene({
+  modelUrl,
+  presets,
+  activeId,
+  onActiveChange,
+  onCameraMove,
+  onMeshCount,
+  devMode = false,
+  environment = 'warehouse',
+  autoTour = false,
+  autoTourInterval = 5000,
+  initialPreset,
+  showHotspots = true,
+  cameraRef,
+}: FactorySceneProps) {
+  const internalCameraRef = useRef<CameraSystemHandle>(null)
+  const activeCameraRef = cameraRef ?? internalCameraRef
+
+  const handleHotspotSelect = useCallback(
+    (id: string) => {
+      const preset = presets.find((p) => p.id === id)
+      if (preset) {
+        activeCameraRef.current?.flyToPreset(preset)
+      }
+    },
+    [presets, activeCameraRef]
+  )
+
+  return (
+    <>
+      {/* Lighting */}
+      <Environment
+        preset={environment as 'warehouse'}
+        background={false}
+        environmentIntensity={0.8}
+      />
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={0.5}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={100}
+        shadow-camera-near={0.1}
+        shadow-camera-left={-30}
+        shadow-camera-right={30}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
+      />
+      <ambientLight intensity={0.15} />
+
+      {/* Camera */}
+      <CameraSystem
+        ref={activeCameraRef}
+        presets={presets}
+        activeId={activeId}
+        onActiveChange={onActiveChange}
+        onCameraMove={onCameraMove}
+        devMode={devMode}
+        autoTour={autoTour}
+        autoTourInterval={autoTourInterval}
+        initialPreset={initialPreset}
+      />
+
+      {/* Model */}
+      <Suspense fallback={null}>
+        <FactoryModel url={modelUrl} onMeshCount={onMeshCount} />
+      </Suspense>
+
+      {/* Hotspots */}
+      {showHotspots && (
+        <NavigationHotspots
+          presets={presets}
+          activeId={activeId}
+          onSelect={handleHotspotSelect}
+        />
+      )}
+    </>
+  )
+}

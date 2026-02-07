@@ -87,21 +87,43 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Placeholder for 3D */}
-            <div className="group bg-white rounded-lg border border-slate-200 opacity-60">
+            {/* Digital Twin 3D */}
+            <div className="group bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:shadow-lg transition">
               <div className="p-6">
                 <div className="text-4xl mb-3">🎯</div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">
                   Digital Twin 3D
                 </h3>
                 <p className="text-slate-600 text-sm mb-4">
-                  3D visualization of industrial systems synchronized with
-                  Timeline. Coming in Sprint 3.
+                  3D factory navigator with smooth camera transitions,
+                  hotspot markers, and keyboard controls. Loads GLB models.
                 </p>
 
-                <div className="px-4 py-2 bg-slate-100 text-slate-600 rounded font-medium inline-block text-sm">
-                  Coming Soon
+                <div className="space-y-2 mb-6 text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>Smooth SmoothDamp camera fly-to</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>8 navigation presets + keyboard shortcuts</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>3D hotspot markers with hover labels</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>Dev mode coordinate capture</span>
+                  </div>
                 </div>
+
+                <a
+                  href="/digital-twin"
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
+                >
+                  Open Digital Twin →
+                </a>
               </div>
             </div>
           </div>
