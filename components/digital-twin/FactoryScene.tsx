@@ -2,6 +2,7 @@
 
 import { Suspense, useRef, useCallback } from 'react'
 import { Environment } from '@react-three/drei'
+import { ThreeEvent } from '@react-three/fiber'
 import { FactoryModel, type MeshClickEvent } from './FactoryModel'
 import { CameraSystem, type CameraSystemHandle } from './CameraSystem'
 import { NavigationHotspots } from './NavigationHotspots'
@@ -15,6 +16,7 @@ interface FactorySceneProps {
   onCameraMove: (position: [number, number, number]) => void
   onMeshCount: (count: number) => void
   onMeshClick?: (event: MeshClickEvent) => void
+  onCanvasClick?: (point: [number, number, number]) => void
   devMode?: boolean
   environment?: string
   autoTour?: boolean
@@ -32,6 +34,7 @@ export function FactoryScene({
   onCameraMove,
   onMeshCount,
   onMeshClick,
+  onCanvasClick,
   devMode = false,
   environment = 'warehouse',
   autoTour = false,
@@ -51,6 +54,15 @@ export function FactoryScene({
       }
     },
     [presets, activeCameraRef]
+  )
+
+  const handleGroundClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      // This fires when clicking the ground plane (not a mesh on the model)
+      if (!onCanvasClick) return
+      onCanvasClick(e.point.toArray() as [number, number, number])
+    },
+    [onCanvasClick]
   )
 
   return (
@@ -75,6 +87,17 @@ export function FactoryScene({
         shadow-camera-bottom={-30}
       />
       <ambientLight intensity={0.15} />
+
+      {/* Invisible ground plane — catches clicks that miss the model */}
+      <mesh
+        rotation-x={-Math.PI / 2}
+        position={[0, -0.01, 0]}
+        onClick={handleGroundClick}
+        visible={false}
+      >
+        <planeGeometry args={[500, 500]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
 
       {/* Camera */}
       <CameraSystem

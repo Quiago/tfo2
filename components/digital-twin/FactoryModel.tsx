@@ -93,27 +93,26 @@ export function FactoryModel({ url, onMeshCount, onMeshClick }: FactoryModelProp
       const mesh = e.object as THREE.Mesh
       if (!mesh.isMesh || !onMeshClick) return
 
-      // Walk up to find the most meaningful name
-      let name = mesh.name
+      // Walk up to find the most meaningful name.
+      // Stop at "Scene", "DefaultScene", or root. Collect the FIRST
+      // ancestor with a descriptive name (length > 1) — that's the
+      // component/group this mesh belongs to.
+      const SKIP_NAMES = new Set(['Scene', 'DefaultScene', 'RootNode', 'Root'])
+      let name = mesh.name || ''
+      let bestName = ''
       let current: THREE.Object3D | null = mesh
-      while (current) {
-        if (current.name && current.name.length > 1 && current.name !== 'Scene') {
-          name = current.name
-          // Prefer parent group names as they're usually more descriptive
-          if (current.parent && current.parent.name && current.parent.name !== 'Scene' && current.parent.name.length > 2) {
-            name = current.parent.name
-          }
-          break
+      while (current && !SKIP_NAMES.has(current.name)) {
+        if (current.name && current.name.length > 1) {
+          bestName = current.name
         }
         current = current.parent
       }
+      name = bestName || mesh.name || `Mesh_${mesh.id}`
 
-      const worldPos = new THREE.Vector3()
-      mesh.getWorldPosition(worldPos)
-
+      // Use e.point — the exact raycast intersection coordinate
       onMeshClick({
         meshName: name || `Mesh_${mesh.id}`,
-        worldPosition: worldPos.toArray() as [number, number, number],
+        worldPosition: e.point.toArray() as [number, number, number],
       })
     },
     [onMeshClick]

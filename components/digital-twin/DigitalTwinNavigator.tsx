@@ -49,6 +49,7 @@ export function DigitalTwinNavigator({
   const [inspector, setInspector] = useState<InspectorState | null>(null)
   const cameraRef = useRef<CameraSystemHandle>(null)
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inspectorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleActiveChange = useCallback(
     (id: string | null) => {
@@ -83,9 +84,29 @@ export function DigitalTwinNavigator({
     setMeshCount(count)
   }, [])
 
+  // Dynamic fly: mesh click → fly to the exact point + show inspector
   const handleMeshClick = useCallback((event: MeshClickEvent) => {
     const machine = getMachineInfo(event.meshName)
-    setInspector({ machine, meshName: event.meshName })
+
+    // Fly to the exact click point on the mesh
+    cameraRef.current?.flyToPoint(event.worldPosition, machine.name)
+
+    // Show transition label
+    setTransitionLabel(machine.name)
+    if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
+    transitionTimeoutRef.current = setTimeout(() => setTransitionLabel(null), 2200)
+
+    // Show inspector after camera starts moving
+    if (inspectorTimeoutRef.current) clearTimeout(inspectorTimeoutRef.current)
+    inspectorTimeoutRef.current = setTimeout(() => {
+      setInspector({ machine, meshName: event.meshName })
+    }, 400)
+  }, [])
+
+  // Dynamic fly: canvas/ground click → fly to that point (no inspector)
+  const handleCanvasClick = useCallback((point: [number, number, number]) => {
+    setInspector(null)
+    cameraRef.current?.flyToPoint(point)
   }, [])
 
   const handleInspectorClose = useCallback(() => {
@@ -114,6 +135,7 @@ export function DigitalTwinNavigator({
   useEffect(() => {
     return () => {
       if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
+      if (inspectorTimeoutRef.current) clearTimeout(inspectorTimeoutRef.current)
     }
   }, [])
 
@@ -144,6 +166,7 @@ export function DigitalTwinNavigator({
           onCameraMove={handleCameraMove}
           onMeshCount={handleMeshCount}
           onMeshClick={handleMeshClick}
+          onCanvasClick={handleCanvasClick}
           devMode={devMode}
           environment={environment}
           autoTour={autoTour}

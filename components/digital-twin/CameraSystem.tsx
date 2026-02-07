@@ -8,7 +8,10 @@ import * as THREE from 'three'
 import type { CameraPreset } from './camera-presets'
 
 export interface CameraSystemHandle {
+  /** Fly to a predefined preset (buttons/hotspots) */
   flyToPreset: (preset: CameraPreset) => void
+  /** Fly to any arbitrary world point (mesh click / canvas click) */
+  flyToPoint: (target: [number, number, number], label?: string) => void
   getCurrentPosition: () => [number, number, number]
   getCurrentTarget: () => [number, number, number]
 }
@@ -68,6 +71,40 @@ export const CameraSystem = forwardRef<CameraSystemHandle, CameraSystemProps>(
       [presets, onActiveChange]
     )
 
+    const flyToPoint = useCallback(
+      (target: [number, number, number], label?: string) => {
+        const controls = controlsRef.current
+        if (!controls) return
+
+        // Compute camera position: keep current viewing angle but reposition
+        // at a comfortable distance from the target point
+        const camPos = camera.position.clone()
+        const targetVec = new THREE.Vector3(...target)
+        const direction = camPos.clone().sub(targetVec).normalize()
+
+        // If camera is too far or direction is degenerate, use a default offset
+        const currentDist = camPos.distanceTo(targetVec)
+        const flyDist = Math.min(Math.max(currentDist * 0.3, 5), 15)
+
+        // Ensure we're looking slightly from above (min Y offset)
+        if (direction.y < 0.15) direction.y = 0.3
+        direction.normalize()
+
+        const newCamPos = targetVec.clone().add(direction.multiplyScalar(flyDist))
+        // Ensure camera doesn't go below target
+        newCamPos.y = Math.max(newCamPos.y, target[1] + 2)
+
+        controls.smoothTime = 1.2
+        controls.setLookAt(
+          newCamPos.x, newCamPos.y, newCamPos.z,
+          target[0], target[1], target[2],
+          true
+        )
+        onActiveChange(null)
+      },
+      [camera, onActiveChange]
+    )
+
     const getCurrentPosition = useCallback((): [number, number, number] => {
       return camera.position.toArray() as [number, number, number]
     }, [camera])
@@ -80,6 +117,7 @@ export const CameraSystem = forwardRef<CameraSystemHandle, CameraSystemProps>(
 
     useImperativeHandle(ref, () => ({
       flyToPreset,
+      flyToPoint,
       getCurrentPosition,
       getCurrentTarget,
     }))
