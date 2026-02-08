@@ -3,7 +3,7 @@
 import { Suspense, useRef, useCallback } from 'react'
 import { Environment } from '@react-three/drei'
 import { ThreeEvent } from '@react-three/fiber'
-import { FactoryModel, type MeshClickEvent } from './FactoryModel'
+import { FactoryModel, type MeshClickEvent, type AlertMeshInfo } from './FactoryModel'
 import { CameraSystem, type CameraSystemHandle } from './CameraSystem'
 import { NavigationHotspots } from './NavigationHotspots'
 import type { CameraPreset } from './camera-presets'
@@ -17,6 +17,8 @@ interface FactorySceneProps {
   onMeshCount: (count: number) => void
   onMeshClick?: (event: MeshClickEvent) => void
   onCanvasClick?: (point: [number, number, number]) => void
+  alertMeshPattern?: string | null
+  onAlertMeshFound?: (info: AlertMeshInfo) => void
   devMode?: boolean
   environment?: string
   autoTour?: boolean
@@ -35,6 +37,8 @@ export function FactoryScene({
   onMeshCount,
   onMeshClick,
   onCanvasClick,
+  alertMeshPattern,
+  onAlertMeshFound,
   devMode = false,
   environment = 'warehouse',
   autoTour = false,
@@ -58,7 +62,6 @@ export function FactoryScene({
 
   const handleGroundClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      // This fires when clicking the ground plane (not a mesh on the model)
       if (!onCanvasClick) return
       onCanvasClick(e.point.toArray() as [number, number, number])
     },
@@ -114,7 +117,13 @@ export function FactoryScene({
 
       {/* Model */}
       <Suspense fallback={null}>
-        <FactoryModel url={modelUrl} onMeshCount={onMeshCount} onMeshClick={onMeshClick} />
+        <FactoryModel
+          url={modelUrl}
+          onMeshCount={onMeshCount}
+          onMeshClick={onMeshClick}
+          alertMeshPattern={alertMeshPattern}
+          onAlertMeshFound={onAlertMeshFound}
+        />
       </Suspense>
 
       {/* Hotspots */}

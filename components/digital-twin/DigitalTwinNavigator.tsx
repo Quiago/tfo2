@@ -2,13 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { AlertTriangle } from 'lucide-react'
 import { FactoryScene } from './FactoryScene'
 import { NavigationPanel } from './NavigationPanel'
 import { LoadingScreen } from './LoadingScreen'
 import { InfoBar } from './InfoBar'
-import { MachineInspector } from './MachineInspector'
+import { MachineInspector, type AnomalyAlert } from './MachineInspector'
 import { getMachineInfo, type MachineInfo } from './machine-data'
-import type { MeshClickEvent } from './FactoryModel'
+import type { MeshClickEvent, AlertMeshInfo } from './FactoryModel'
 import type { CameraPreset } from './camera-presets'
 import type { CameraSystemHandle } from './CameraSystem'
 
@@ -28,6 +29,7 @@ interface DigitalTwinNavigatorProps {
 interface InspectorState {
   machine: MachineInfo
   meshName: string
+  anomaly?: AnomalyAlert | null
 }
 
 export function DigitalTwinNavigator({
@@ -47,6 +49,8 @@ export function DigitalTwinNavigator({
   const [meshCount, setMeshCount] = useState(0)
   const [transitionLabel, setTransitionLabel] = useState<string | null>(null)
   const [inspector, setInspector] = useState<InspectorState | null>(null)
+  const [alertMeshPattern, setAlertMeshPattern] = useState<string | null>(null)
+  const [alertActive, setAlertActive] = useState(false)
   const cameraRef = useRef<CameraSystemHandle>(null)
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inspectorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -84,26 +88,22 @@ export function DigitalTwinNavigator({
     setMeshCount(count)
   }, [])
 
-  // Dynamic fly: mesh click → fly to the exact point + show inspector
+  // Dynamic fly: mesh click
   const handleMeshClick = useCallback((event: MeshClickEvent) => {
     const machine = getMachineInfo(event.meshName)
-
-    // Fly to the exact click point on the mesh
     cameraRef.current?.flyToPoint(event.worldPosition, machine.name)
 
-    // Show transition label
     setTransitionLabel(machine.name)
     if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
     transitionTimeoutRef.current = setTimeout(() => setTransitionLabel(null), 2200)
 
-    // Show inspector after camera starts moving
     if (inspectorTimeoutRef.current) clearTimeout(inspectorTimeoutRef.current)
     inspectorTimeoutRef.current = setTimeout(() => {
-      setInspector({ machine, meshName: event.meshName })
+      setInspector({ machine, meshName: event.meshName, anomaly: null })
     }, 400)
   }, [])
 
-  // Dynamic fly: canvas/ground click → fly to that point (no inspector)
+  // Dynamic fly: canvas/ground click
   const handleCanvasClick = useCallback((point: [number, number, number]) => {
     setInspector(null)
     cameraRef.current?.flyToPoint(point)
@@ -111,26 +111,68 @@ export function DigitalTwinNavigator({
 
   const handleInspectorClose = useCallback(() => {
     setInspector(null)
+    setAlertMeshPattern(null)
+    setAlertActive(false)
   }, [])
 
   const handleInspectorAction = useCallback(
     (action: 'monitoring' | 'workflows' | 'logs' | 'manual') => {
-      // Placeholder — these will navigate to respective modules
       console.log(`[DigitalTwin] Action: ${action} for ${inspector?.machine.name}`)
     },
     [inspector]
   )
 
+  // Called by FactoryModel when alert meshes are found — fly to them
+  const handleAlertMeshFound = useCallback((info: AlertMeshInfo) => {
+    cameraRef.current?.flyToPoint(info.worldPosition, info.meshName)
+
+    setTransitionLabel(`ALERT: ${info.meshName}`)
+    if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
+    transitionTimeoutRef.current = setTimeout(() => setTransitionLabel(null), 3000)
+
+    // Show inspector with anomaly data after fly begins
+    const machine = getMachineInfo(info.meshName)
+    const anomaly: AnomalyAlert = {
+      type: 'Excessive Vibration Detected',
+      severity: 'critical',
+      message: 'Vibration amplitude exceeds safe operating threshold on joint axis 3. Immediate inspection recommended — potential bearing wear or misalignment.',
+      value: '13.5 mm/s RMS',
+      threshold: '7.0 mm/s RMS',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    }
+
+    if (inspectorTimeoutRef.current) clearTimeout(inspectorTimeoutRef.current)
+    inspectorTimeoutRef.current = setTimeout(() => {
+      setInspector({ machine, meshName: info.meshName, anomaly })
+    }, 600)
+  }, [])
+
+  // TRIGGER ALERT — simulate vibration anomaly on a KUKA robot
+  const handleTriggerAlert = useCallback(() => {
+    if (alertActive) {
+      setAlertMeshPattern(null)
+      setAlertActive(false)
+      setInspector(null)
+      return
+    }
+
+    setAlertActive(true)
+    // Target one specific KUKA robot arm by exact Blender mesh names
+    setAlertMeshPattern('kuka-kr120-right')
+  }, [alertActive])
+
   // Close inspector on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && inspector) {
+      if (e.key === 'Escape') {
         setInspector(null)
+        setAlertMeshPattern(null)
+        setAlertActive(false)
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [inspector])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -152,7 +194,7 @@ export function DigitalTwinNavigator({
         dpr={[1, 2]}
         gl={{
           antialias: true,
-          toneMapping: 3, // ACESFilmicToneMapping
+          toneMapping: 3,
           toneMappingExposure: 1.2,
         }}
         camera={{ fov: 50, near: 0.1, far: 500 }}
@@ -167,6 +209,8 @@ export function DigitalTwinNavigator({
           onMeshCount={handleMeshCount}
           onMeshClick={handleMeshClick}
           onCanvasClick={handleCanvasClick}
+          alertMeshPattern={alertMeshPattern}
+          onAlertMeshFound={handleAlertMeshFound}
           devMode={devMode}
           environment={environment}
           autoTour={autoTour}
@@ -181,7 +225,9 @@ export function DigitalTwinNavigator({
       {transitionLabel && (
         <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center">
           <div className="animate-fade-in-out">
-            <h2 className="text-4xl font-bold text-white/80 tracking-wide drop-shadow-lg">
+            <h2 className={`text-4xl font-bold tracking-wide drop-shadow-lg ${
+              alertActive ? 'text-red-400/90' : 'text-white/80'
+            }`}>
               {transitionLabel}
             </h2>
           </div>
@@ -202,10 +248,24 @@ export function DigitalTwinNavigator({
         <MachineInspector
           machine={inspector.machine}
           meshName={inspector.meshName}
+          anomaly={inspector.anomaly}
           onClose={handleInspectorClose}
           onAction={handleInspectorAction}
         />
       )}
+
+      {/* Trigger Alert Button */}
+      <button
+        onClick={handleTriggerAlert}
+        className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-xl border font-medium text-sm transition-all duration-300 ${
+          alertActive
+            ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.3)] animate-pulse'
+            : 'bg-zinc-900/80 border-white/10 text-zinc-300 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5'
+        }`}
+      >
+        <AlertTriangle size={16} className={alertActive ? 'text-red-400' : ''} />
+        {alertActive ? 'DISMISS ALERT' : 'TRIGGER ALERT'}
+      </button>
 
       {/* Info Bar */}
       <InfoBar
@@ -223,7 +283,7 @@ export function DigitalTwinNavigator({
         </div>
       )}
 
-      {/* Inline keyframes for transition label */}
+      {/* Keyframes */}
       <style jsx global>{`
         @keyframes fadeInOut {
           0% { opacity: 0; transform: translateY(10px); }
@@ -233,6 +293,13 @@ export function DigitalTwinNavigator({
         }
         .animate-fade-in-out {
           animation: fadeInOut 2.2s ease-out forwards;
+        }
+        .animate-pulse-slow {
+          animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
         }
       `}</style>
     </div>
