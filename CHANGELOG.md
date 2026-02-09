@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Fithub Component (`components/fithub/`)
+- New **Fithub** component: GitHub-inspired cross-facility learning and anomaly detection hub
+- 3-column layout: Factory repos sidebar (left), Feed (center), Changelog (right)
+- Factory system: 5 mock factories as workflow repo owners (Munich, Shanghai, Detroit, Tokyo, São Paulo)
+- Workflow repos with stars, forks, language tags, and cross-facility forking
+- Feed posts: AI insights, human questions, issues, PRs, announcements with upvotes/comments
+- Anomaly detection cards with approve/reject/investigate actions and severity coloring
+- Input bar with Ask AI, Create Ticket, Create Issue, Pull Request actions
+- Zustand store (`lib/store/fithub-store.ts`) with full CRUD and computed selectors
+- Types (`lib/types/fithub.ts`): Factory, WorkflowRepo, FithubPost, DetectedAnomaly, ChangelogEntry
+- Mock data hook (`lib/hooks/useFithubMockData.ts`) with 12 repos, 8 posts, 4 anomalies
+- Playground at `/playground/fithub`
+- Documentation at `/docs/fithub.md`
+
 #### Workflow Builder (`components/features/workflow-builder/`)
 - Full-featured responsive workflow builder with dual-mode interface: React Flow canvas (desktop) + sequential card view (mobile)
 - 19 industrial node types across 5 categories (triggers, conditions, inputs, actions, utility) with freemium gating via `NODE_REGISTRY`
