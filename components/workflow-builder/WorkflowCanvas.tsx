@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useMemo, type DragEvent } from 'react'
+import { useCallback, useMemo, useEffect, useRef, type DragEvent } from 'react'
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  ReactFlowProvider,
+  useReactFlow,
   type Node,
   type Edge,
   type OnConnect,
@@ -29,8 +31,24 @@ const nodeTypes = {
   opsflow: OpsFlowNode,
 }
 
-export function WorkflowCanvas({ workflow }: WorkflowCanvasProps) {
-  const { addNode, addEdge, updateNode, removeNode, removeEdge, selectNode } = useWorkflowStore()
+function WorkflowCanvasInner({ workflow }: WorkflowCanvasProps) {
+  const { addNode, addEdge, updateNode, removeNode, removeEdge, selectNode, isStreaming } = useWorkflowStore()
+  const { fitView } = useReactFlow()
+  const prevNodeCountRef = useRef(workflow.nodes.length)
+
+  // Auto-fit viewport when nodes are added during streaming
+  useEffect(() => {
+    const currentCount = workflow.nodes.length
+    if (currentCount > prevNodeCountRef.current && currentCount > 0) {
+      // Small delay to let React Flow render the new node first
+      const timer = setTimeout(() => {
+        fitView({ padding: 0.3, duration: 400 })
+      }, 50)
+      prevNodeCountRef.current = currentCount
+      return () => clearTimeout(timer)
+    }
+    prevNodeCountRef.current = currentCount
+  }, [workflow.nodes.length, fitView])
 
   // Convert our workflow nodes to React Flow nodes
   const rfNodes: Node[] = useMemo(() =>
@@ -139,7 +157,7 @@ export function WorkflowCanvas({ workflow }: WorkflowCanvasProps) {
         onDrop={onDrop}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.3 }}
         defaultEdgeOptions={{
           animated: true,
           style: { stroke: '#525252', strokeWidth: 2 },
@@ -165,5 +183,14 @@ export function WorkflowCanvas({ workflow }: WorkflowCanvasProps) {
         />
       </ReactFlow>
     </div>
+  )
+}
+
+// Wrap with ReactFlowProvider so useReactFlow() works
+export function WorkflowCanvas({ workflow }: WorkflowCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <WorkflowCanvasInner workflow={workflow} />
+    </ReactFlowProvider>
   )
 }

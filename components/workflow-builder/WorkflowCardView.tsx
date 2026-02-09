@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { useWorkflowStore } from '@/lib/store/workflow-store'
 import { NODE_REGISTRY } from '@/lib/types/workflow'
 import type { Workflow } from '@/lib/types/workflow'
@@ -17,7 +17,18 @@ function getIcon(name: string, size = 16) {
 }
 
 export function WorkflowCardView({ workflow }: WorkflowCardViewProps) {
-  const { selectNode, selectedNodeId, removeNode } = useWorkflowStore()
+  const { selectNode, selectedNodeId, removeNode, isStreaming } = useWorkflowStore()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when new cards appear during streaming
+  useEffect(() => {
+    if (scrollContainerRef.current && workflow.nodes.length > 0) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }, [workflow.nodes.length])
 
   // Build an ordered list of steps by following edges from trigger
   const orderedSteps = useMemo(() => {
@@ -70,7 +81,7 @@ export function WorkflowCardView({ workflow }: WorkflowCardViewProps) {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-4 pb-24">
+    <div ref={scrollContainerRef} className="flex h-full flex-col overflow-y-auto p-4 pb-24">
       {/* Safety Warning */}
       {workflow.safetyCheck && (
         <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
