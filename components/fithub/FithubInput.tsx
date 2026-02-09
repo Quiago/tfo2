@@ -4,17 +4,17 @@ import { useFithubStore } from '@/lib/store/fithub-store'
 import type { InputActionType, PostType } from '@/lib/types/fithub'
 import {
     AlertCircle,
-    GitPullRequest,
+    ClipboardList,
     Send,
     Sparkles,
-    TicketPlus,
+    Workflow,
     X
 } from 'lucide-react'
 import { useState } from 'react'
 
 /**
- * FithubInput: Input bar with action buttons (Ask AI, Create Ticket, Issue, PR)
- * Inspired by GitHub's header input area
+ * FithubInput: Input bar with industrial action buttons
+ * Ask AI | Work Order | Report Issue | Propose Workflow
  */
 export function FithubInput() {
     const {
@@ -28,12 +28,12 @@ export function FithubInput() {
     const [inputValue, setInputValue] = useState('')
     const [title, setTitle] = useState('')
 
-    // Action buttons config
+    // Action buttons config - Industrial language
     const actions: { type: InputActionType; label: string; icon: React.ReactNode; postType: PostType }[] = [
         { type: 'ask_ai', label: 'Ask AI', icon: <Sparkles className="w-4 h-4" />, postType: 'question' },
-        { type: 'create_ticket', label: 'Ticket', icon: <TicketPlus className="w-4 h-4" />, postType: 'question' },
-        { type: 'create_issue', label: 'Issue', icon: <AlertCircle className="w-4 h-4" />, postType: 'issue' },
-        { type: 'pull_request', label: 'PR', icon: <GitPullRequest className="w-4 h-4" />, postType: 'pull_request' },
+        { type: 'work_order', label: 'Work Order', icon: <ClipboardList className="w-4 h-4" />, postType: 'insight' },
+        { type: 'report_issue', label: 'Report Issue', icon: <AlertCircle className="w-4 h-4" />, postType: 'issue' },
+        { type: 'propose_workflow', label: 'Workflow', icon: <Workflow className="w-4 h-4" />, postType: 'pull_request' },
     ]
 
     const activeAction = actions.find(a => a.type === activeInputAction)
@@ -67,7 +67,7 @@ export function FithubInput() {
                     <div className="flex items-center gap-2">
                         <input
                             type="text"
-                            placeholder="Ask anything..."
+                            placeholder="Ask AI, create a work order, or report an issue..."
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onFocus={() => setActiveInputAction('ask_ai')}
@@ -100,9 +100,9 @@ export function FithubInput() {
                             {activeAction?.icon}
                             <span>
                                 {activeAction?.type === 'ask_ai' && 'Ask the AI Assistant'}
-                                {activeAction?.type === 'create_ticket' && 'Create Support Ticket'}
-                                {activeAction?.type === 'create_issue' && 'Report an Issue'}
-                                {activeAction?.type === 'pull_request' && 'Propose Improvement'}
+                                {activeAction?.type === 'work_order' && 'Create Work Order'}
+                                {activeAction?.type === 'report_issue' && 'Report an Issue'}
+                                {activeAction?.type === 'propose_workflow' && 'Propose Workflow Improvement'}
                             </span>
                         </div>
                         <button
@@ -120,7 +120,11 @@ export function FithubInput() {
                     {/* Title input */}
                     <input
                         type="text"
-                        placeholder="Title (optional)"
+                        placeholder={
+                            activeAction?.type === 'work_order'
+                                ? 'Equipment or task (e.g., "Motor A7 bearing replacement")'
+                                : 'Title (optional)'
+                        }
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 mb-2"
@@ -130,10 +134,12 @@ export function FithubInput() {
                     <textarea
                         placeholder={
                             activeAction?.type === 'ask_ai'
-                                ? 'Ask a question about workflows, anomalies, or best practices...'
-                                : activeAction?.type === 'create_issue'
-                                    ? 'Describe the issue in detail...'
-                                    : 'Describe your request...'
+                                ? 'Ask about equipment issues, maintenance procedures, or best practices across facilities...'
+                                : activeAction?.type === 'work_order'
+                                    ? 'Describe the work to be done, include equipment location, priority, and any safety notes...'
+                                    : activeAction?.type === 'report_issue'
+                                        ? 'Describe what you observed: equipment behavior, readings, when it started...'
+                                        : 'Describe your proposed workflow improvement and expected benefits...'
                         }
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
@@ -164,7 +170,8 @@ export function FithubInput() {
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-md transition"
                         >
                             <Send className="w-4 h-4" />
-                            {activeAction?.type === 'ask_ai' ? 'Ask' : 'Submit'}
+                            {activeAction?.type === 'ask_ai' ? 'Ask' :
+                                activeAction?.type === 'work_order' ? 'Create WO' : 'Submit'}
                         </button>
                     </div>
                 </div>

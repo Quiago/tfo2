@@ -124,7 +124,7 @@ export function FactoryReposSidebar() {
                                                 <span className="text-slate-500 dark:text-slate-400">{factory?.name || 'unknown'}/</span>
                                                 {repo.name}
                                             </div>
-                                            {/* Language dot + stars + forks */}
+                                            {/* Language dot + adoption metrics */}
                                             <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                                                 {repo.language && (
                                                     <span className="flex items-center gap-1">
@@ -132,13 +132,13 @@ export function FactoryReposSidebar() {
                                                         {repo.language}
                                                     </span>
                                                 )}
-                                                <span className="flex items-center gap-0.5">
+                                                <span className="flex items-center gap-0.5" title="Facilities that adopted this workflow">
                                                     <Star className="w-3 h-3" />
-                                                    {repo.stars}
+                                                    {repo.stars} adopted
                                                 </span>
-                                                <span className="flex items-center gap-0.5">
+                                                <span className="flex items-center gap-0.5" title="Facilities that adapted to their context">
                                                     <GitFork className="w-3 h-3" />
-                                                    {repo.forks}
+                                                    {repo.forks} adapted
                                                 </span>
                                             </div>
                                         </div>

@@ -9,12 +9,12 @@ import {
     Bot,
     CheckCircle,
     GitMerge,
-    GitPullRequest,
     HelpCircle,
     Lightbulb,
     Megaphone,
     MessageSquare,
     User,
+    Workflow,
     XCircle
 } from 'lucide-react'
 
@@ -59,7 +59,7 @@ export function FeedPost({ post }: FeedPostProps) {
             bgColor: 'bg-red-100 dark:bg-red-900/30'
         },
         pull_request: {
-            icon: <GitPullRequest className="w-4 h-4" />,
+            icon: <Workflow className="w-4 h-4" />,
             color: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-100 dark:bg-purple-900/30'
         },
@@ -95,10 +95,10 @@ export function FeedPost({ post }: FeedPostProps) {
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${post.authorType === 'ai_agent'
-                                ? 'bg-gradient-to-br from-violet-500 to-purple-600'
-                                : post.authorType === 'system'
-                                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                                    : 'bg-gradient-to-br from-slate-400 to-slate-500'
+                            ? 'bg-gradient-to-br from-violet-500 to-purple-600'
+                            : post.authorType === 'system'
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                                : 'bg-gradient-to-br from-slate-400 to-slate-500'
                             }`}>
                             {post.authorAvatar || (post.authorType === 'ai_agent' ? '🤖' : post.authorType === 'system' ? '📢' : '👤')}
                         </div>

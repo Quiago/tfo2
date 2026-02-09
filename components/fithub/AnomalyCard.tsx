@@ -3,7 +3,10 @@
 import { useFithubStore } from '@/lib/store/fithub-store'
 import type { DetectedAnomaly } from '@/lib/types/fithub'
 import {
+    Box,
     CheckCircle,
+    Clock,
+    DollarSign,
     Search,
     Workflow,
     XCircle
@@ -14,7 +17,8 @@ interface AnomalyCardProps {
 }
 
 /**
- * AnomalyCard: Compact card for pending anomalies with approve/reject/investigate actions
+ * AnomalyCard: Industrial anomaly card with RUL, cost, and approve/reject actions
+ * "Approve" → "Approve & Create Work Order" (the game changer)
  */
 export function AnomalyCard({ anomaly }: AnomalyCardProps) {
     const { approveAnomaly, rejectAnomaly, investigateAnomaly } = useFithubStore()
@@ -45,6 +49,12 @@ export function AnomalyCard({ anomaly }: AnomalyCardProps) {
 
     const config = severityConfig[anomaly.severity] || severityConfig.medium
 
+    // Format currency
+    const formatCost = (cost: number) => {
+        if (cost >= 10000) return `€${(cost / 1000).toFixed(0)}K`
+        return `€${cost.toLocaleString()}`
+    }
+
     return (
         <div className={`border rounded-lg overflow-hidden ${config.bgColor}`}>
             <div className="p-3">
@@ -73,7 +83,34 @@ export function AnomalyCard({ anomaly }: AnomalyCardProps) {
                     {anomaly.description}
                 </p>
 
-                {/* Suggested action */}
+                {/* Critical context: RUL, Cost, 3D Link */}
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                    {/* Remaining Useful Life */}
+                    {anomaly.remainingUsefulLife && (
+                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <Clock className="w-3 h-3" />
+                            <span className="font-medium">RUL: {anomaly.remainingUsefulLife}</span>
+                        </div>
+                    )}
+
+                    {/* Estimated cost if ignored */}
+                    {anomaly.estimatedCostIfIgnored && (
+                        <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                            <DollarSign className="w-3 h-3" />
+                            <span className="font-medium">Risk: {formatCost(anomaly.estimatedCostIfIgnored)}</span>
+                        </div>
+                    )}
+
+                    {/* Link to Digital Twin */}
+                    {anomaly.digitalTwinAssetId && (
+                        <button className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline">
+                            <Box className="w-3 h-3" />
+                            <span>View in 3D</span>
+                        </button>
+                    )}
+                </div>
+
+                {/* Suggested workflow */}
                 {anomaly.suggestedWorkflowName && (
                     <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
                         <Workflow className="w-3 h-3" />
@@ -88,22 +125,22 @@ export function AnomalyCard({ anomaly }: AnomalyCardProps) {
                 <div className="flex items-center gap-2 mt-3">
                     <button
                         onClick={() => approveAnomaly(anomaly.id)}
-                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded transition"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded transition"
                     >
                         <CheckCircle className="w-3.5 h-3.5" />
-                        Approve
+                        Approve & Create Work Order
                     </button>
                     <button
                         onClick={() => rejectAnomaly(anomaly.id)}
                         className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded transition"
                     >
                         <XCircle className="w-3.5 h-3.5" />
-                        Reject
+                        Dismiss
                     </button>
                     {anomaly.status !== 'investigating' && (
                         <button
                             onClick={() => investigateAnomaly(anomaly.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition"
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition"
                         >
                             <Search className="w-3.5 h-3.5" />
                             Investigate

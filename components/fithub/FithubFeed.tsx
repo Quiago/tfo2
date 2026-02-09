@@ -6,10 +6,10 @@ import {
     AlertCircle,
     AlertTriangle,
     Filter,
-    GitPullRequest,
     HelpCircle,
     Lightbulb,
-    Megaphone
+    Megaphone,
+    Workflow
 } from 'lucide-react'
 import { AnomalyCard } from './AnomalyCard'
 import { FeedPost } from './FeedPost'
@@ -38,7 +38,7 @@ export function FithubFeed() {
         { value: 'insight', label: 'Insights', icon: <Lightbulb className="w-3.5 h-3.5" /> },
         { value: 'question', label: 'Questions', icon: <HelpCircle className="w-3.5 h-3.5" /> },
         { value: 'issue', label: 'Issues', icon: <AlertCircle className="w-3.5 h-3.5" /> },
-        { value: 'pull_request', label: 'PRs', icon: <GitPullRequest className="w-3.5 h-3.5" /> },
+        { value: 'pull_request', label: 'Workflows', icon: <Workflow className="w-3.5 h-3.5" /> },
         { value: 'announcement', label: 'News', icon: <Megaphone className="w-3.5 h-3.5" /> },
     ]
 
@@ -63,8 +63,8 @@ export function FithubFeed() {
                         <button
                             onClick={toggleAnomaliesOnly}
                             className={`ml-auto text-xs px-2 py-1 rounded ${showOnlyAnomalies
-                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
                         >
                             {showOnlyAnomalies ? 'Show all' : 'Focus'}
@@ -92,8 +92,8 @@ export function FithubFeed() {
                                 key={option.value}
                                 onClick={() => setFeedFilter(option.value)}
                                 className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-full transition ${feedFilter === option.value
-                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium'
-                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 {option.icon}

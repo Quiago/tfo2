@@ -91,6 +91,10 @@ export interface DetectedAnomaly {
     resolvedAt?: string
     resolvedBy?: string
     confidence: number        // AI confidence 0-1
+    // Industrial context fields
+    remainingUsefulLife?: string  // "72 hours", "5 days"
+    estimatedCostIfIgnored?: number  // € cost of unplanned downtime
+    digitalTwinAssetId?: string  // Link to 3D asset in digital twin
 }
 
 // ─── Changelog Entry ─────────────────────────────────────────────
@@ -116,7 +120,7 @@ export interface FithubFilters {
 }
 
 // ─── UI State Types ──────────────────────────────────────────────
-export type InputActionType = 'ask_ai' | 'create_ticket' | 'create_issue' | 'pull_request'
+export type InputActionType = 'ask_ai' | 'work_order' | 'report_issue' | 'propose_workflow'
 
 export interface FithubUIState {
     isInputExpanded: boolean
