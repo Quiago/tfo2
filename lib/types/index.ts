@@ -19,3 +19,20 @@ export type {
   TimelineState,
   TimelineMetrics,
 } from './timeline';
+
+export type {
+  NodeCategory,
+  WorkflowNodeType,
+  NodeMeta,
+  WorkflowNode,
+  WorkflowEdge,
+  SafetyCheck,
+  TargetAsset,
+  Workflow,
+  VoiceWorkflowIntent,
+  ConfirmationCard,
+  CardStatus,
+  NodeConfig,
+  StepExecutionStatus,
+  WorkflowExecution,
+} from './workflow';

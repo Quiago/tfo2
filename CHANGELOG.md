@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### Workflow Builder (`components/features/workflow-builder/`)
+- Full-featured responsive workflow builder with dual-mode interface: React Flow canvas (desktop) + sequential card view (mobile)
+- 19 industrial node types across 5 categories (triggers, conditions, inputs, actions, utility) with freemium gating via `NODE_REGISTRY`
+- Voice/text input with simulated AI intent parsing and confirmation card overlay for Speech-to-Workflow flow
+- Drag-and-drop `NodePalette` sidebar, `NodeConfigPanel` for per-type property editing, `WorkflowToolbar` with export JSON and simulated execution
+- Zustand + immer store (`lib/store/workflow-store.ts`) managing workflow CRUD, node/edge CRUD, voice state, execution state, and mode switching
+- Zod validators (`lib/validators/workflow.validators.ts`) for Workflow, WorkflowNode, WorkflowEdge, and VoiceWorkflowIntent schemas
+- Mock data (`lib/hooks/useWorkflowMockData.ts`) with two sample workflows (Vibration Diagnosis, Rack Inspection) and one voice intent (HVAC Compressor)
+- `useMediaQuery` hook (`lib/hooks/useMediaQuery.ts`) for responsive breakpoint detection
+- Playground at `/playground/workflow-builder` with preset selector (Blank, Vibration Diagnosis, Rack Inspection)
+- Documentation at `/docs/workflow-builder.md`
+
 ### Fixed
 
 #### Timeline Component

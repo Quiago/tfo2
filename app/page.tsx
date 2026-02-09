@@ -69,21 +69,44 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Placeholder for Workflow */}
-            <div className="group bg-white rounded-lg border border-slate-200 opacity-60">
+            {/* Workflow Builder */}
+            <div className="group bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:shadow-lg transition">
               <div className="p-6">
                 <div className="text-4xl mb-3">🔄</div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">
-                  Workflow Canvas
+                  Workflow Builder
                 </h3>
                 <p className="text-slate-600 text-sm mb-4">
-                  Node-based workflow builder with real-time preview. Coming in
-                  Sprint 2.
+                  Voice-first workflow builder with React Flow canvas (desktop)
+                  and sequential card view (mobile). 19 industrial node types
+                  with drag-and-drop.
                 </p>
 
-                <div className="px-4 py-2 bg-slate-100 text-slate-600 rounded font-medium inline-block text-sm">
-                  Coming Soon
+                <div className="space-y-2 mb-6 text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>19 node types across 5 categories</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>Voice/text input with AI intent parsing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>Drag-and-drop canvas + mobile card view</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">✓</span>
+                    <span>JSON export + simulated execution</span>
+                  </div>
                 </div>
+
+                <a
+                  href="/playground/workflow-builder"
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
+                >
+                  Open Playground →
+                </a>
               </div>
             </div>
 
@@ -120,7 +143,7 @@ export default function Home() {
                 </div>
 
                 <a
-                  href="/digital-twin"
+                  href="/playground/digital-twin"
                   className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
                 >
                   Open Digital Twin →

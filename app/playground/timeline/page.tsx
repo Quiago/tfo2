@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 
 const MultiLayerTimeline = dynamic(
   () =>
-    import('@/components/features/Timeline').then((m) => m.MultiLayerTimeline),
+    import('@/components/timeline/Timeline').then((m) => m.MultiLayerTimeline),
   { ssr: false }
 );
 

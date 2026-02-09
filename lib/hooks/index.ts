@@ -5,4 +5,6 @@
 
 export { useMultiLayerData } from './useMultiLayerData';
 export { useTimeline } from './useTimeline';
+export { useMediaQuery } from './useMediaQuery';
+export { useWorkflowMockData } from './useWorkflowMockData';
 

@@ -54,7 +54,7 @@ export const CameraSystem = forwardRef<CameraSystemHandle, CameraSystemProps>(
       (preset: CameraPreset) => {
         const controls = controlsRef.current
         if (!controls) return
-        controls.smoothTime = 1.6
+        controls.smoothTime = 0.5
         controls.setLookAt(
           preset.position[0],
           preset.position[1],
@@ -94,7 +94,7 @@ export const CameraSystem = forwardRef<CameraSystemHandle, CameraSystemProps>(
         // Ensure camera doesn't go below target
         newCamPos.y = Math.max(newCamPos.y, target[1] + 2)
 
-        controls.smoothTime = 1.2
+        controls.smoothTime = 0.5
         controls.setLookAt(
           newCamPos.x, newCamPos.y, newCamPos.z,
           target[0], target[1], target[2],
