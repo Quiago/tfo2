@@ -9,6 +9,7 @@ import {
   ChevronDown,
   GitBranch,
   LayoutGrid,
+  MapPin,
   Maximize2,
   Minimize2,
   Moon,
@@ -17,7 +18,7 @@ import {
   Sun,
   Workflow,
 } from 'lucide-react'
-import { useTfoStore } from '@/lib/store/tfo-store'
+import { useTfoStore, type FacilityLocation } from '@/lib/store/tfo-store'
 import type { TfoModule } from '@/lib/types/tfo'
 
 // Dynamic imports — SSR disabled for heavy components
@@ -63,8 +64,10 @@ function ModuleLoader({ label }: { label: string }) {
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 export default function TFODashboard() {
-  const { activeModule, setActiveModule, darkMode, toggleDarkMode, facilityMetrics, activeAlerts, recentWorkflows } =
+  const { activeModule, setActiveModule, darkMode, toggleDarkMode, facilityMetrics, activeAlerts, recentWorkflows, locations, activeLocationId, setActiveLocation } =
     useTfoStore()
+
+  const activeLocation = locations.find((l) => l.id === activeLocationId) ?? locations[0]
 
   const handleModuleChange = useCallback(
     (mod: TfoModule) => setActiveModule(mod),
@@ -96,6 +99,9 @@ export default function TFODashboard() {
         onModuleChange={handleModuleChange}
         darkMode={darkMode}
         onToggleDark={toggleDarkMode}
+        locations={locations}
+        activeLocation={activeLocation}
+        onLocationChange={setActiveLocation}
       />
 
       {/* ── BODY ─────────────────────────────────────────────────── */}
@@ -141,7 +147,7 @@ export default function TFODashboard() {
             {/* Zone label */}
             <div className="absolute bottom-[21%] left-3 z-20 flex items-center gap-2 rounded bg-zinc-900/80 backdrop-blur-sm px-2.5 py-1 text-[10px] text-zinc-400 pointer-events-none">
               <Box size={12} className="text-cyan-500" />
-              Digital Twin — Paint Shop Floor
+              Digital Twin — {activeLocation.name}
             </div>
             {/* Bottom Analytics — 20% height, 70% width */}
             <div className={`absolute bottom-0 left-0 w-[70%] h-[20%] z-20 border-t border-r ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
@@ -201,11 +207,17 @@ function Navbar({
   onModuleChange,
   darkMode,
   onToggleDark,
+  locations,
+  activeLocation,
+  onLocationChange,
 }: {
   activeModule: TfoModule
   onModuleChange: (mod: TfoModule) => void
   darkMode: boolean
   onToggleDark: () => void
+  locations: FacilityLocation[]
+  activeLocation: FacilityLocation
+  onLocationChange: (id: string) => void
 }) {
   return (
     <header
@@ -237,6 +249,14 @@ function Navbar({
 
         {/* Operations dropdown */}
         <OperationsDropdown darkMode={darkMode} onSelect={onModuleChange} />
+
+        {/* Location selector (AWS region-style) */}
+        <LocationSelector
+          darkMode={darkMode}
+          locations={locations}
+          activeLocation={activeLocation}
+          onSelect={onLocationChange}
+        />
 
         {/* Search */}
         <div className={`hidden md:flex items-center gap-2 rounded-md px-3 py-1.5 text-xs flex-1 max-w-xs ${
@@ -354,6 +374,86 @@ function OperationsDropdown({
   )
 }
 
+// ─── LOCATION SELECTOR (AWS Region-style) ────────────────────────────────
+function LocationSelector({
+  darkMode,
+  locations,
+  activeLocation,
+  onSelect,
+}: {
+  darkMode: boolean
+  locations: FacilityLocation[]
+  activeLocation: FacilityLocation
+  onSelect: (id: string) => void
+}) {
+  return (
+    <div className="relative group">
+      <button
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition ${
+          darkMode
+            ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        }`}
+      >
+        <MapPin size={13} className={darkMode ? 'text-cyan-400' : 'text-blue-500'} />
+        <span className="max-w-[140px] truncate">{activeLocation.name}</span>
+        <span className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+          {activeLocation.region}
+        </span>
+        <ChevronDown size={12} />
+      </button>
+
+      <div
+        className={`absolute left-0 top-full mt-1 z-50 w-80 rounded-lg border p-3 shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity ${
+          darkMode
+            ? 'bg-zinc-900 border-zinc-700'
+            : 'bg-white border-slate-200'
+        }`}
+      >
+        <p className={`text-[10px] uppercase tracking-widest font-semibold mb-2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+          Select Facility
+        </p>
+        <div className="space-y-1">
+          {locations.map((loc) => (
+            <button
+              key={loc.id}
+              onClick={() => onSelect(loc.id)}
+              className={`w-full flex items-center gap-3 rounded-md px-2.5 py-2 text-left transition ${
+                loc.id === activeLocation.id
+                  ? darkMode
+                    ? 'bg-cyan-500/10 border border-cyan-500/30'
+                    : 'bg-blue-50 border border-blue-200'
+                  : darkMode
+                    ? 'hover:bg-zinc-800 border border-transparent'
+                    : 'hover:bg-slate-50 border border-transparent'
+              }`}
+            >
+              <MapPin size={14} className={
+                loc.id === activeLocation.id
+                  ? darkMode ? 'text-cyan-400' : 'text-blue-500'
+                  : darkMode ? 'text-zinc-500' : 'text-slate-400'
+              } />
+              <div className="flex-1 min-w-0">
+                <div className={`text-xs font-medium truncate ${darkMode ? 'text-zinc-200' : 'text-slate-800'}`}>
+                  {loc.name}
+                </div>
+                <div className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                  {loc.region} · {loc.type}
+                </div>
+              </div>
+              {loc.id === activeLocation.id && (
+                <span className={`text-[10px] font-medium ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                  Active
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── RIGHT PANEL ───────────────────────────────────────────────────────────
 function RightPanel({
   darkMode,
@@ -426,19 +526,19 @@ function RightPanel({
         </div>
       </div>
 
-      {/* Energy Overview */}
+      {/* Energy Consumption */}
       <div className={`rounded-lg border p-3 ${cardBg}`}>
         <h3 className={`text-[10px] uppercase tracking-widest font-semibold mb-3 ${mutedText}`}>
-          Energy Overview
+          Energy Consumption
         </h3>
         <div className="space-y-2">
-          <EnergyBar label="Cooling" value={68} darkMode={darkMode} color="cyan" />
-          <EnergyBar label="Compute" value={82} darkMode={darkMode} color="blue" />
-          <EnergyBar label="Lighting" value={34} darkMode={darkMode} color="emerald" />
-          <EnergyBar label="HVAC" value={56} darkMode={darkMode} color="amber" />
+          <EnergyBar label="Robot Arms" value={78} darkMode={darkMode} color="cyan" />
+          <EnergyBar label="Conveyor System" value={62} darkMode={darkMode} color="blue" />
+          <EnergyBar label="Paint Booth" value={45} darkMode={darkMode} color="emerald" />
+          <EnergyBar label="Curing Oven" value={71} darkMode={darkMode} color="amber" />
         </div>
         <div className={`mt-3 pt-2 border-t flex justify-between ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-          <span className={`text-[10px] ${mutedText}`}>Total Efficiency</span>
+          <span className={`text-[10px] ${mutedText}`}>Plant Efficiency</span>
           <span className={`text-xs font-bold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
             86.4%
           </span>
@@ -569,15 +669,15 @@ function BottomAnalytics({
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span className={`text-[10px] ${bodyText}`}>3 Inspections completed</span>
+            <span className={`text-[10px] ${bodyText}`}>3 Robot calibrations done</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            <span className={`text-[10px] ${bodyText}`}>1 Alert acknowledged</span>
+            <span className={`text-[10px] ${bodyText}`}>1 Vibration alert ack'd</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-            <span className={`text-[10px] ${bodyText}`}>2 Workflows running</span>
+            <span className={`text-[10px] ${bodyText}`}>2 Maintenance workflows active</span>
           </div>
         </div>
       </div>
