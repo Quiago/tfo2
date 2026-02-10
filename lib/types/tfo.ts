@@ -5,7 +5,7 @@ export type TfoModule =
   | 'digital-twin'
   | 'timeline'
   | 'workflows'
-  | 'fithub'
+  | 'opshub'
 
 export interface TfoModuleMeta {
   id: TfoModule

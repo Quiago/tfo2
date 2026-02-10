@@ -7,7 +7,7 @@ import {
   AlertTriangle,
   Box,
   ChevronDown,
-  GitBranch,
+  LayoutDashboard,
   LayoutGrid,
   MapPin,
   Maximize2,
@@ -34,9 +34,9 @@ const WorkflowBuilder = dynamic(
   { ssr: false, loading: () => <ModuleLoader label="Workflow Builder" /> }
 )
 
-const FithubLayout = dynamic(
-  () => import('@/components/fithub').then((m) => m.FithubLayout),
-  { ssr: false, loading: () => <ModuleLoader label="Fithub" /> }
+const OpshubLayout = dynamic(
+  () => import('@/components/opshub').then((m) => m.OpshubLayout),
+  { ssr: false, loading: () => <ModuleLoader label="OpsHub" /> }
 )
 
 // ─── MODULE REGISTRY ────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ const MODULES: { id: TfoModule; label: string; icon: React.ReactNode; descriptio
   { id: 'digital-twin', label: 'Digital Twin', icon: <Box size={16} />, description: '3D facility model' },
   { id: 'timeline', label: 'Timeline', icon: <Activity size={16} />, description: 'Sensor time-series' },
   { id: 'workflows', label: 'Workflows', icon: <Workflow size={16} />, description: 'Process automation' },
-  { id: 'fithub', label: 'Fithub', icon: <GitBranch size={16} />, description: 'Cross-facility feed' },
+  { id: 'opshub', label: 'OpsHub', icon: <LayoutDashboard size={16} />, description: 'Cross-facility ops' },
 ]
 
 // ─── LOADING PLACEHOLDER ────────────────────────────────────────────────────
@@ -188,9 +188,9 @@ export default function TFODashboard() {
             <WorkflowBuilder className="h-full" />
           </div>
         )}
-        {mounted.has('fithub') && (
-          <div className={`absolute inset-0 overflow-hidden ${activeModule === 'fithub' ? 'z-20' : 'z-0 invisible pointer-events-none'}`}>
-            <FithubLayout />
+        {mounted.has('opshub') && (
+          <div className={`absolute inset-0 overflow-hidden ${activeModule === 'opshub' ? 'z-20' : 'z-0 invisible pointer-events-none'}`}>
+            <OpshubLayout />
           </div>
         )}
       </main>
@@ -583,19 +583,19 @@ function RightPanel({
         </div>
       </div>
 
-      {/* Quick Links to Fithub */}
+      {/* Quick Links to OpsHub */}
       <button
-        onClick={() => onNavigate('fithub')}
+        onClick={() => onNavigate('opshub')}
         className={`w-full flex items-center gap-3 rounded-lg border p-3 transition ${
           darkMode
             ? 'border-zinc-800 bg-zinc-900 hover:border-cyan-800 text-zinc-300'
             : 'border-slate-200 bg-white hover:border-blue-300 text-slate-700'
         }`}
       >
-        <GitBranch size={16} className={darkMode ? 'text-cyan-500' : 'text-blue-500'} />
+        <LayoutDashboard size={16} className={darkMode ? 'text-cyan-500' : 'text-blue-500'} />
         <div className="text-left">
-          <div className="text-xs font-medium">Fithub Feed</div>
-          <div className={`text-[10px] ${mutedText}`}>Cross-facility insights & anomalies</div>
+          <div className="text-xs font-medium">OpsHub</div>
+          <div className={`text-[10px] ${mutedText}`}>Cross-facility ops & work orders</div>
         </div>
       </button>
     </>

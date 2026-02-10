@@ -1,7 +1,7 @@
 'use client'
 
-import { useFithubStore } from '@/lib/store/fithub-store'
-import type { InputActionType, PostType } from '@/lib/types/fithub'
+import { useOpshubStore } from '@/lib/store/opshub-store'
+import type { InputActionType, PostType } from '@/lib/types/opshub'
 import {
     AlertCircle,
     ClipboardList,
@@ -12,23 +12,18 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-/**
- * FithubInput: Input bar with industrial action buttons
- * Ask AI | Work Order | Report Issue | Propose Workflow
- */
-export function FithubInput() {
+export function OpshubInput() {
     const {
         activeInputAction,
         setActiveInputAction,
         createPost,
         factories,
         selectedFactoryId,
-    } = useFithubStore()
+    } = useOpshubStore()
 
     const [inputValue, setInputValue] = useState('')
     const [title, setTitle] = useState('')
 
-    // Action buttons config - Industrial language
     const actions: { type: InputActionType; label: string; icon: React.ReactNode; postType: PostType }[] = [
         { type: 'ask_ai', label: 'Ask AI', icon: <Sparkles className="w-4 h-4" />, postType: 'question' },
         { type: 'work_order', label: 'Work Order', icon: <ClipboardList className="w-4 h-4" />, postType: 'insight' },
@@ -60,8 +55,8 @@ export function FithubInput() {
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
-            {/* Collapsed state - simple input */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            {/* Collapsed state */}
             {!activeInputAction && (
                 <div className="p-3">
                     <div className="flex items-center gap-2">
@@ -71,17 +66,17 @@ export function FithubInput() {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onFocus={() => setActiveInputAction('ask_ai')}
-                            className="flex-1 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                            className="flex-1 px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 placeholder:text-zinc-500"
                         />
                     </div>
 
                     {/* Action buttons row */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-800">
                         {actions.map(action => (
                             <button
                                 key={action.type}
                                 onClick={() => setActiveInputAction(action.type)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-400 bg-zinc-800 hover:bg-zinc-700 hover:text-zinc-200 rounded-md transition"
                             >
                                 {action.icon}
                                 {action.label}
@@ -91,12 +86,12 @@ export function FithubInput() {
                 </div>
             )}
 
-            {/* Expanded state - full form */}
+            {/* Expanded state */}
             {activeInputAction && (
                 <div className="p-4">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
                             {activeAction?.icon}
                             <span>
                                 {activeAction?.type === 'ask_ai' && 'Ask the AI Assistant'}
@@ -111,7 +106,7 @@ export function FithubInput() {
                                 setInputValue('')
                                 setTitle('')
                             }}
-                            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                            className="p-1 text-zinc-500 hover:text-zinc-300 transition"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -127,7 +122,7 @@ export function FithubInput() {
                         }
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 mb-2"
+                        className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 placeholder:text-zinc-500 mb-2"
                     />
 
                     {/* Content textarea */}
@@ -144,7 +139,7 @@ export function FithubInput() {
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         rows={4}
-                        className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 resize-none"
+                        className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 placeholder:text-zinc-500 resize-none"
                     />
 
                     {/* Submit row */}
@@ -155,8 +150,8 @@ export function FithubInput() {
                                     key={action.type}
                                     onClick={() => setActiveInputAction(action.type)}
                                     className={`p-2 rounded-md transition ${activeInputAction === action.type
-                                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                                            : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                            ? 'bg-cyan-900/30 text-cyan-400'
+                                            : 'text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
                                         }`}
                                 >
                                     {action.icon}
@@ -167,7 +162,7 @@ export function FithubInput() {
                         <button
                             onClick={handleSubmit}
                             disabled={!inputValue.trim()}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-md transition"
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed rounded-md transition"
                         >
                             <Send className="w-4 h-4" />
                             {activeAction?.type === 'ask_ai' ? 'Ask' :

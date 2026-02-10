@@ -13,6 +13,9 @@ const LOCATIONS: FacilityLocation[] = [
   { id: 'det-01', name: 'Detroit Assembly', region: 'US-East', type: 'Automotive' },
   { id: 'shz-01', name: 'Shenzhen Electronics', region: 'AP-East', type: 'Manufacturing' },
   { id: 'cdmx-01', name: 'CDMX Stamping Plant', region: 'LATAM', type: 'Automotive' },
+  { id: 'ryd-01', name: 'Riyadh Cooling Systems', region: 'ME-Central', type: 'HVAC/Datacenter' },
+  { id: 'tky-01', name: 'Tokyo Innovation Lab', region: 'AP-East', type: 'R&D' },
+  { id: 'gru-01', name: 'São Paulo Hub', region: 'LATAM-South', type: 'Manufacturing' },
 ]
 
 // Per-location mock data
@@ -91,6 +94,55 @@ const FACILITY_DATA: Record<string, {
       { id: 'w1', name: 'Emergency Seal Replacement', status: 'running', timeAgo: '1m ago' },
       { id: 'w2', name: 'Die Inspection', status: 'running', timeAgo: '10m ago' },
       { id: 'w3', name: 'Tonnage Calibration', status: 'completed', timeAgo: '1h ago' },
+    ],
+  },
+  'ryd-01': {
+    metrics: [
+      { label: 'OEE', value: '88.7', unit: '%', status: 'normal' },
+      { label: 'Cooling Eff.', value: '94.2', unit: '%', status: 'normal' },
+      { label: 'Chillers Online', value: '12/12', status: 'normal' },
+      { label: 'Ambient Temp', value: '44', unit: 'C', status: 'warning' },
+      { label: 'PUE', value: '1.28', status: 'normal' },
+      { label: 'Uptime', value: '99.6', unit: '%', status: 'normal' },
+    ],
+    alerts: [
+      { id: 'a1', zone: 'Hall B', sensor: 'Temperature', severity: 'warning', message: 'CRAH unit B-3 supply temp rising (+2.1C)', timeAgo: '6m ago' },
+    ],
+    workflows: [
+      { id: 'w1', name: 'Chiller Optimization Cycle', status: 'running', timeAgo: '3m ago' },
+      { id: 'w2', name: 'Filter Replacement — AHU-7', status: 'completed', timeAgo: '45m ago' },
+    ],
+  },
+  'tky-01': {
+    metrics: [
+      { label: 'OEE', value: '96.1', unit: '%', status: 'normal' },
+      { label: 'Cycle Time', value: '8.4', unit: 's', status: 'normal' },
+      { label: 'Lines Online', value: '6/6', status: 'normal' },
+      { label: 'Clean Room', value: '21.5', unit: 'C', status: 'normal' },
+      { label: 'Yield', value: '99.4', unit: '%', status: 'normal' },
+      { label: 'Uptime', value: '99.9', unit: '%', status: 'normal' },
+    ],
+    alerts: [],
+    workflows: [
+      { id: 'w1', name: 'Predictive Maintenance Scan', status: 'completed', timeAgo: '8m ago' },
+      { id: 'w2', name: 'Energy Forecast Update', status: 'completed', timeAgo: '1h ago' },
+    ],
+  },
+  'gru-01': {
+    metrics: [
+      { label: 'OEE', value: '85.3', unit: '%', status: 'normal' },
+      { label: 'Cycle Time', value: '34.1', unit: 's', status: 'normal' },
+      { label: 'Machines Online', value: '9/10', status: 'warning' },
+      { label: 'Humidity', value: '62', unit: '%', status: 'normal' },
+      { label: 'Air Quality', value: '92', unit: 'AQI', status: 'normal' },
+      { label: 'Uptime', value: '96.8', unit: '%', status: 'normal' },
+    ],
+    alerts: [
+      { id: 'a1', zone: 'Line 4', sensor: 'Humidity', severity: 'warning', message: 'Humidity sensor drift detected in Zone C', timeAgo: '12m ago' },
+    ],
+    workflows: [
+      { id: 'w1', name: 'Humidity Calibration Check', status: 'running', timeAgo: '5m ago' },
+      { id: 'w2', name: 'Shift Handover', status: 'completed', timeAgo: '30m ago' },
     ],
   },
 }

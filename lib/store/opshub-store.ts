@@ -1,74 +1,128 @@
 import type {
+    ActivityEntry,
+    AIAgentRecommendation,
     ChangelogEntry,
+    CrossFacilityPackage,
     DetectedAnomaly,
+    DiscussionComment,
+    ExecutionChecklist,
     Factory,
     FeedFilter,
-    FithubPost,
     InputActionType,
-    WorkflowRepo
-} from '@/lib/types/fithub'
+    OpshubPost,
+    OpshubTab,
+    OpshubViewMode,
+    TeamMember,
+    WorkflowRepo,
+    WorkOrderCard,
+    WorkOrderInnerTab,
+    WorkOrderTask,
+} from '@/lib/types/opshub'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 // ─── Store Shape ─────────────────────────────────────────────────
-interface FithubState {
-    // Data
+interface OpshubState {
+    // Data (existing)
     factories: Factory[]
     workflowRepos: WorkflowRepo[]
-    feed: FithubPost[]
+    feed: OpshubPost[]
     anomalies: DetectedAnomaly[]
     changelog: ChangelogEntry[]
 
-    // Filters
+    // Data (new — WAM)
+    workOrders: WorkOrderCard[]
+    activityEntries: ActivityEntry[]
+    discussionComments: DiscussionComment[]
+    executionChecklists: ExecutionChecklist[]
+    aiRecommendations: AIAgentRecommendation[]
+    crossFacilityPackages: CrossFacilityPackage[]
+
+    // Navigation
+    activeTab: OpshubTab
+    viewMode: OpshubViewMode
+    selectedWorkOrderId: string | null
+    selectedInnerTab: WorkOrderInnerTab
+
+    // User / Demo
+    currentUser: TeamMember | null
+    demoUserIndex: number
+    currency: 'EUR' | 'SAR'
+
+    // Filters (existing)
     selectedFactoryId: string | null
     feedFilter: FeedFilter
     searchQuery: string
     showOnlyAnomalies: boolean
 
-    // UI State
+    // UI State (existing)
     isInputExpanded: boolean
     activeInputAction: InputActionType | null
     isCreatingPost: boolean
     selectedPostId: string | null
     selectedAnomalyId: string | null
 
-    // Data Actions
+    // ── Data Setters (existing) ─────────────────────
     setFactories: (factories: Factory[]) => void
     setWorkflowRepos: (repos: WorkflowRepo[]) => void
-    setFeed: (posts: FithubPost[]) => void
+    setFeed: (posts: OpshubPost[]) => void
     setAnomalies: (anomalies: DetectedAnomaly[]) => void
     setChangelog: (entries: ChangelogEntry[]) => void
 
-    // Anomaly Actions
+    // ── Data Setters (new — WAM) ────────────────────
+    setWorkOrders: (workOrders: WorkOrderCard[]) => void
+    setActivityEntries: (entries: ActivityEntry[]) => void
+    setDiscussionComments: (comments: DiscussionComment[]) => void
+    setExecutionChecklists: (checklists: ExecutionChecklist[]) => void
+    setAIRecommendations: (recs: AIAgentRecommendation[]) => void
+    setCrossFacilityPackages: (pkgs: CrossFacilityPackage[]) => void
+
+    // ── Navigation Setters ──────────────────────────
+    setActiveTab: (tab: OpshubTab) => void
+    setViewMode: (mode: OpshubViewMode) => void
+    setSelectedWorkOrderId: (id: string | null) => void
+    setSelectedInnerTab: (tab: WorkOrderInnerTab) => void
+    setCurrency: (currency: 'EUR' | 'SAR') => void
+
+    // ── User / Demo ─────────────────────────────────
+    setCurrentUser: (user: TeamMember | null) => void
+    setDemoUser: (index: number) => void
+
+    // ── Anomaly Actions (existing) ──────────────────
     approveAnomaly: (id: string) => void
     rejectAnomaly: (id: string) => void
     investigateAnomaly: (id: string) => void
 
-    // Post Actions
-    createPost: (post: Omit<FithubPost, 'id' | 'createdAt' | 'upvotes' | 'comments'>) => void
+    // ── Post Actions (existing) ─────────────────────
+    createPost: (post: Omit<OpshubPost, 'id' | 'createdAt' | 'upvotes' | 'comments'>) => void
     upvotePost: (id: string) => void
 
-    // Workflow Actions
+    // ── Workflow Actions (existing) ─────────────────
     starWorkflow: (repoId: string) => void
     forkWorkflow: (repoId: string, targetFactoryId: string) => void
 
-    // Filter Actions
+    // ── Filter Actions (existing) ───────────────────
     setSelectedFactory: (factoryId: string | null) => void
     setFeedFilter: (filter: FeedFilter) => void
     setSearchQuery: (query: string) => void
     toggleAnomaliesOnly: () => void
 
-    // UI Actions
+    // ── UI Actions (existing) ───────────────────────
     setInputExpanded: (expanded: boolean) => void
     setActiveInputAction: (action: InputActionType | null) => void
     setCreatingPost: (creating: boolean) => void
     selectPost: (id: string | null) => void
     selectAnomaly: (id: string | null) => void
 
-    // Computed selectors
-    getFilteredFeed: () => FithubPost[]
+    // ── Computed selectors (existing) ───────────────
+    getFilteredFeed: () => OpshubPost[]
     getFilteredRepos: () => WorkflowRepo[]
     getPendingAnomalies: () => DetectedAnomaly[]
+
+    // ── Computed selectors (new — WAM) ──────────────
+    getMyTasks: () => WorkOrderTask[]
+    getWorkOrderById: (id: string) => WorkOrderCard | undefined
+    getLatestWorkOrders: () => WorkOrderCard[]
 }
 
 // ─── ID Generator ────────────────────────────────────────────────
@@ -76,9 +130,9 @@ let counter = 0
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${++counter}`
 
 // ─── Store ───────────────────────────────────────────────────────
-export const useFithubStore = create<FithubState>()(
+export const useOpshubStore = create<OpshubState>()(
     immer((set, get) => ({
-        // Initial state
+        // Initial state (existing)
         factories: [],
         workflowRepos: [],
         feed: [],
@@ -94,30 +148,62 @@ export const useFithubStore = create<FithubState>()(
         selectedPostId: null,
         selectedAnomalyId: null,
 
-        // ── Data Setters ─────────────────────────────
+        // Initial state (new — WAM)
+        workOrders: [],
+        activityEntries: [],
+        discussionComments: [],
+        executionChecklists: [],
+        aiRecommendations: [],
+        crossFacilityPackages: [],
+        activeTab: 'home',
+        viewMode: 'executive',
+        selectedWorkOrderId: null,
+        selectedInnerTab: 'overview',
+        currentUser: null,
+        demoUserIndex: 0,
+        currency: 'EUR',
+
+        // ── Data Setters (existing) ─────────────────────
         setFactories: (factories) => set((state) => { state.factories = factories }),
         setWorkflowRepos: (repos) => set((state) => { state.workflowRepos = repos }),
         setFeed: (posts) => set((state) => { state.feed = posts }),
         setAnomalies: (anomalies) => set((state) => { state.anomalies = anomalies }),
         setChangelog: (entries) => set((state) => { state.changelog = entries }),
 
-        // ── Anomaly Actions ──────────────────────────
+        // ── Data Setters (new — WAM) ────────────────────
+        setWorkOrders: (workOrders) => set((state) => { state.workOrders = workOrders }),
+        setActivityEntries: (entries) => set((state) => { state.activityEntries = entries }),
+        setDiscussionComments: (comments) => set((state) => { state.discussionComments = comments }),
+        setExecutionChecklists: (checklists) => set((state) => { state.executionChecklists = checklists }),
+        setAIRecommendations: (recs) => set((state) => { state.aiRecommendations = recs }),
+        setCrossFacilityPackages: (pkgs) => set((state) => { state.crossFacilityPackages = pkgs }),
+
+        // ── Navigation Setters ──────────────────────────
+        setActiveTab: (tab) => set((state) => { state.activeTab = tab }),
+        setViewMode: (mode) => set((state) => { state.viewMode = mode }),
+        setSelectedWorkOrderId: (id) => set((state) => { state.selectedWorkOrderId = id }),
+        setSelectedInnerTab: (tab) => set((state) => { state.selectedInnerTab = tab }),
+        setCurrency: (currency) => set((state) => { state.currency = currency }),
+
+        // ── User / Demo ─────────────────────────────────
+        setCurrentUser: (user) => set((state) => { state.currentUser = user }),
+        setDemoUser: (index) => set((state) => { state.demoUserIndex = index }),
+
+        // ── Anomaly Actions (existing) ──────────────────
         approveAnomaly: (id) => set((state) => {
             const anomaly = state.anomalies.find(a => a.id === id)
             if (!anomaly) return
 
-            // Update anomaly status
             anomaly.status = 'resolved'
             anomaly.resolvedAt = new Date().toISOString()
 
-            // Create a feed post about the resolution
-            const newPost: FithubPost = {
+            const newPost: OpshubPost = {
                 id: generateId('post'),
                 type: 'insight',
                 authorType: 'system',
                 authorId: anomaly.factoryId,
                 authorName: anomaly.factoryName,
-                title: `✅ Anomaly resolved: ${anomaly.equipmentName}`,
+                title: `Anomaly resolved: ${anomaly.equipmentName}`,
                 content: `The ${anomaly.severity} severity anomaly on **${anomaly.equipmentName}** has been approved and resolved.\n\n**Original issue:** ${anomaly.description}\n\n**Applied workflow:** ${anomaly.suggestedWorkflowName || 'Manual resolution'}`,
                 anomalyRef: anomaly.id,
                 workflowRepoRef: anomaly.suggestedWorkflowId,
@@ -144,9 +230,9 @@ export const useFithubStore = create<FithubState>()(
             }
         }),
 
-        // ── Post Actions ─────────────────────────────
+        // ── Post Actions (existing) ─────────────────────
         createPost: (postData) => set((state) => {
-            const newPost: FithubPost = {
+            const newPost: OpshubPost = {
                 ...postData,
                 id: generateId('post'),
                 createdAt: new Date().toISOString(),
@@ -165,7 +251,7 @@ export const useFithubStore = create<FithubState>()(
             }
         }),
 
-        // ── Workflow Actions ─────────────────────────
+        // ── Workflow Actions (existing) ─────────────────
         starWorkflow: (repoId) => set((state) => {
             const repo = state.workflowRepos.find(r => r.id === repoId)
             if (repo) {
@@ -178,10 +264,8 @@ export const useFithubStore = create<FithubState>()(
             const targetFactory = state.factories.find(f => f.id === targetFactoryId)
             if (!sourceRepo || !targetFactory) return
 
-            // Increment fork count
             sourceRepo.forks++
 
-            // Create forked repo
             const forkedRepo: WorkflowRepo = {
                 ...sourceRepo,
                 id: generateId('repo'),
@@ -194,15 +278,14 @@ export const useFithubStore = create<FithubState>()(
             }
             state.workflowRepos.push(forkedRepo)
 
-            // Create feed post about the fork
             const sourceFactory = state.factories.find(f => f.id === sourceRepo.factoryId)
-            const newPost: FithubPost = {
+            const newPost: OpshubPost = {
                 id: generateId('post'),
                 type: 'pull_request',
                 authorType: 'human',
                 authorId: targetFactoryId,
                 authorName: targetFactory.displayName,
-                title: `🔀 Forked: ${sourceRepo.name}`,
+                title: `Forked: ${sourceRepo.name}`,
                 content: `**${targetFactory.displayName}** forked workflow **${sourceRepo.name}** from **${sourceFactory?.displayName || 'unknown'}** for cross-facility learning.`,
                 workflowRepoRef: forkedRepo.id,
                 tags: sourceRepo.tags,
@@ -216,7 +299,7 @@ export const useFithubStore = create<FithubState>()(
             state.feed.unshift(newPost)
         }),
 
-        // ── Filter Actions ───────────────────────────
+        // ── Filter Actions (existing) ───────────────────
         setSelectedFactory: (factoryId) => set((state) => {
             state.selectedFactoryId = factoryId
         }),
@@ -226,7 +309,7 @@ export const useFithubStore = create<FithubState>()(
             state.showOnlyAnomalies = !state.showOnlyAnomalies
         }),
 
-        // ── UI Actions ───────────────────────────────
+        // ── UI Actions (existing) ───────────────────────
         setInputExpanded: (expanded) => set((state) => { state.isInputExpanded = expanded }),
         setActiveInputAction: (action) => set((state) => {
             state.activeInputAction = action
@@ -236,27 +319,20 @@ export const useFithubStore = create<FithubState>()(
         selectPost: (id) => set((state) => { state.selectedPostId = id }),
         selectAnomaly: (id) => set((state) => { state.selectedAnomalyId = id }),
 
-        // ── Computed Selectors ───────────────────────
+        // ── Computed Selectors (existing) ───────────────
         getFilteredFeed: () => {
-            const { feed, feedFilter, selectedFactoryId, searchQuery, showOnlyAnomalies } = get()
+            const { feed, feedFilter, searchQuery, showOnlyAnomalies } = get()
             let filtered = [...feed]
 
-            // Filter by factory
-            if (selectedFactoryId) {
-                filtered = filtered.filter(p => p.authorId === selectedFactoryId)
-            }
+            // Note: We don't filter by selectedFactoryId here - the feed shows all posts from all factories
+            // The factory selector only filters work orders and risk data
 
-            // Filter by type
             if (feedFilter !== 'all') {
                 filtered = filtered.filter(p => p.type === feedFilter)
             }
-
-            // Filter anomalies only
             if (showOnlyAnomalies) {
                 filtered = filtered.filter(p => p.type === 'anomaly_alert' || p.anomalyRef)
             }
-
-            // Filter by search
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase()
                 filtered = filtered.filter(p =>
@@ -265,7 +341,6 @@ export const useFithubStore = create<FithubState>()(
                     p.tags.some(t => t.toLowerCase().includes(q))
                 )
             }
-
             return filtered
         },
 
@@ -273,12 +348,9 @@ export const useFithubStore = create<FithubState>()(
             const { workflowRepos, selectedFactoryId, searchQuery } = get()
             let filtered = [...workflowRepos]
 
-            // Filter by factory
             if (selectedFactoryId) {
                 filtered = filtered.filter(r => r.factoryId === selectedFactoryId)
             }
-
-            // Filter by search
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase()
                 filtered = filtered.filter(r =>
@@ -287,7 +359,6 @@ export const useFithubStore = create<FithubState>()(
                     r.tags.some(t => t.toLowerCase().includes(q))
                 )
             }
-
             return filtered
         },
 
@@ -303,6 +374,37 @@ export const useFithubStore = create<FithubState>()(
                 const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
                 return severityOrder[a.severity] - severityOrder[b.severity]
             })
+        },
+
+        // ── Computed Selectors (new — WAM) ──────────────
+        getMyTasks: () => {
+            const { workOrders, currentUser } = get()
+            if (!currentUser) return []
+            return workOrders.flatMap(wo =>
+                wo.tasks.filter(t => t.assignee.id === currentUser.id)
+            )
+        },
+
+        getWorkOrderById: (id: string) => {
+            return get().workOrders.find(wo => wo.id === id)
+        },
+
+        getLatestWorkOrders: () => {
+            const { workOrders, selectedFactoryId } = get()
+            let filtered = [...workOrders]
+
+            // Filter by selected factory
+            if (selectedFactoryId) {
+                const selectedFactory = get().factories.find(f => f.id === selectedFactoryId)
+                if (selectedFactory) {
+                    filtered = filtered.filter(wo => wo.facility === selectedFactory.displayName)
+                }
+            }
+
+            // Sort by creation date (newest first) and take top 10
+            return filtered
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 10)
         },
     }))
 )

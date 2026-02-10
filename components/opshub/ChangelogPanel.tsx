@@ -1,6 +1,6 @@
 'use client'
 
-import { useFithubStore } from '@/lib/store/fithub-store'
+import { useOpshubStore } from '@/lib/store/opshub-store'
 import {
     AlertTriangle,
     ExternalLink,
@@ -10,7 +10,6 @@ import {
     Wrench
 } from 'lucide-react'
 
-// Time ago formatter
 function formatDate(dateString: string): string {
     const date = new Date(dateString)
     const now = new Date()
@@ -22,14 +21,9 @@ function formatDate(dateString: string): string {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-/**
- * ChangelogPanel: Right sidebar showing latest updates
- * GitHub-style timeline with dots and entries
- */
 export function ChangelogPanel() {
-    const { changelog } = useFithubStore()
+    const { changelog } = useOpshubStore()
 
-    // Type icons
     const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
         release: { icon: <Rocket className="w-3 h-3" />, color: 'bg-emerald-500' },
         insight: { icon: <Lightbulb className="w-3 h-3" />, color: 'bg-amber-500' },
@@ -41,8 +35,8 @@ export function ChangelogPanel() {
     return (
         <div className="h-full flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <div className="p-4 border-b border-zinc-800">
+                <h2 className="text-sm font-semibold text-zinc-200">
                     Latest from our changelog
                 </h2>
             </div>
@@ -51,27 +45,27 @@ export function ChangelogPanel() {
             <div className="flex-1 overflow-y-auto p-4">
                 <div className="relative">
                     {/* Timeline line */}
-                    <div className="absolute left-1.5 top-2 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
+                    <div className="absolute left-1.5 top-2 bottom-0 w-px bg-zinc-800" />
 
                     {/* Entries */}
                     <ul className="space-y-4">
-                        {changelog.map((entry, index) => {
+                        {changelog.map((entry) => {
                             const config = typeConfig[entry.type] || typeConfig.improvement
                             return (
                                 <li key={entry.id} className="relative pl-6">
                                     {/* Timeline dot */}
-                                    <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full ${config.color} ring-2 ring-white dark:ring-slate-900`} />
+                                    <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full ${config.color} ring-2 ring-zinc-950`} />
 
                                     {/* Content */}
                                     <div className="group">
-                                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                                        <p className="text-[10px] text-zinc-500">
                                             {formatDate(entry.date)}
                                         </p>
-                                        <p className="mt-0.5 text-sm text-slate-700 dark:text-slate-300 font-medium line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 cursor-pointer transition">
+                                        <p className="mt-0.5 text-sm text-zinc-300 font-medium line-clamp-2 group-hover:text-cyan-400 cursor-pointer transition">
                                             {entry.title}
                                         </p>
                                         {entry.factoryName && (
-                                            <p className="mt-0.5 text-xs text-slate-400">
+                                            <p className="mt-0.5 text-[10px] text-zinc-500">
                                                 {entry.factoryName}
                                             </p>
                                         )}
@@ -84,12 +78,12 @@ export function ChangelogPanel() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="p-4 border-t border-zinc-800">
                 <a
                     href="#"
-                    className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition"
                 >
-                    View changelog
+                    View activity log
                     <ExternalLink className="w-3 h-3" />
                 </a>
             </div>

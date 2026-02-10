@@ -1,7 +1,7 @@
 'use client'
 
-import { useFithubStore } from '@/lib/store/fithub-store'
-import type { FeedFilter } from '@/lib/types/fithub'
+import { useOpshubStore } from '@/lib/store/opshub-store'
+import type { FeedFilter } from '@/lib/types/opshub'
 import {
     AlertCircle,
     AlertTriangle,
@@ -13,13 +13,9 @@ import {
 } from 'lucide-react'
 import { AnomalyCard } from './AnomalyCard'
 import { FeedPost } from './FeedPost'
-import { FithubInput } from './FithubInput'
+import { OpshubInput } from './OpshubInput'
 
-/**
- * FithubFeed: Main feed area with input bar and posts
- * Reddit/StackOverflow style with filtering
- */
-export function FithubFeed() {
+export function OpshubFeed() {
     const {
         feedFilter,
         setFeedFilter,
@@ -27,12 +23,11 @@ export function FithubFeed() {
         getPendingAnomalies,
         showOnlyAnomalies,
         toggleAnomaliesOnly,
-    } = useFithubStore()
+    } = useOpshubStore()
 
     const filteredFeed = getFilteredFeed()
     const pendingAnomalies = getPendingAnomalies()
 
-    // Filter options
     const filterOptions: { value: FeedFilter; label: string; icon: React.ReactNode }[] = [
         { value: 'all', label: 'All', icon: null },
         { value: 'insight', label: 'Insights', icon: <Lightbulb className="w-3.5 h-3.5" /> },
@@ -43,28 +38,23 @@ export function FithubFeed() {
     ]
 
     return (
-        <div className="max-w-3xl mx-auto py-6 px-4">
-            {/* Header */}
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">
-                Home
-            </h1>
-
+        <div className="w-full">
             {/* Input Box */}
-            <FithubInput />
+            <OpshubInput />
 
             {/* Pending Anomalies Section */}
             {pendingAnomalies.length > 0 && (
                 <div className="mt-6 mb-4">
                     <div className="flex items-center gap-2 mb-3">
                         <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        <h2 className="text-sm font-semibold text-zinc-300">
                             Pending Anomalies ({pendingAnomalies.length})
                         </h2>
                         <button
                             onClick={toggleAnomaliesOnly}
-                            className={`ml-auto text-xs px-2 py-1 rounded ${showOnlyAnomalies
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            className={`ml-auto text-xs px-2 py-1 rounded transition ${showOnlyAnomalies
+                                ? 'bg-amber-900/30 text-amber-400'
+                                : 'text-zinc-500 hover:bg-zinc-800'
                                 }`}
                         >
                             {showOnlyAnomalies ? 'Show all' : 'Focus'}
@@ -81,19 +71,19 @@ export function FithubFeed() {
             {/* Feed Section */}
             <div className="mt-6">
                 {/* Filter Bar */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-800">
+                    <span className="text-sm font-medium text-zinc-300">
                         Feed
                     </span>
                     <div className="flex items-center gap-1">
-                        <Filter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+                        <Filter className="w-3.5 h-3.5 text-zinc-500 mr-1" />
                         {filterOptions.map(option => (
                             <button
                                 key={option.value}
                                 onClick={() => setFeedFilter(option.value)}
                                 className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-full transition ${feedFilter === option.value
-                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    ? 'bg-cyan-900/40 text-cyan-400 font-medium'
+                                    : 'text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
                                     }`}
                             >
                                 {option.icon}
@@ -106,12 +96,12 @@ export function FithubFeed() {
                 {/* Posts */}
                 {filteredFeed.length === 0 ? (
                     <div className="py-12 text-center">
-                        <p className="text-slate-400 dark:text-slate-500">
+                        <p className="text-zinc-500">
                             No posts match your filters
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {filteredFeed.map(post => (
                             <FeedPost key={post.id} post={post} />
                         ))}
