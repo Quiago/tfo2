@@ -2,20 +2,19 @@
 
 import {
     ArrowLeft,
-    ClipboardList,
     FileText,
     History,
     LayoutList,
     MessageSquare,
-    Workflow,
+    Workflow
 } from 'lucide-react'
 import { useState } from 'react'
+import { WorkOrderActivity } from './WorkOrderActivity'
+import { WorkOrderDiscussion } from './WorkOrderDiscussion'
 import { WorkOrderOverview } from './WorkOrderOverview'
 import { WorkOrderTasks } from './WorkOrderTasks'
-import { WorkOrderWorkflows } from './WorkOrderWorkflows'
-import { WorkOrderDiscussion } from './WorkOrderDiscussion'
-import { WorkOrderActivity } from './WorkOrderActivity'
 import { WorkOrderTeamSidebar, type TeamMember } from './WorkOrderTeamSidebar'
+import { WorkOrderWorkflows } from './WorkOrderWorkflows'
 
 // TODO: import from opshub types when available
 type WorkOrderInnerTab = 'overview' | 'tasks' | 'workflows' | 'discussion' | 'activity'
@@ -68,9 +67,16 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
                 <button onClick={onBack} className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition">
                     <ArrowLeft className="w-4 h-4" />
                 </button>
-                <ClipboardList className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-mono text-zinc-500">WO-4821</span>
-                <h1 className="text-sm font-semibold text-zinc-100">Motor A7 Bearing Replacement — Line 3</h1>
+                <div className="flex flex-col gap-0.5">
+                    <h1 className="text-sm font-semibold text-zinc-100">Motor A7 Bearing Replacement — Line 3</h1>
+                    <div className="flex items-center gap-2 text-xs font-mono">
+                        <span className="text-zinc-500">WO-4821</span>
+                        <span className="text-zinc-600">-</span>
+                        <span className="text-cyan-400 font-medium">in_progress</span>
+                        <span className="text-zinc-600">-</span>
+                        <span className="text-red-400 font-medium">critical</span>
+                    </div>
+                </div>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -80,11 +86,10 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
                         <button
                             key={tab.id}
                             onClick={() => setInnerTab(tab.id)}
-                            className={`flex items-center gap-2 w-full px-4 py-2 text-sm transition ${
-                                innerTab === tab.id
+                            className={`flex items-center gap-2 w-full px-4 py-2 text-sm transition ${innerTab === tab.id
                                     ? 'text-cyan-400 bg-cyan-950/30 border-r-2 border-cyan-500'
                                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
-                            }`}
+                                }`}
                         >
                             {tab.icon}
                             {tab.label}

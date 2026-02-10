@@ -7,14 +7,11 @@ import {
     AlertTriangle,
     ArrowUp,
     Bot,
-    CheckCircle,
-    GitMerge,
     HelpCircle,
     Lightbulb,
     Megaphone,
     MessageSquare,
-    Workflow,
-    XCircle
+    Workflow
 } from 'lucide-react'
 
 function timeAgo(dateString: string): string {
@@ -35,43 +32,40 @@ interface FeedPostProps {
 export function FeedPost({ post }: FeedPostProps) {
     const { upvotePost } = useOpshubStore()
 
-    const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
+    const typeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
         insight: {
             icon: <Lightbulb className="w-3.5 h-3.5" />,
-            color: 'text-amber-400',
+            color: 'text-zinc-500',
+            label: 'Insight'
         },
         question: {
             icon: <HelpCircle className="w-3.5 h-3.5" />,
-            color: 'text-cyan-400',
+            color: 'text-zinc-500',
+            label: 'Question'
         },
         issue: {
             icon: <AlertCircle className="w-3.5 h-3.5" />,
-            color: 'text-red-400',
+            color: 'text-zinc-500',
+            label: 'Issue'
         },
         pull_request: {
             icon: <Workflow className="w-3.5 h-3.5" />,
-            color: 'text-purple-400',
+            color: 'text-zinc-500',
+            label: 'Workflow'
         },
         announcement: {
             icon: <Megaphone className="w-3.5 h-3.5" />,
-            color: 'text-emerald-400',
+            color: 'text-zinc-500',
+            label: 'News'
         },
         anomaly_alert: {
             icon: <AlertTriangle className="w-3.5 h-3.5" />,
             color: 'text-orange-400',
+            label: 'Alert'
         },
     }
 
-    const statusConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-        open: { icon: <AlertCircle className="w-3 h-3" />, color: 'text-emerald-400', label: 'Open' },
-        resolved: { icon: <CheckCircle className="w-3 h-3" />, color: 'text-purple-400', label: 'Resolved' },
-        merged: { icon: <GitMerge className="w-3 h-3" />, color: 'text-purple-400', label: 'Merged' },
-        rejected: { icon: <XCircle className="w-3 h-3" />, color: 'text-red-400', label: 'Rejected' },
-        pending: { icon: <AlertTriangle className="w-3 h-3" />, color: 'text-amber-400', label: 'Pending' },
-    }
-
     const config = typeConfig[post.type] || typeConfig.insight
-    const status = post.status ? statusConfig[post.status] : null
 
     // Generate initials from author name
     const initials = post.authorName
@@ -82,92 +76,84 @@ export function FeedPost({ post }: FeedPostProps) {
         .toUpperCase()
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition">
-            <div className="p-4">
-                <div className="flex items-start gap-3">
-                    {/* Avatar — initials, no emojis */}
-                    <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            post.authorType === 'ai_agent'
-                                ? 'bg-purple-900/50 text-purple-400'
-                                : post.authorType === 'system'
-                                    ? 'bg-emerald-900/50 text-emerald-400'
-                                    : 'bg-zinc-800 text-zinc-400'
+        <div className="group border-b border-zinc-800/50 py-4 first:pt-0 last:border-0 hover:bg-zinc-900/30 transition-colors -mx-2 px-2 rounded-md">
+            <div className="flex items-start gap-3">
+                {/* Avatar */}
+                <div className="flex-shrink-0 mt-0.5">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-zinc-950 ${post.authorType === 'ai_agent'
+                            ? 'bg-purple-900/20 text-purple-400'
+                            : 'bg-zinc-800 text-zinc-400'
                         }`}>
-                            {post.authorType === 'ai_agent' ? <Bot className="w-4 h-4" /> : initials}
+                        {post.authorType === 'ai_agent' ? <Bot className="w-4 h-4" /> : initials}
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    {/* Header: Title + Meta */}
+                    <div className="flex items-baseline justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-zinc-200 hover:text-cyan-400 transition-colors cursor-pointer">
+                                {post.title}
+                            </span>
+                            {/* Type Badge - subtle */}
+                            <span className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-zinc-800/50 bg-zinc-900/50 ${config.color.replace('text-', 'text-opacity-80 text-')}`}>
+                                {config.icon}
+                                <span>{config.label}</span>
+                            </span>
                         </div>
+                        <span className="text-[10px] text-zinc-600 whitespace-nowrap">
+                            {timeAgo(post.createdAt)}
+                        </span>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                        {/* Author and meta */}
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="font-medium text-zinc-200">
-                                {post.authorName}
-                            </span>
-                            {post.authorType === 'ai_agent' && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-900/30 text-purple-400 rounded">
-                                    AI
-                                </span>
-                            )}
-                            <span className="text-zinc-600">&middot;</span>
-                            <span className="text-zinc-500">{timeAgo(post.createdAt)}</span>
+                    {/* Meta line */}
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
+                        <span>{post.authorName}</span>
+                    </div>
 
-                            {/* Type icon */}
-                            <span className={config.color}>
-                                {config.icon}
-                            </span>
+                    {/* Text Body */}
+                    <p className="mt-2 text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap line-clamp-3">
+                        {post.content.replace(/\*\*/g, '').replace(/\n\n/g, '\n')}
+                    </p>
 
-                            {/* Status */}
-                            {status && (
-                                <span className={`flex items-center gap-1 text-[10px] ${status.color}`}>
-                                    {status.icon}
-                                    {status.label}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="mt-1 text-sm font-semibold text-zinc-100">
-                            {post.title}
-                        </h3>
-
-                        {/* Content preview */}
-                        <p className="mt-1.5 text-xs text-zinc-400 line-clamp-3 whitespace-pre-wrap">
-                            {post.content.replace(/\*\*/g, '').replace(/\n\n/g, '\n')}
-                        </p>
-
+                    {/* Status / Tags Footer */}
+                    <div className="flex items-center gap-3 mt-3">
                         {/* Tags */}
                         {post.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                {post.tags.slice(0, 4).map(tag => (
+                            <div className="flex items-center gap-1.5">
+                                {post.tags.slice(0, 3).map(tag => (
                                     <span
                                         key={tag}
-                                        className="px-2 py-0.5 text-[10px] bg-zinc-800 text-zinc-400 rounded"
+                                        className="text-[10px] text-cyan-400/80 hover:text-cyan-300 hover:underline cursor-pointer"
                                     >
-                                        {tag}
+                                        #{tag}
                                     </span>
                                 ))}
-                                {post.tags.length > 4 && (
-                                    <span className="px-2 py-0.5 text-[10px] text-zinc-600">
-                                        +{post.tags.length - 4}
-                                    </span>
-                                )}
                             </div>
                         )}
 
                         {/* Actions */}
-                        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+                        <div className="flex items-center gap-4 ml-auto">
+                            {/* Upvote */}
                             <button
-                                onClick={() => upvotePost(post.id)}
-                                className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-400 transition"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    upvotePost(post.id)
+                                }}
+                                className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 transition-colors group/btn"
                             >
-                                <ArrowUp className="w-3.5 h-3.5" />
-                                <span>{post.upvotes}</span>
+                                <ArrowUp className="w-3.5 h-3.5 group-hover/btn:text-cyan-400" />
+                                <span>{post.upvotes > 0 ? post.upvotes : ''}</span>
                             </button>
-                            <button className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-400 transition">
+
+                            {/* Comments count */}
+                            <button
+                                className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <MessageSquare className="w-3.5 h-3.5" />
-                                <span>{post.comments}</span>
+                                <span>{post.comments > 0 ? post.comments : ''}</span>
                             </button>
                         </div>
                     </div>

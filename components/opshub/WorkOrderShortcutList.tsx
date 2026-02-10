@@ -63,32 +63,33 @@ export function WorkOrderShortcutList() {
                         <button
                             key={wo.id}
                             onClick={() => setSelectedWorkOrderId(wo.id)}
-                            className="w-full px-2 py-2 text-left hover:bg-zinc-800 rounded-md transition-colors group"
+                            className="w-full px-2 py-2.5 text-left hover:bg-zinc-800/50 rounded-md transition-colors group border-b border-zinc-800/30 last:border-0"
                         >
-                            {/* Priority dot + Number */}
-                            <div className="flex items-center gap-2 mb-1">
-                                <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(wo.priority)}`} />
-                                <span className="text-xs font-mono text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                                    {wo.number}
+                            {/* WO-ID - status - priority */}
+                            <div className="flex items-center gap-1 mb-1 text-xs font-mono">
+                                <span className="text-zinc-500">{wo.number}</span>
+                                <span className="text-zinc-700">-</span>
+                                <span className={`font-medium ${wo.status === 'open' ? 'text-emerald-400' :
+                                        wo.status === 'in-progress' ? 'text-cyan-400' :
+                                            wo.status === 'resolved' ? 'text-purple-400' :
+                                                'text-zinc-500'
+                                    }`}>
+                                    {wo.status.replace('-', '_')}
+                                </span>
+                                <span className="text-zinc-700">-</span>
+                                <span className={`font-medium ${wo.priority === 'critical' ? 'text-red-400' :
+                                        wo.priority === 'high' ? 'text-orange-400' :
+                                            wo.priority === 'medium' ? 'text-amber-400' :
+                                                'text-blue-400'
+                                    }`}>
+                                    {wo.priority}
                                 </span>
                             </div>
 
                             {/* Title */}
-                            <p className="text-xs text-zinc-300 line-clamp-2 mb-1 group-hover:text-white transition-colors">
+                            <p className="text-xs text-zinc-300 line-clamp-2 group-hover:text-white transition-colors">
                                 {wo.title}
                             </p>
-
-                            {/* Status */}
-                            <div className="flex items-center gap-2">
-                                <span
-                                    className={`text-[10px] px-1.5 py-0.5 rounded border ${getStatusBadge(wo.status)}`}
-                                >
-                                    {wo.status === 'in-progress' ? 'In Progress' : wo.status.charAt(0).toUpperCase() + wo.status.slice(1)}
-                                </span>
-                                <span className="text-[10px] text-zinc-500 capitalize">
-                                    {wo.priority}
-                                </span>
-                            </div>
                         </button>
                     ))
                 )}

@@ -5,10 +5,8 @@ import {
     Calendar,
     CheckCircle,
     Cog,
-    DollarSign,
     MapPin,
-    Search,
-    Wrench,
+    Search
 } from 'lucide-react'
 
 interface WorkOrderOverviewProps {
@@ -50,122 +48,104 @@ function formatDate(iso: string): string {
 export function WorkOrderOverview({ workOrder }: WorkOrderOverviewProps) {
     return (
         <div className="space-y-6">
-            {/* Status + Priority + Dates */}
-            <div className="flex items-center gap-3 flex-wrap">
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded ${statusBadge[workOrder.status] || statusBadge.open}`}>
-                    {workOrder.status.replace('-', ' ').toUpperCase()}
-                </span>
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded uppercase ${priorityBadge[workOrder.priority] || priorityBadge.medium}`}>
-                    {workOrder.priority}
-                </span>
-                <div className="flex items-center gap-1 text-xs text-zinc-500">
-                    <Calendar className="w-3 h-3" />
-                    Created {formatDate(workOrder.createdAt)}
+            {/* Dates & Meta */}
+            <div className="flex items-center gap-4 text-xs text-zinc-500 border-b border-zinc-800/50 pb-4">
+                <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Created <strong className="text-zinc-300">{formatDate(workOrder.createdAt)}</strong></span>
                 </div>
                 {workOrder.resolvedAt && (
-                    <div className="flex items-center gap-1 text-xs text-emerald-500">
-                        <CheckCircle className="w-3 h-3" />
-                        Resolved {formatDate(workOrder.resolvedAt)}
+                    <div className="flex items-center gap-1.5 text-emerald-500">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Resolved <strong>{formatDate(workOrder.resolvedAt)}</strong></span>
                     </div>
                 )}
             </div>
 
             {/* Equipment Info */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Equipment</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Cog className="w-4 h-4 text-zinc-500" />
-                        <div>
-                            <p className="text-zinc-400 text-xs">Name</p>
-                            <p className="text-zinc-100 font-medium">{workOrder.equipmentName}</p>
+            <div>
+                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Equipment Context</h3>
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-md p-4">
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="flex items-start gap-3">
+                            <Cog className="w-4 h-4 text-zinc-500 mt-0.5" />
+                            <div>
+                                <p className="text-zinc-500 text-xs mb-0.5">Asset Name</p>
+                                <p className="text-zinc-200 font-medium">{workOrder.equipmentName}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Box className="w-4 h-4 text-zinc-500 mt-0.5" />
+                            <div>
+                                <p className="text-zinc-500 text-xs mb-0.5">Asset ID</p>
+                                <p className="text-zinc-200 font-mono text-xs">{workOrder.equipmentId}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <MapPin className="w-4 h-4 text-zinc-500 mt-0.5" />
+                            <div>
+                                <p className="text-zinc-500 text-xs mb-0.5">Location</p>
+                                <p className="text-zinc-200">{workOrder.location}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <MapPin className="w-4 h-4 text-zinc-500 mt-0.5" />
+                            <div>
+                                <p className="text-zinc-500 text-xs mb-0.5">Facility</p>
+                                <p className="text-zinc-200">{workOrder.factoryName}</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Box className="w-4 h-4 text-zinc-500" />
-                        <div>
-                            <p className="text-zinc-400 text-xs">ID</p>
-                            <p className="text-zinc-100 font-mono text-xs">{workOrder.equipmentId}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-zinc-500" />
-                        <div>
-                            <p className="text-zinc-400 text-xs">Location</p>
-                            <p className="text-zinc-100">{workOrder.location}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-zinc-500" />
-                        <div>
-                            <p className="text-zinc-400 text-xs">Facility</p>
-                            <p className="text-zinc-100">{workOrder.factoryName}</p>
-                        </div>
+                    <div className="mt-4 pt-3 border-t border-zinc-800/50">
+                        <button className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition hover:underline">
+                            <Box className="w-3.5 h-3.5" /> Locate in Digital Twin
+                        </button>
                     </div>
                 </div>
-                <button className="mt-3 flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition">
-                    <Box className="w-3.5 h-3.5" /> View in Digital Twin
-                </button>
             </div>
 
             {/* Root Cause */}
             {workOrder.rootCause && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
-                        <Search className="w-3.5 h-3.5" /> Root Cause
-                    </h3>
-                    <p className="text-sm text-zinc-300">{workOrder.rootCause}</p>
+                <div>
+                    <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Root Cause Analysis</h3>
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-md p-4">
+                        <div className="flex gap-3">
+                            <Search className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-zinc-300 leading-relaxed">{workOrder.rootCause}</p>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {/* Spare Parts */}
             {workOrder.spareParts && workOrder.spareParts.length > 0 && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">
-                        <Wrench className="w-3.5 h-3.5" /> Spare Parts
-                    </h3>
-                    <div className="space-y-2">
-                        {workOrder.spareParts.map(part => (
-                            <div key={part.partNumber} className="flex items-center justify-between text-sm">
-                                <div>
-                                    <span className="text-zinc-200">{part.name}</span>
-                                    <span className="ml-2 text-xs font-mono text-zinc-500">{part.partNumber}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-zinc-400">x{part.quantity}</span>
-                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${part.inStock ? 'bg-emerald-900/40 text-emerald-400' : 'bg-red-900/40 text-red-400'}`}>
-                                        {part.inStock ? 'In Stock' : 'Order'}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Cost Summary */}
-            {workOrder.costSummary && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">
-                        <DollarSign className="w-3.5 h-3.5" /> Cost Summary
-                    </h3>
-                    <div className="space-y-1.5 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-zinc-400">Labor</span>
-                            <span className="text-zinc-200">EUR {workOrder.costSummary.labor.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-zinc-400">Parts</span>
-                            <span className="text-zinc-200">EUR {workOrder.costSummary.parts.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-zinc-400">Downtime Cost</span>
-                            <span className="text-zinc-200">EUR {workOrder.costSummary.downtime.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between pt-1.5 mt-1.5 border-t border-zinc-800 font-semibold">
-                            <span className="text-zinc-300">Total</span>
-                            <span className="text-zinc-100">EUR {workOrder.costSummary.total.toLocaleString()}</span>
-                        </div>
+                <div>
+                    <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Required Parts</h3>
+                    <div className="border border-zinc-800 rounded-md overflow-hidden bg-zinc-900/50">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-zinc-900 border-b border-zinc-800 text-xs font-medium text-zinc-500 uppercase">
+                                <tr>
+                                    <th className="px-4 py-2">Part Name</th>
+                                    <th className="px-4 py-2">Part #</th>
+                                    <th className="px-4 py-2 text-right">Qty</th>
+                                    <th className="px-4 py-2">Availability</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800/50">
+                                {workOrder.spareParts.map(part => (
+                                    <tr key={part.partNumber} className="hover:bg-zinc-800/20">
+                                        <td className="px-4 py-2.5 text-zinc-200">{part.name}</td>
+                                        <td className="px-4 py-2.5 font-mono text-xs text-zinc-500">{part.partNumber}</td>
+                                        <td className="px-4 py-2.5 text-zinc-400 text-right">{part.quantity}</td>
+                                        <td className="px-4 py-2.5">
+                                            <span className={`text-xs ${part.inStock ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {part.inStock ? 'In Stock' : 'On Order'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

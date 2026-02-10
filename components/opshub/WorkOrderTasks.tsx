@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { WorkOrderTaskCard } from './WorkOrderTaskCard'
 import type { TaskStatus, TaskType } from './MyTaskCard'
+import { WorkOrderTaskCard } from './WorkOrderTaskCard'
 
 interface TaskItem {
     id: string
@@ -67,21 +67,22 @@ export function WorkOrderTasks() {
             </div>
 
             {/* Task list with dependency lines */}
-            <div className="space-y-2">
-                {tasks.map(task => (
-                    <WorkOrderTaskCard
-                        key={task.id}
-                        taskNumber={task.taskNumber}
-                        type={task.type}
-                        title={task.title}
-                        assigneeName={task.assigneeName}
-                        assigneeInitials={task.assigneeInitials}
-                        assigneeColor={task.assigneeColor}
-                        status={task.status}
-                        blockedBy={task.blockedBy}
-                        onStart={() => handleStart(task.id)}
-                        onComplete={() => handleComplete(task.id)}
-                    />
+            <div className="border border-zinc-800 rounded-md overflow-hidden bg-zinc-900/50">
+                {tasks.map((task, i) => (
+                    <div key={task.id} className={`${i !== tasks.length - 1 ? 'border-b border-zinc-800/50' : ''}`}>
+                        <WorkOrderTaskCard
+                            taskNumber={task.taskNumber}
+                            type={task.type}
+                            title={task.title}
+                            assigneeName={task.assigneeName}
+                            assigneeInitials={task.assigneeInitials}
+                            assigneeColor={task.assigneeColor}
+                            status={task.status}
+                            blockedBy={task.blockedBy}
+                            onStart={() => handleStart(task.id)}
+                            onComplete={() => handleComplete(task.id)}
+                        />
+                    </div>
                 ))}
             </div>
         </div>

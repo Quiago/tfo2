@@ -1,7 +1,7 @@
 'use client'
 
 import { AvatarStack } from '@/components/shared/AvatarStack'
-import { Calendar, Tag } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 // TODO: import from opshub types when available
 export type WorkOrderStatus = 'open' | 'in-progress' | 'resolved' | 'closed'
@@ -52,17 +52,19 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
     return (
         <button
             onClick={() => onClick?.(workOrder.id)}
-            className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 hover:bg-zinc-900/80 transition group"
+            className="w-full text-left bg-zinc-900 border-b border-zinc-800 p-4 hover:bg-zinc-800/50 transition group first:rounded-t-lg last:rounded-b-lg last:border-0"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    {/* Number + Status */}
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-mono text-zinc-500">{workOrder.number}</span>
-                        <span className={`px-2 py-0.5 text-[10px] font-medium rounded ${sc.color}`}>
-                            {sc.label}
+                    {/* ID - Status - Priority (Text Only) */}
+                    <div className="flex items-center gap-0 text-xs font-mono mb-1">
+                        <span className="text-zinc-500 mr-1">{workOrder.number}</span>
+                        <span className="text-zinc-600 mr-1">-</span>
+                        <span className={`${sc.color.replace('bg-', 'text-').replace('/40', '')} mr-1 font-medium`}>
+                            {workOrder.status.replace('-', '_')}
                         </span>
-                        <span className={`text-[10px] font-semibold uppercase ${priorityColor[workOrder.priority]}`}>
+                        <span className="text-zinc-600 mr-1">-</span>
+                        <span className={`${priorityColor[workOrder.priority]} font-medium`}>
                             {workOrder.priority}
                         </span>
                     </div>
@@ -73,15 +75,15 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
                     </h3>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500">
                         {workOrder.factoryName && <span>{workOrder.factoryName}</span>}
                         {workOrder.equipmentName && (
                             <>
-                                <span className="text-zinc-700">|</span>
+                                <span className="text-zinc-700">&middot;</span>
                                 <span>{workOrder.equipmentName}</span>
                             </>
                         )}
-                        <span className="text-zinc-700">|</span>
+                        <span className="text-zinc-700">&middot;</span>
                         <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {timeAgo(workOrder.createdAt)}
@@ -92,8 +94,8 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
                     {workOrder.tags.length > 0 && (
                         <div className="flex items-center gap-1.5 mt-2">
                             {workOrder.tags.slice(0, 3).map(tag => (
-                                <span key={tag} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-zinc-800 text-zinc-400 rounded">
-                                    <Tag className="w-2.5 h-2.5" />{tag}
+                                <span key={tag} className="text-[10px] text-zinc-500 hover:text-zinc-300 cursor-pointer">
+                                    #{tag}
                                 </span>
                             ))}
                         </div>
