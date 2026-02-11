@@ -24,6 +24,8 @@ interface FactoryModelProps {
     alertMeshPattern?: string | null
     /** Called once when alert meshes are found, with position info for fly-to */
     onAlertMeshFound?: (info: AlertMeshInfo) => void
+    /** Mesh name to isolate. If set, all other meshes are hidden. */
+    isolatedMeshName?: string | null
 }
 
 const HIGHLIGHT_EMISSIVE = new THREE.Color(0x442200)
@@ -45,6 +47,7 @@ export function FactoryModel({
     onMeshClick,
     alertMeshPattern,
     onAlertMeshFound,
+    isolatedMeshName,
 }: FactoryModelProps) {
     const { scene } = useGLTF(url)
     const meshCountRef = useRef(0)
@@ -62,6 +65,57 @@ export function FactoryModel({
         new WeakMap()
     )
     const prevAlertPatternRef = useRef<string | null>(null)
+
+    // Store original materials for isolation restore
+    const isolationOriginalMatsRef = useRef<WeakMap<THREE.Mesh, THREE.Material | THREE.Material[]>>(
+        new WeakMap()
+    )
+
+    // ISOLATION LOGIC — ghost-fade non-matching meshes instead of hiding
+    useEffect(() => {
+        scene.traverse((child) => {
+            if (!(child as THREE.Mesh).isMesh) return
+            const mesh = child as THREE.Mesh
+
+            if (isolatedMeshName) {
+                const shouldShow = mesh.name.toLowerCase().includes(isolatedMeshName.toLowerCase()) ||
+                    (mesh.parent && mesh.parent.name.toLowerCase().includes(isolatedMeshName.toLowerCase()))
+
+                if (shouldShow) {
+                    // Restore original material if we ghosted it before
+                    const orig = isolationOriginalMatsRef.current.get(mesh)
+                    if (orig) {
+                        mesh.material = orig
+                        isolationOriginalMatsRef.current.delete(mesh)
+                    }
+                    mesh.visible = true
+                } else {
+                    // Ghost: save original, apply transparent clone
+                    if (!isolationOriginalMatsRef.current.has(mesh)) {
+                        isolationOriginalMatsRef.current.set(mesh, mesh.material)
+                    }
+                    const sourceMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
+                    if (sourceMat && 'clone' in sourceMat) {
+                        const ghost = (sourceMat as THREE.MeshStandardMaterial).clone()
+                        ghost.transparent = true
+                        ghost.opacity = 0.04
+                        ghost.depthWrite = false
+                        mesh.material = ghost
+                    }
+                    mesh.visible = true
+                }
+            } else {
+                // Restore all originals
+                const orig = isolationOriginalMatsRef.current.get(mesh)
+                if (orig) {
+                    mesh.material = orig
+                    isolationOriginalMatsRef.current.delete(mesh)
+                }
+                mesh.visible = true
+            }
+        })
+    }, [isolatedMeshName, scene])
+
 
     useEffect(() => {
         let count = 0

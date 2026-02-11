@@ -1,5 +1,10 @@
 'use client'
 
+import { AssetTree } from '@/components/asset-details/AssetTree'
+import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
+import { AiChatBubble } from '@/components/ui/AiChatBubble'
+import { DigitalTwinNavigator } from '@/components/digital-twin/DigitalTwinNavigator'
+import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
 import { useTfoStore, type FacilityLocation } from '@/lib/store/tfo-store'
 import type { TfoModule } from '@/lib/types/tfo'
 import {
@@ -61,6 +66,7 @@ function ModuleLoader({ label }: { label: string }) {
 // No DigitalTwinFrame component — single iframe rendered directly in main
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────
+
 export default function TFODashboard() {
     const { activeModule, setActiveModule, darkMode, toggleDarkMode, facilityMetrics, activeAlerts, recentWorkflows, locations, activeLocationId, setActiveLocation } =
         useTfoStore()
@@ -83,12 +89,42 @@ export default function TFODashboard() {
         })
     }, [activeModule])
 
-    // Digital Twin iframe loaded state
-    const [dtLoaded, setDtLoaded] = useState(false)
+    // View Mode State: 'overview' vs 'details'
+    const [viewMode, setViewMode] = useState<'overview' | 'details'>('overview')
+    const [selectedAsset, setSelectedAsset] = useState<string | null>(null)
 
     const isOverview = activeModule === 'overview'
-    const isFullDT = activeModule === 'digital-twin'
-    const isDigitalTwinVisible = isOverview || isFullDT
+
+    // When clicking a mesh, switch to details mode
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'MESH_CLICK') {
+                const meshName = event.data.meshName
+                setSelectedAsset(meshName)
+                setViewMode('details')
+            }
+        }
+        window.addEventListener('message', handleMessage)
+        return () => window.removeEventListener('message', handleMessage)
+    }, [])
+
+    // Handler for DigitalTwinNavigator click (need to expose this via the iframe or component)
+    // Note: Since we are using an iframe for the DT, we need to pass props via postMessage or URL params if possible,
+    // OR render the DigitalTwinNavigator directly if we want tighter integration.
+    // The current architecture uses an iframe pointing to generic playground.
+    // To support the seamless transition requested, rendering the component directly is better,
+    // BUT to minimize risk, let's keep the iframe and control it via className/layout changes.
+    // WAIT: The "shrink" effect on the model requires the canvas to resize.
+
+    // Modification: Render DigitalTwinNavigator DIRECTLY instead of iframe to allow prop passing and smoother transition.
+    // We already imported it in `playground/digital-twin/page.tsx`. Let's assume we can import it here too.
+
+    // But wait, the dynamic import in page.tsx implies module separation.
+    // Let's modify the DigitalTwin wrapper to simply be the component if we can.
+    // For now, I will stick to the iframe strategy but resize the iframe container. 
+    // AND I need to pass the 'viewMode' and 'isolatedMeshName' to the iframe context.
+    // OR simpler: Move DigitalTwinNavigator import here and drop the iframe.
+    // Let's drop the iframe for better control as requested by the specific transition effect.
 
     return (
         <div className={`flex h-screen flex-col ${darkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-900'}`}>
@@ -104,61 +140,110 @@ export default function TFODashboard() {
             />
 
             {/* ── BODY ─────────────────────────────────────────────────── */}
-            <main className="relative flex-1 overflow-hidden">
+            <main className="relative flex-1 overflow-hidden flex">
 
-                {/* ── SINGLE DIGITAL TWIN IFRAME — always alive, always full screen for overview/DT ── */}
+                {/* ── UNIFIED CONTENT CONTAINER ── 
+                    We use a flex layout. 
+                    - Overview: Digital Twin takes 100% absolute, Panels overlay.
+                    - Details: Standard Flex/Grid layout.
+                */}
+
+                {/* ── LEFT COLUMN (Variable Width) ── */}
+                <div className={`flex flex-col border-r border-zinc-800 transition-all duration-700 ease-in-out ${viewMode === 'details' ? 'w-[20%]' : 'w-0 border-none'
+                    }`}>
+                    {/* Top: 3D Model Container (When in Details Mode) */}
+                    {/* Actually, if we want the 3D model to shrink from Full to Top-Left, 
+                         we should keep the 3D model container independent and resize it. 
+                         Let's try absolute positioning transition. 
+                     */}
+                </div>
+
+                {/* ── DYNAMIC LAYOUT ── */}
+
+                {/* 3D Model Container - Transitions between Full Screen and Top-Left */}
                 <div
-                    className={`absolute bg-zinc-950 transition-all duration-300 ease-in-out ${isDigitalTwinVisible
-                        ? 'inset-0 z-10'
-                        : 'top-0 left-0 w-1 h-1 -z-10 opacity-0 pointer-events-none'
+                    style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.1, 1)' }}
+                    className={`absolute bg-zinc-950 border-b border-zinc-800 z-10
+                    ${viewMode === 'overview'
+                            ? 'inset-0'
+                            : 'top-0 left-0 w-[20%] h-[40%]'
                         }`}
                 >
-                    {!dtLoaded && (
-                        <div className="absolute inset-0 flex items-center justify-center z-10">
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-cyan-500" />
-                                <span className="text-xs text-zinc-500">Loading 3D Scene...</span>
-                            </div>
-                        </div>
-                    )}
-                    <iframe
-                        src="/playground/digital-twin"
-                        className={`w-full h-full border-0 transition-opacity duration-500 ${dtLoaded ? 'opacity-100' : 'opacity-0'}`}
-                        title="Digital Twin"
-                        onLoad={() => setDtLoaded(true)}
+                    {/* We need to render the DigitalTwinNavigator directly for props to work */}
+                    <SuspendedDigitalTwin
+                        viewMode={viewMode}
+                        isolatedMeshName={selectedAsset}
+                        onMeshClick={(meshName) => {
+                            setSelectedAsset(meshName)
+                            setViewMode('details')
+                        }}
                     />
                 </div>
 
-                {/* ── OVERVIEW PANELS (overlay on DT) ──── */}
-                {isOverview && (
-                    <>
-                        {/* Zone label */}
+                {/* Asset Tree - Slides up after 3D shrinks */}
+                <div
+                    style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.3s' }}
+                    className={`absolute bg-zinc-900 border-r border-zinc-800
+                    ${viewMode === 'details'
+                            ? 'left-0 top-[40%] w-[20%] h-[60%] opacity-100'
+                            : 'left-0 top-[100%] w-[20%] h-0 opacity-0'
+                        }`}
+                >
+                    <AssetTree
+                        selectedAssetId={selectedAsset || undefined}
+                        onSelect={(id) => {
+                            setSelectedAsset(id)
+                            // If user clicks tree, trigger isolation logic too
+                        }}
+                    />
+                </div>
 
+                {/* Right Column - Expands from right after 3D shrinks */}
+                <div
+                    style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.15s' }}
+                    className={`absolute right-0 top-0 h-full flex flex-col bg-zinc-900
+                    ${viewMode === 'details'
+                            ? 'w-[80%] opacity-100'
+                            : 'w-0 opacity-0 overflow-hidden'
+                        }`}
+                >
+                    {/* Top Bar — Machine summary + action buttons */}
+                    <div className="h-[15%] min-h-0 border-b border-zinc-800">
+                        <MachineSummaryBar />
+                    </div>
 
-                        {/* Right Panel — 30% width, Glassmorphism Overlay */}
-                        <div
-                            className={`absolute top-0 right-0 h-full z-20 overflow-y-auto p-4 space-y-4 transition-transform duration-300 ease-out translate-x-0 w-full sm:w-[320px] md:w-[360px] lg:w-[400px] xl:w-[25%] 2xl:w-[22%] 
-                border-l ${darkMode ? 'border-zinc-800/50 bg-zinc-950/60' : 'border-slate-200/50 bg-white/60'} backdrop-blur-xl shadow-2xl`}
-                        >
-                            <RightPanel
-                                darkMode={darkMode}
-                                onNavigate={handleModuleChange}
-                                facilityMetrics={facilityMetrics}
-                                activeAlerts={activeAlerts}
-                                recentWorkflows={recentWorkflows}
-                            />
-                        </div>
-                    </>
+                    {/* Timeline Container (85%) */}
+                    <div className="h-[85%] min-h-0 relative bg-zinc-900 p-0 overflow-hidden">
+                        <MultiLayerTimeline />
+                    </div>
+                </div>
+
+                {/* ── OVERVIEW PANELS (overlay on DT, Fade out in Details Mode) ──── */}
+                {isOverview && viewMode === 'overview' && (
+                    <div
+                        className={`absolute top-0 right-0 h-full z-20 overflow-y-auto p-4 space-y-4 transition-transform duration-300 ease-out translate-x-0 w-full sm:w-[320px] md:w-[360px] lg:w-[400px] xl:w-[25%] 2xl:w-[22%] 
+                        border-l ${darkMode ? 'border-zinc-800/50 bg-zinc-950/60' : 'border-slate-200/50 bg-white/60'} backdrop-blur-xl shadow-2xl`}
+                    >
+                        <RightPanel
+                            darkMode={darkMode}
+                            onNavigate={handleModuleChange}
+                            facilityMetrics={facilityMetrics}
+                            activeAlerts={activeAlerts}
+                            recentWorkflows={recentWorkflows}
+                        />
+                    </div>
                 )}
 
-                {/* ── Full DT back button ─────────────────────────────────── */}
-                {isFullDT && (
+                {/* Back Button for Details Mode */}
+                {viewMode === 'details' && (
                     <button
-                        onClick={() => handleModuleChange('overview')}
-                        className="absolute top-4 left-4 z-40 flex items-center gap-2 rounded-full bg-zinc-950/50 backdrop-blur-md px-4 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-900/80 border border-zinc-800/50 transition-all shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/30"
+                        onClick={() => {
+                            setViewMode('overview')
+                            setSelectedAsset(null)
+                        }}
+                        className="absolute top-2 right-2 z-50 bg-zinc-800 hover:bg-zinc-700 text-white p-2 rounded shadow border border-zinc-600"
                     >
-                        <Minimize2 size={14} />
-                        Back to Dashboard
+                        <Minimize2 size={16} />
                     </button>
                 )}
 
@@ -182,7 +267,40 @@ export default function TFODashboard() {
 
             {/* ── FOOTER ───────────────────────────────────────────────── */}
             <Footer darkMode={darkMode} facilityMetrics={facilityMetrics} />
+
+            {/* ── AI CHAT BUBBLE (all views) ─────────────────────────── */}
+            <AiChatBubble />
         </div>
+    )
+}
+
+// Helper to load DigitalTwinNavigator
+// We need to import it. Since it was in playground, let's update the imports.
+
+function SuspendedDigitalTwin({
+    viewMode,
+    isolatedMeshName,
+    onMeshClick
+}: {
+    viewMode: 'overview' | 'details',
+    isolatedMeshName: string | null,
+    onMeshClick: (name: string) => void
+}) {
+    return (
+        <DigitalTwinNavigator
+            modelUrl="/models/factory.glb"
+            presets={CAMERA_PRESETS}
+            initialPreset="overview"
+            devMode={false}
+            environment="warehouse"
+            autoTour={false}
+            showHotspots={viewMode === 'overview'}
+            showNavPanel={viewMode === 'overview'}
+            className="w-full h-full"
+            viewMode={viewMode}
+            isolatedMeshName={isolatedMeshName}
+            onMeshClick={onMeshClick}
+        />
     )
 }
 
