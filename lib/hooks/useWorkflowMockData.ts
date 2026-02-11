@@ -160,14 +160,16 @@ export const MOCK_VOICE_INTENT: VoiceWorkflowIntent = {
         tags: ['paint', 'booth', 'temperature'],
     },
     trigger: {
-        type: 'trigger',
+        type: 'voice_trigger',
         keywords: ['High Temp > 40°C'],
     },
     steps: [
         {
-            type: 'task',
+            type: 'checklist_gate',
             label: 'Check Heating Element',
-            config: { allowSkipping: false },
+            config: {
+                items: [{ id: 'chk_1', label: 'Check Heating Element', required: true }]
+            },
         },
         {
             type: 'decision',
@@ -175,14 +177,18 @@ export const MOCK_VOICE_INTENT: VoiceWorkflowIntent = {
             config: { condition: 'resistance > 100Ω', trueLabel: 'Yes', falseLabel: 'No' },
         },
         {
-            type: 'task',
+            type: 'checklist_gate',
             label: 'Check Ventilation',
-            config: { allowSkipping: true },
+            config: {
+                items: [{ id: 'chk_2', label: 'Check Ventilation', required: false }]
+            },
         },
         {
-            type: 'task',
+            type: 'checklist_gate',
             label: 'Replace Element',
-            config: { allowSkipping: false },
+            config: {
+                items: [{ id: 'chk_3', label: 'Replace Element', required: true }]
+            },
         },
     ],
     safetyCheck: {
