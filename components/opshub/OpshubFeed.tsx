@@ -6,9 +6,11 @@ import {
     AlertCircle,
     AlertTriangle,
     Filter,
+    GitPullRequest,
     HelpCircle,
     Lightbulb,
     Megaphone,
+    MessageSquare,
     Workflow
 } from 'lucide-react'
 import { AnomalyCard } from './AnomalyCard'
@@ -31,9 +33,11 @@ export function OpshubFeed() {
     const filterOptions: { value: FeedFilter; label: string; icon: React.ReactNode }[] = [
         { value: 'all', label: 'All', icon: null },
         { value: 'insight', label: 'Insights', icon: <Lightbulb className="w-3.5 h-3.5" /> },
+        { value: 'discussion', label: 'Discussions', icon: <MessageSquare className="w-3.5 h-3.5" /> },
+        { value: 'workflow_execution', label: 'Executions', icon: <Workflow className="w-3.5 h-3.5" /> },
         { value: 'question', label: 'Questions', icon: <HelpCircle className="w-3.5 h-3.5" /> },
         { value: 'issue', label: 'Issues', icon: <AlertCircle className="w-3.5 h-3.5" /> },
-        { value: 'pull_request', label: 'Workflows', icon: <Workflow className="w-3.5 h-3.5" /> },
+        { value: 'pull_request', label: 'Proposals', icon: <GitPullRequest className="w-3.5 h-3.5" /> },
         { value: 'announcement', label: 'News', icon: <Megaphone className="w-3.5 h-3.5" /> },
     ]
 

@@ -63,6 +63,16 @@ export function FeedPost({ post }: FeedPostProps) {
             color: 'text-orange-400',
             label: 'Alert'
         },
+        discussion: {
+            icon: <MessageSquare className="w-3.5 h-3.5" />,
+            color: 'text-zinc-500',
+            label: 'Discussion'
+        },
+        workflow_execution: {
+            icon: <Workflow className="w-3.5 h-3.5" />,
+            color: 'text-cyan-500',
+            label: 'Execution'
+        },
     }
 
     const config = typeConfig[post.type] || typeConfig.insight
@@ -81,8 +91,8 @@ export function FeedPost({ post }: FeedPostProps) {
                 {/* Avatar */}
                 <div className="flex-shrink-0 mt-0.5">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-zinc-950 ${post.authorType === 'ai_agent'
-                            ? 'bg-purple-900/20 text-purple-400'
-                            : 'bg-zinc-800 text-zinc-400'
+                        ? 'bg-purple-900/20 text-purple-400'
+                        : 'bg-zinc-800 text-zinc-400'
                         }`}>
                         {post.authorType === 'ai_agent' ? <Bot className="w-4 h-4" /> : initials}
                     </div>

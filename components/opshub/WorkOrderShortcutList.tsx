@@ -66,21 +66,21 @@ export function WorkOrderShortcutList() {
                             className="w-full px-2 py-2.5 text-left hover:bg-zinc-800/50 rounded-md transition-colors group border-b border-zinc-800/30 last:border-0"
                         >
                             {/* WO-ID - status - priority */}
-                            <div className="flex items-center gap-1 mb-1 text-xs font-mono">
-                                <span className="text-zinc-500">{wo.number}</span>
-                                <span className="text-zinc-700">-</span>
-                                <span className={`font-medium ${wo.status === 'open' ? 'text-emerald-400' :
-                                        wo.status === 'in-progress' ? 'text-cyan-400' :
-                                            wo.status === 'resolved' ? 'text-purple-400' :
-                                                'text-zinc-500'
+                            <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mb-1 text-[10px] font-mono leading-tight">
+                                <span className="text-zinc-500 whitespace-nowrap">{wo.number}</span>
+                                <span className="text-zinc-700 hidden sm:inline">-</span>
+                                <span className={`font-medium whitespace-nowrap ${wo.status === 'open' ? 'text-emerald-400' :
+                                    wo.status === 'in-progress' ? 'text-cyan-400' :
+                                        wo.status === 'resolved' ? 'text-purple-400' :
+                                            'text-zinc-500'
                                     }`}>
                                     {wo.status.replace('-', '_')}
                                 </span>
-                                <span className="text-zinc-700">-</span>
-                                <span className={`font-medium ${wo.priority === 'critical' ? 'text-red-400' :
-                                        wo.priority === 'high' ? 'text-orange-400' :
-                                            wo.priority === 'medium' ? 'text-amber-400' :
-                                                'text-blue-400'
+                                <span className="text-zinc-700 hidden sm:inline">-</span>
+                                <span className={`font-medium whitespace-nowrap ${wo.priority === 'critical' ? 'text-red-400' :
+                                    wo.priority === 'high' ? 'text-orange-400' :
+                                        wo.priority === 'medium' ? 'text-amber-400' :
+                                            'text-blue-400'
                                     }`}>
                                     {wo.priority}
                                 </span>

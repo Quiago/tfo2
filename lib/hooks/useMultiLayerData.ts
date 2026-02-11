@@ -213,11 +213,25 @@ function generateSensorData(
     let frameCounter = 0;
 
     // Initial data: completely clean (no anomalies). Anomalies are triggered via Test button.
+    // MODIFIED FOR DEMO: Inject rising vibration trend leading up to predictionStart
     return timestamps.map((ts, i) => {
         const inPrediction = i >= predictionStart;
 
+        // Calculate hours before "now" (predictionStart)
+        // Each point is approx predictionStart - i steps away
+        const stepsFromNow = predictionStart - i;
+        const hoursFromNow = (stepsFromNow * (INTERVALS_MS[_granularity] / 3600000));
+
         // Temperature: random walk
         temp = clamp(temp + (rand() - 0.48) * 1.0, 22, 42);
+
+        // MUNICH INCIDENT: Temperature rises in the last 4 hours
+        if (!inPrediction && hoursFromNow <= 4 && hoursFromNow > 0) {
+            // Ramp from 28 to 42
+            const tempEffect = 14 * (1 - (hoursFromNow / 4));
+            temp = 28 + tempEffect + (rand() - 0.5);
+        }
+
         if (inPrediction) {
             temp += (rand() - 0.5) * 2.0;
             temp = clamp(temp, 20, 45);
@@ -225,6 +239,14 @@ function generateSensorData(
 
         // Vibration: stable random walk
         vibration = generateVibrationValue(rand, vibration);
+
+        // MUNICH INCIDENT: Vibration rises in the last 4 hours
+        if (!inPrediction && hoursFromNow <= 4 && hoursFromNow > 0) {
+            // Ramp from 3.0 to 9.0 (warning/anomaly level) just before the critical spike
+            const vibEffect = 6.0 * (1 - (hoursFromNow / 4));
+            vibration = 3.0 + vibEffect + (rand() - 0.5);
+        }
+
         if (inPrediction) {
             vibration += (rand() - 0.5) * 1.5;
             vibration = clamp(vibration, 1.5, 6.0);
@@ -248,6 +270,9 @@ function generateSensorData(
                 ? generateVideoFrame(frameCounter++, temp, vibration, pressure, zone)
                 : undefined;
 
+        // Mark as anomaly if we are in the high vibration zone (DEMO)
+        const isDemoAnomaly = !inPrediction && hoursFromNow <= 1 && hoursFromNow > 0 && vibration > 8;
+
         return {
             timestamp: ts,
             temperature: round(temp, 2),
@@ -255,8 +280,8 @@ function generateSensorData(
             pressure,
             vibration: round(vibration, 2),
             videoFrame,
-            anomaly: false,
-            alertLevel: 'none' as const,
+            anomaly: isDemoAnomaly,
+            alertLevel: isDemoAnomaly ? 'warning' : 'none' as const,
         };
     });
 }
@@ -275,24 +300,27 @@ function generateEnergyData(
         const inPrediction = i >= predictionStart;
 
         // Factory power consumption model:
-        // Line-1 Filler: 35-45 kW
-        // Line-2 Packager: 25-35 kW
-        // QC Station: 5-8 kW
-        // Chiller (product cooling): 15-25 kW
-        // Compressed air: 10-15 kW
-        // Total: 90-130 kW typical
         const baseLoad = 110 + rand() * 20;
 
         // Uptime-based efficiency: 85-99% normal, 78-100% in prediction
         const uptimeBase = 92 + rand() * 7;
         const uptimeVariance = inPrediction ? (rand() - 0.5) * 12 : 0;
-        const efficiency = clamp(round(uptimeBase + uptimeVariance, 1), 78, 100);
+        let efficiency = clamp(round(uptimeBase + uptimeVariance, 1), 78, 100);
+
+        // MUNICH INCIDENT: Efficiency drops as vibration rises (correlation)
+        if (sensor.vibration > 6.0) {
+            efficiency -= (sensor.vibration - 6.0) * 2.5; // Drop efficiency
+        }
 
         // Power draw scales with efficiency (uptime)
-        const powerDraw = round(baseLoad * (efficiency / 100) + rand() * 5, 1);
+        let powerDraw = round(baseLoad * (efficiency / 100) + rand() * 5, 1);
+
+        // MUNICH INCIDENT: Energy spike due to "malfunction" (resistance/friction)
+        if (sensor.vibration > 7.0 && !inPrediction) {
+            powerDraw += (sensor.vibration - 7.0) * 5.0; // Extra kW load
+        }
 
         // Chiller load: correlated with ambient temperature
-        // Increases significantly in Dubai summer heat (>35°C)
         const ambientTemp = sensor?.temperature ?? 28;
         const baseChiller = 18 + (ambientTemp - 22) * 0.8;
         const coolingLoad = round(
@@ -345,14 +373,30 @@ function generateProductData(
         // Uptime percentage: 85-99% normal; prediction zone: wider variance 78-100%
         const uptimeBase = 92 + rand() * 7;
         const uptimeVariance = inPrediction ? (rand() - 0.5) * 14 : 0;
-        const uptime = clamp(round(uptimeBase + uptimeVariance, 1), 70, 100);
+        let uptime = clamp(round(uptimeBase + uptimeVariance, 1), 70, 100);
 
         // Output: units/min based on uptime and line speed variance
         const outputVariance = 0.9 + rand() * 0.2;
         const predictionNoise = inPrediction ? (rand() - 0.5) * 0.15 : 0;
-        const output = Math.round(
+
+        let output = Math.round(
             target * (uptime / 100) * (outputVariance + predictionNoise),
         );
+
+        // MUNICH INCIDENT: Output drops when vibration is high (equipment struggle)
+        // We don't have direct access to sensor data here, but we can infer or use a simplified model.
+        // Ideally we would pass sensor data, but to keep signature simple we'll assume a random dip logic 
+        // that statistically aligns with the vibration logic (e.g. based on index/time if we knew it exactly).
+        // OR better: Update the function signature to accept sensorData if we really want strict correlation.
+        // For now, let's just make it dip in the last few steps before predictionStart
+
+        // RE-CALCULATING based on assumed "high vibration" zone (last 10% of history)
+        const stepsFromNow = predictionStart - i;
+        if (!inPrediction && stepsFromNow <= 20 && stepsFromNow > 0) {
+            // progressive drop
+            output = output * 0.75; // 25% drop
+            uptime = uptime * 0.8;
+        }
 
         return {
             timestamp: ts,
@@ -600,7 +644,7 @@ export function useMultiLayerData(granularity: TimeGranularity) {
         setEnergyData(fresh.energyData);
         setActionData(fresh.actionData);
         setProductData(fresh.productData);
-        
+
         // Actualizamos las referencias inmediatamente
         sensorDataRef.current = fresh.sensorData;
         timestampsRef.current = fresh.timestamps;
@@ -639,14 +683,14 @@ export function useMultiLayerData(granularity: TimeGranularity) {
             const prevSensors = sensorDataRef.current;
 
             // EL TRUCO: El timestamp que "ahora" es predicción inmediata, se convierte en "presente"
-            const liveTimestamp = prevTimestamps[predictionStart]; 
-            
+            const liveTimestamp = prevTimestamps[predictionStart];
+
             // Calculamos el nuevo timestamp para el final del array (horizonte futuro)
             const step = INTERVALS_MS[granularity];
             const horizonTimestamp = prevTimestamps[prevTimestamps.length - 1] + step;
 
             // --- C. Generar Puntos ---
-            
+
             // 1. Punto LIVE (El que insertamos en el medio)
             const lastHistorySensor = prevSensors[predictionStart - 1]; // Usamos el dato anterior al corte para continuidad
             const newLiveSensor = isAnomalyTick
@@ -734,7 +778,7 @@ export function useMultiLayerData(granularity: TimeGranularity) {
                 ...prev.slice(predictionStart + 1),
                 horizonTimestamp
             ]);
-            
+
             setSensorData(prev => updateArray(prev, newLiveSensor, newHorizonSensor));
             setEnergyData(prev => updateArray(prev, newLiveEnergy, newHorizonEnergy));
             setProductData(prev => updateArray(prev, newLiveProduct, newHorizonProduct));

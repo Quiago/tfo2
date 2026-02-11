@@ -44,6 +44,8 @@ export type PostType =
     | 'pull_request'   // Proposed improvement to a workflow
     | 'announcement'   // System or admin announcement
     | 'anomaly_alert'  // AI-detected anomaly notification
+    | 'discussion'     // Team discussion/comment from work orders
+    | 'workflow_execution'  // Workflow execution/completion activity
 
 export type PostAuthorType = 'human' | 'ai_agent' | 'system'
 
@@ -138,6 +140,7 @@ export interface TeamMember {
     avatarInitials: string
     avatarColor: string
     status: 'available' | 'busy' | 'in-field' | 'offline'
+    isAI?: boolean
 }
 
 // ─── Work Order ─────────────────────────────────────────────────

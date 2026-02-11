@@ -3,7 +3,6 @@
 import { useOpshubMockData } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { ClipboardList, Home, ListTodo } from 'lucide-react'
-import { useState } from 'react'
 import { MyTasks } from './MyTasks'
 import { OpshubHome } from './OpshubHome'
 import { WorkOrderDetail } from './WorkOrderDetail'
@@ -21,7 +20,8 @@ const TABS: { id: OpshubTab; label: string; icon: React.ReactNode }[] = [
 export function OpshubLayout() {
     useOpshubMockData()
 
-    const [activeTab, setActiveTab] = useState<OpshubTab>('home')
+    const activeTab = useOpshubStore(s => s.activeTab)
+    const setActiveTab = useOpshubStore(s => s.setActiveTab)
     const selectedWorkOrderId = useOpshubStore(s => s.selectedWorkOrderId)
     const setSelectedWorkOrderId = useOpshubStore(s => s.setSelectedWorkOrderId)
     const anomalies = useOpshubStore(s => s.anomalies)
