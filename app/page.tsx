@@ -173,9 +173,12 @@ export default function TFODashboard() {
                     <SuspendedDigitalTwin
                         viewMode={viewMode}
                         isolatedMeshName={selectedAsset}
-                        onMeshClick={(meshName) => {
+                        onExpandClick={(meshName) => {
                             setSelectedAsset(meshName)
                             setViewMode('details')
+                        }}
+                        onCreateWorkOrder={(meshName) => {
+                            console.log(`[TFO] Create work order for: ${meshName}`)
                         }}
                     />
                 </div>
@@ -280,11 +283,13 @@ export default function TFODashboard() {
 function SuspendedDigitalTwin({
     viewMode,
     isolatedMeshName,
-    onMeshClick
+    onExpandClick,
+    onCreateWorkOrder,
 }: {
-    viewMode: 'overview' | 'details',
-    isolatedMeshName: string | null,
-    onMeshClick: (name: string) => void
+    viewMode: 'overview' | 'details'
+    isolatedMeshName: string | null
+    onExpandClick: (name: string) => void
+    onCreateWorkOrder: (name: string) => void
 }) {
     return (
         <DigitalTwinNavigator
@@ -295,11 +300,11 @@ function SuspendedDigitalTwin({
             environment="warehouse"
             autoTour={false}
             showHotspots={viewMode === 'overview'}
-            showNavPanel={viewMode === 'overview'}
             className="w-full h-full"
             viewMode={viewMode}
             isolatedMeshName={isolatedMeshName}
-            onMeshClick={onMeshClick}
+            onExpandClick={onExpandClick}
+            onCreateWorkOrder={onCreateWorkOrder}
         />
     )
 }

@@ -15,7 +15,6 @@ export default function DigitalTwinPage() {
                 autoTour={false}
                 autoTourInterval={5000}
                 showHotspots={true}
-                showNavPanel={true}
                 className="w-full h-screen"
             />
         </main>
