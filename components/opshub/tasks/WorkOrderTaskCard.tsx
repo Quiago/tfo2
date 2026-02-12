@@ -9,7 +9,9 @@ import {
     Settings,
     ShieldCheck,
 } from 'lucide-react'
-import type { TaskStatus, TaskType } from './MyTaskCard'
+
+export type TaskType = 'investigation' | 'execution' | 'verification' | 'approval'
+export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'blocked'
 
 interface WOTaskCardProps {
     taskNumber: number

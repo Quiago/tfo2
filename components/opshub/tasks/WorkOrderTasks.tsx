@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { TaskStatus, TaskType } from './MyTaskCard'
-import { WorkOrderTaskCard } from './WorkOrderTaskCard'
+import { WorkOrderTaskCard, type TaskStatus, type TaskType } from './WorkOrderTaskCard'
 
 interface TaskItem {
     id: string
