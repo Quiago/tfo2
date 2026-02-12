@@ -15,10 +15,7 @@ import {
     LayoutGrid,
     MapPin,
     Minimize2,
-    Moon,
     Search,
-    Settings,
-    Sun,
     Workflow
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -68,7 +65,7 @@ function ModuleLoader({ label }: { label: string }) {
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 
 export default function TFODashboard() {
-    const { activeModule, setActiveModule, darkMode, toggleDarkMode, facilityMetrics, activeAlerts, recentWorkflows, locations, activeLocationId, setActiveLocation } =
+    const { activeModule, setActiveModule, facilityMetrics, activeAlerts, recentWorkflows, locations, activeLocationId, setActiveLocation } =
         useTfoStore()
 
     const setPendingCreateWorkOrder = useOpshubStore(s => s.setPendingCreateWorkOrder)
@@ -130,13 +127,11 @@ export default function TFODashboard() {
     // Let's drop the iframe for better control as requested by the specific transition effect.
 
     return (
-        <div className={`flex h-screen flex-col ${darkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-900'}`}>
+        <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
             {/* ── NAVBAR ───────────────────────────────────────────────── */}
             <Navbar
                 activeModule={activeModule}
                 onModuleChange={handleModuleChange}
-                darkMode={darkMode}
-                onToggleDark={toggleDarkMode}
                 locations={locations}
                 activeLocation={activeLocation}
                 onLocationChange={setActiveLocation}
@@ -251,11 +246,10 @@ export default function TFODashboard() {
                 {/* ── OVERVIEW PANELS (overlay on DT, Fade out in Details Mode) ──── */}
                 {isOverview && viewMode === 'overview' && (
                     <div
-                        className={`absolute top-0 right-0 h-full z-20 overflow-y-auto p-4 space-y-4 transition-transform duration-300 ease-out translate-x-0 w-full sm:w-[320px] md:w-[360px] lg:w-[400px] xl:w-[25%] 2xl:w-[22%] 
-                        border-l ${darkMode ? 'border-zinc-800/50 bg-zinc-950/60' : 'border-slate-200/50 bg-white/60'} backdrop-blur-xl shadow-2xl`}
+                        className="absolute top-0 right-0 h-full z-20 overflow-y-auto p-4 space-y-4 transition-transform duration-300 ease-out translate-x-0 w-full sm:w-[320px] md:w-[360px] lg:w-[400px] xl:w-[25%] 2xl:w-[22%] 
+                        border-l border-slate-200/50 bg-white/60 backdrop-blur-xl shadow-2xl"
                     >
                         <RightPanel
-                            darkMode={darkMode}
                             onNavigate={handleModuleChange}
                             facilityMetrics={facilityMetrics}
                             activeAlerts={activeAlerts}
@@ -332,107 +326,83 @@ function SuspendedDigitalTwin({
 }
 
 // ─── NAVBAR COMPONENT ──────────────────────────────────────────────────────
+import s from './overview.module.css'
+
 function Navbar({
     activeModule,
     onModuleChange,
-    darkMode,
-    onToggleDark,
     locations,
     activeLocation,
     onLocationChange,
 }: {
     activeModule: TfoModule
     onModuleChange: (mod: TfoModule) => void
-    darkMode: boolean
-    onToggleDark: () => void
     locations: FacilityLocation[]
     activeLocation: FacilityLocation
     onLocationChange: (id: string) => void
 }) {
     return (
-        <header
-            className={`flex-shrink-0 border-b z-50 relative ${darkMode
-                ? 'border-zinc-800 bg-zinc-900'
-                : 'border-slate-200 bg-white'
-                }`}
-        >
-            {/* Top bar */}
-            <div className="flex h-12 items-center gap-4 px-4">
-                {/* Logo */}
-                <div className="flex items-center gap-2.5 mr-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={darkMode ? '/dark.png' : '/light.png'}
-                        alt="Tripolar"
-                        width={28}
-                        height={28}
-                        className="object-contain"
-                    />
-                    <span className={`text-sm font-semibold tracking-tight ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
-                        TFO
-                    </span>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${darkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-blue-50 text-blue-600'}`}>
-                        Facility Ops
-                    </span>
-                </div>
-
-                {/* Operations dropdown */}
-                <OperationsDropdown darkMode={darkMode} onSelect={onModuleChange} />
-
-                {/* Location selector (AWS region-style) */}
-                <LocationSelector
-                    darkMode={darkMode}
-                    locations={locations}
-                    activeLocation={activeLocation}
-                    onSelect={onLocationChange}
+        <header className={s.navbar}>
+            {/* ── Logo + Brand ── */}
+            <div className={s.navLogo}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="/light.png"
+                    alt="Tripolar"
+                    className={s.navLogoImg}
                 />
-
-                {/* Search */}
-                <div className={`hidden md:flex items-center gap-2 rounded-md px-3 py-1.5 text-xs flex-1 max-w-xs ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                    <Search size={13} />
-                    <span>Search zones, machines, workflows...</span>
-                </div>
-
-                {/* Spacer */}
-                <div className="flex-1" />
-
-                {/* Right controls */}
-                <button
-                    onClick={onToggleDark}
-                    className={`p-1.5 rounded-md transition ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-slate-100 text-slate-500'}`}
-                >
-                    {darkMode ? <Sun size={15} /> : <Moon size={15} />}
-                </button>
-                <button className={`p-1.5 rounded-md transition ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-slate-100 text-slate-500'}`}>
-                    <Settings size={15} />
-                </button>
-                <div className={`flex items-center gap-2 pl-3 ml-1 border-l ${darkMode ? 'border-zinc-700' : 'border-slate-200'}`}>
-                    <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${darkMode ? 'bg-cyan-500/20 text-cyan-400' : 'bg-blue-100 text-blue-700'}`}>
-                        OP
-                    </div>
-                </div>
+                <span className={s.navBrand}>Tripolar</span>
             </div>
 
-            {/* Tabs bar */}
-            <div className="flex items-center gap-0.5 px-4 h-9">
+            {/* ── Separator ── */}
+            <div className={s.navSep} />
+
+            {/* ── Operations label ── */}
+            <div className={s.navOps}>
+                <LayoutGrid size={14} />
+                <span className={s.navOpsText}>operations</span>
+            </div>
+
+            {/* ── Module Icons Pill ── */}
+            <div className={s.modulePill}>
                 {MODULES.map((mod) => (
                     <button
                         key={mod.id}
                         onClick={() => onModuleChange(mod.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-medium transition ${activeModule === mod.id
-                            ? darkMode
-                                ? 'bg-zinc-950 text-cyan-400 border-b-2 border-cyan-500'
-                                : 'bg-slate-50 text-blue-700 border-b-2 border-blue-600'
-                            : darkMode
-                                ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                            }`}
+                        title={mod.label}
+                        className={activeModule === mod.id ? s.moduleBtnActive : s.moduleBtn}
                     >
                         {mod.icon}
-                        {mod.label}
                     </button>
                 ))}
+            </div>
+
+            {/* ── Search Button ── */}
+            <button className={s.searchBtn}>
+                <Search size={13} />
+                <span>Search</span>
+            </button>
+
+            {/* ── Spacer ── */}
+            <div className={s.spacer} />
+
+            {/* ── Factory Selector Pill ── */}
+            <LocationSelector
+                locations={locations}
+                activeLocation={activeLocation}
+                onSelect={onLocationChange}
+            />
+
+            {/* ── User Section ── */}
+            <div className={s.userSection}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="/light.png"
+                    alt="User"
+                    className={s.userAvatar}
+                />
+                <span className={s.userName}>User</span>
+                <ChevronDown size={12} className={s.userChevron} />
             </div>
         </header>
     )
@@ -440,19 +410,14 @@ function Navbar({
 
 // ─── OPERATIONS DROPDOWN ───────────────────────────────────────────────────
 function OperationsDropdown({
-    darkMode,
     onSelect,
 }: {
-    darkMode: boolean
     onSelect: (mod: TfoModule) => void
 }) {
     return (
         <div className="relative group">
             <button
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition ${darkMode
-                    ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200"
             >
                 <LayoutGrid size={13} />
                 Operations
@@ -461,12 +426,9 @@ function OperationsDropdown({
 
             {/* Dropdown panel */}
             <div
-                className={`absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border p-3 shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity ${darkMode
-                    ? 'bg-zinc-900 border-zinc-700'
-                    : 'bg-white border-slate-200'
-                    }`}
+                className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border p-3 shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity bg-white border-slate-200"
             >
-                <p className={`text-[10px] uppercase tracking-widest font-semibold mb-2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 text-slate-400">
                     All Operations
                 </p>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -474,18 +436,14 @@ function OperationsDropdown({
                         <button
                             key={mod.id}
                             onClick={() => onSelect(mod.id)}
-                            className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-left transition ${darkMode
-                                ? 'hover:bg-zinc-800 text-zinc-300'
-                                : 'hover:bg-slate-50 text-slate-700'
-                                }`}
+                            className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left transition hover:bg-slate-50 text-slate-700"
                         >
-                            <span className={`flex h-7 w-7 items-center justify-center rounded ${darkMode ? 'bg-zinc-800' : 'bg-slate-100'
-                                }`}>
+                            <span className="flex h-7 w-7 items-center justify-center rounded bg-slate-100">
                                 {mod.icon}
                             </span>
                             <div>
                                 <div className="text-xs font-medium">{mod.label}</div>
-                                <div className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                                <div className="text-[10px] text-slate-400">
                                     {mod.description}
                                 </div>
                             </div>
@@ -499,39 +457,26 @@ function OperationsDropdown({
 
 // ─── LOCATION SELECTOR (AWS Region-style) ────────────────────────────────
 function LocationSelector({
-    darkMode,
     locations,
     activeLocation,
     onSelect,
 }: {
-    darkMode: boolean
     locations: FacilityLocation[]
     activeLocation: FacilityLocation
     onSelect: (id: string) => void
 }) {
     return (
         <div className="relative group">
-            <button
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition ${darkMode
-                    ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-            >
-                <MapPin size={13} className={darkMode ? 'text-cyan-400' : 'text-blue-500'} />
-                <span className="max-w-[140px] truncate">{activeLocation.name}</span>
-                <span className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
-                    {activeLocation.region}
-                </span>
-                <ChevronDown size={12} />
+            <button className={s.factoryPill}>
+                <MapPin size={14} />
+                <span style={{ maxWidth: 160 }} className="truncate">{activeLocation.name}</span>
+                <ChevronDown size={13} />
             </button>
 
             <div
-                className={`absolute left-0 top-full mt-1 z-50 w-80 rounded-lg border p-3 shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity ${darkMode
-                    ? 'bg-zinc-900 border-zinc-700'
-                    : 'bg-white border-slate-200'
-                    }`}
+                className="absolute left-0 top-full mt-1 z-50 w-80 rounded-lg border p-3 shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity bg-white border-slate-200"
             >
-                <p className={`text-[10px] uppercase tracking-widest font-semibold mb-2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 text-slate-400">
                     Select Facility
                 </p>
                 <div className="space-y-1">
@@ -540,29 +485,25 @@ function LocationSelector({
                             key={loc.id}
                             onClick={() => onSelect(loc.id)}
                             className={`w-full flex items-center gap-3 rounded-md px-2.5 py-2 text-left transition ${loc.id === activeLocation.id
-                                ? darkMode
-                                    ? 'bg-cyan-500/10 border border-cyan-500/30'
-                                    : 'bg-blue-50 border border-blue-200'
-                                : darkMode
-                                    ? 'hover:bg-zinc-800 border border-transparent'
-                                    : 'hover:bg-slate-50 border border-transparent'
+                                ? 'bg-blue-50 border border-blue-200'
+                                : 'hover:bg-slate-50 border border-transparent'
                                 }`}
                         >
                             <MapPin size={14} className={
                                 loc.id === activeLocation.id
-                                    ? darkMode ? 'text-cyan-400' : 'text-blue-500'
-                                    : darkMode ? 'text-zinc-500' : 'text-slate-400'
+                                    ? 'text-blue-500'
+                                    : 'text-slate-400'
                             } />
                             <div className="flex-1 min-w-0">
-                                <div className={`text-xs font-medium truncate ${darkMode ? 'text-zinc-200' : 'text-slate-800'}`}>
+                                <div className="text-xs font-medium truncate text-slate-800">
                                     {loc.name}
                                 </div>
-                                <div className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                                <div className="text-[10px] text-slate-400">
                                     {loc.region} · {loc.type}
                                 </div>
                             </div>
                             {loc.id === activeLocation.id && (
-                                <span className={`text-[10px] font-medium ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                                <span className="text-[10px] font-medium text-blue-600">
                                     Active
                                 </span>
                             )}
@@ -576,25 +517,21 @@ function LocationSelector({
 
 // ─── RIGHT PANEL ───────────────────────────────────────────────────────────
 function RightPanel({
-    darkMode,
     onNavigate,
     facilityMetrics,
     activeAlerts,
     recentWorkflows,
 }: {
-    darkMode: boolean
     onNavigate: (mod: TfoModule) => void
     facilityMetrics: { label: string; value: string; unit?: string; status: string }[]
     activeAlerts: { id: string; zone: string; sensor: string; severity: string; message: string; timeAgo: string }[]
     recentWorkflows: { id: string; name: string; status: string; timeAgo: string }[]
 }) {
     // Enhanced card background for glassmorphism context
-    const cardBg = darkMode
-        ? 'bg-zinc-900/60 border-zinc-800/80 hover:bg-zinc-900/80'
-        : 'bg-white/60 border-slate-200/80 hover:bg-white/90'
+    const cardBg = 'bg-white/60 border-slate-200/80 hover:bg-white/90'
 
-    const mutedText = darkMode ? 'text-zinc-500' : 'text-slate-500'
-    const bodyText = darkMode ? 'text-zinc-300' : 'text-slate-700'
+    const mutedText = 'text-slate-500'
+    const bodyText = 'text-slate-700'
 
     return (
         <>
@@ -605,10 +542,10 @@ function RightPanel({
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                     {facilityMetrics.map((m) => (
-                        <div key={m.label} className={`rounded-lg p-2.5 transition-colors ${darkMode ? 'bg-zinc-800/40' : 'bg-slate-50/60'}`}>
+                        <div key={m.label} className={`rounded-lg p-2.5 transition-colors bg-slate-50/60`}>
                             <div className={`text-[10px] ${mutedText}`}>{m.label}</div>
                             <div className="flex items-baseline gap-1 mt-0.5">
-                                <span className={`text-lg font-bold tracking-tight ${m.status === 'critical' ? 'text-red-400' : m.status === 'warning' ? 'text-amber-400' : darkMode ? 'text-zinc-100' : 'text-slate-900'
+                                <span className={`text-lg font-bold tracking-tight ${m.status === 'critical' ? 'text-red-400' : m.status === 'warning' ? 'text-amber-400' : 'text-slate-900'
                                     }`}>
                                     {m.value}
                                 </span>
@@ -632,8 +569,7 @@ function RightPanel({
                         <button
                             key={alert.id}
                             onClick={() => onNavigate('timeline')}
-                            className={`w-full text-left rounded-lg p-2.5 transition-all group ${darkMode ? 'hover:bg-zinc-800/60' : 'hover:bg-slate-50'
-                                }`}
+                            className={`w-full text-left rounded-lg p-2.5 transition-all group hover:bg-slate-50`}
                         >
                             <div className="flex items-center gap-2">
                                 <AlertTriangle
@@ -654,14 +590,14 @@ function RightPanel({
                     Energy Consumption
                 </h3>
                 <div className="space-y-3">
-                    <EnergyBar label="Robot Arms" value={78} darkMode={darkMode} color="cyan" />
-                    <EnergyBar label="Conveyor System" value={62} darkMode={darkMode} color="blue" />
-                    <EnergyBar label="Paint Booth" value={45} darkMode={darkMode} color="emerald" />
-                    <EnergyBar label="Curing Oven" value={71} darkMode={darkMode} color="amber" />
+                    <EnergyBar label="Robot Arms" value={78} color="cyan" />
+                    <EnergyBar label="Conveyor System" value={62} color="blue" />
+                    <EnergyBar label="Paint Booth" value={45} color="emerald" />
+                    <EnergyBar label="Curing Oven" value={71} color="amber" />
                 </div>
-                <div className={`mt-4 pt-3 border-t flex justify-between items-center ${darkMode ? 'border-zinc-800/50' : 'border-slate-200/50'}`}>
+                <div className={`mt-4 pt-3 border-t flex justify-between items-center border-slate-200/50`}>
                     <span className={`text-[10px] ${mutedText}`}>Plant Efficiency</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${darkMode ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' : 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200'}`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200`}>
                         86.4%
                     </span>
                 </div>
@@ -675,7 +611,7 @@ function RightPanel({
                     </h3>
                     <button
                         onClick={() => onNavigate('workflows')}
-                        className={`text-[10px] font-medium transition-colors ${darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}
+                        className={`text-[10px] font-medium transition-colors text-blue-600 hover:text-blue-700`}
                     >
                         View all
                     </button>
@@ -685,8 +621,7 @@ function RightPanel({
                         <button
                             key={wf.id}
                             onClick={() => onNavigate('workflows')}
-                            className={`w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${darkMode ? 'hover:bg-zinc-800/60' : 'hover:bg-slate-50'
-                                }`}
+                            className={`w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-slate-50`}
                         >
                             <span
                                 className={`h-2 w-2 rounded-full flex-shrink-0 shadow-sm ${wf.status === 'running'
@@ -706,13 +641,10 @@ function RightPanel({
             {/* Quick Links to OpsHub */}
             <button
                 onClick={() => onNavigate('opshub')}
-                className={`w-full flex items-center gap-3 rounded-xl border p-3 transition-all group ${darkMode
-                    ? 'border-zinc-800/80 bg-zinc-900/60 hover:border-cyan-800 hover:bg-zinc-900/80 text-zinc-300'
-                    : 'border-slate-200/80 bg-white/60 hover:border-blue-300 hover:bg-white/90 text-slate-700'
-                    }`}
+                className={`w-full flex items-center gap-3 rounded-xl border p-3 transition-all group border-slate-200/80 bg-white/60 hover:border-blue-300 hover:bg-white/90 text-slate-700`}
             >
-                <div className={`p-2 rounded-lg transition-colors ${darkMode ? 'bg-zinc-800 group-hover:bg-cyan-500/10' : 'bg-slate-100 group-hover:bg-blue-50'}`}>
-                    <LayoutDashboard size={18} className={`${darkMode ? 'text-cyan-500' : 'text-blue-500'}`} />
+                <div className={`p-2 rounded-lg transition-colors bg-slate-100 group-hover:bg-blue-50`}>
+                    <LayoutDashboard size={18} className={`text-blue-500`} />
                 </div>
                 <div className="text-left">
                     <div className="text-xs font-semibold">OpsHub</div>
@@ -724,7 +656,7 @@ function RightPanel({
 }
 
 // ─── ENERGY BAR ────────────────────────────────────────────────────────────
-function EnergyBar({ label, value, darkMode, color }: { label: string; value: number; darkMode: boolean; color: string }) {
+function EnergyBar({ label, value, color }: { label: string; value: number; color: string }) {
     const colorMap: Record<string, string> = {
         cyan: 'bg-cyan-500 shadow-cyan-500/50',
         blue: 'bg-blue-500 shadow-blue-500/50',
@@ -735,10 +667,10 @@ function EnergyBar({ label, value, darkMode, color }: { label: string; value: nu
     return (
         <div>
             <div className="flex justify-between mb-1">
-                <span className={`text-[10px] font-medium ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>{label}</span>
-                <span className={`text-[10px] font-bold ${darkMode ? 'text-zinc-300' : 'text-slate-800'}`}>{value}%</span>
+                <span className={`text-[10px] font-medium text-slate-600`}>{label}</span>
+                <span className={`text-[10px] font-bold text-slate-800`}>{value}%</span>
             </div>
-            <div className={`h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-zinc-800' : 'bg-slate-200'}`}>
+            <div className={`h-1.5 rounded-full overflow-hidden bg-slate-200`}>
                 <div
                     className={`h-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)] ${colorMap[color] ?? 'bg-cyan-500'}`}
                     style={{ width: `${value}%` }}
@@ -749,13 +681,10 @@ function EnergyBar({ label, value, darkMode, color }: { label: string; value: nu
 }
 
 // ─── FOOTER ────────────────────────────────────────────────────────────────
-function Footer({ darkMode, facilityMetrics }: { darkMode: boolean; facilityMetrics: { label: string; value: string; unit?: string }[] }) {
+function Footer({ facilityMetrics }: { facilityMetrics: { label: string; value: string; unit?: string }[] }) {
     return (
         <footer
-            className={`flex-shrink-0 flex items-center justify-between px-4 h-8 text-[10px] border-t z-50 ${darkMode
-                ? 'border-zinc-800 bg-zinc-900 text-zinc-500'
-                : 'border-slate-200 bg-white text-slate-400'
-                }`}
+            className="flex-shrink-0 flex items-center justify-between px-4 h-8 text-[10px] border-t z-50 border-slate-200 bg-white text-slate-400"
         >
             <div className="flex items-center gap-4">
                 {facilityMetrics.slice(0, 4).map((m) => (
