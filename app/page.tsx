@@ -245,15 +245,10 @@ export default function TFODashboard() {
 
                 {/* ── OVERVIEW PANELS (overlay on DT, Fade out in Details Mode) ──── */}
                 {isOverview && viewMode === 'overview' && (
-                    <div
-                        className="absolute top-0 right-0 h-full z-20 overflow-y-auto p-4 space-y-4 transition-transform duration-300 ease-out translate-x-0 w-full sm:w-[320px] md:w-[360px] lg:w-[400px] xl:w-[25%] 2xl:w-[22%] 
-                        border-l border-slate-200/50 bg-white/60 backdrop-blur-xl shadow-2xl"
-                    >
+                    <div className={s.rightPanel}>
                         <RightPanel
                             onNavigate={handleModuleChange}
-                            facilityMetrics={facilityMetrics}
                             activeAlerts={activeAlerts}
-                            recentWorkflows={recentWorkflows}
                         />
                     </div>
                 )}
@@ -518,122 +513,146 @@ function LocationSelector({
 // ─── RIGHT PANEL ───────────────────────────────────────────────────────────
 function RightPanel({
     onNavigate,
-    facilityMetrics,
     activeAlerts,
-    recentWorkflows,
 }: {
     onNavigate: (mod: TfoModule) => void
-    facilityMetrics: { label: string; value: string; unit?: string; status: string }[]
     activeAlerts: { id: string; zone: string; sensor: string; severity: string; message: string; timeAgo: string }[]
-    recentWorkflows: { id: string; name: string; status: string; timeAgo: string }[]
 }) {
-    // Enhanced card background for glassmorphism context
-    const cardBg = 'bg-white/60 border-slate-200/80 hover:bg-white/90'
-
-    const mutedText = 'text-slate-500'
-    const bodyText = 'text-slate-700'
-
     return (
         <>
-            {/* Facility Status */}
-            <div className={`rounded-xl border p-3 backdrop-blur-sm transition-all duration-200 ${cardBg}`}>
-                <h3 className={`text-[10px] uppercase tracking-widest font-semibold mb-3 ${mutedText}`}>
-                    Facility Status
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                    {facilityMetrics.map((m) => (
-                        <div key={m.label} className={`rounded-lg p-2.5 transition-colors bg-slate-50/60`}>
-                            <div className={`text-[10px] ${mutedText}`}>{m.label}</div>
-                            <div className="flex items-baseline gap-1 mt-0.5">
-                                <span className={`text-lg font-bold tracking-tight ${m.status === 'critical' ? 'text-red-400' : m.status === 'warning' ? 'text-amber-400' : 'text-slate-900'
-                                    }`}>
-                                    {m.value}
-                                </span>
-                                {m.unit && <span className={`text-[10px] ${mutedText}`}>{m.unit}</span>}
-                            </div>
-                        </div>
-                    ))}
+            {/* ─── Card 1: Production Efficiency (Stacked Area Chart) ──── */}
+            <div className={s.card}>
+                <div className={s.cardTitle}>Production Efficiency (Last 7d)</div>
+                <div className={s.chartContainer}>
+                    <svg viewBox="0 0 360 180" width="100%" preserveAspectRatio="xMidYMid meet">
+                        {/* Grid lines */}
+                        {[0, 20, 40, 60, 80, 100].map((v) => {
+                            const y = 160 - (v / 100) * 140
+                            return (
+                                <g key={v}>
+                                    <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
+                                    <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
+                                </g>
+                            )
+                        })}
+                        {/* Area layers — lower (light cyan) */}
+                        <path
+                            d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85
+                               L350,160 L40,160 Z"
+                            fill="#66DBFF" opacity="0.7"
+                        />
+                        {/* Area layers — upper (darker blue) */}
+                        <path
+                            d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30
+                               L350,160 L40,160 Z"
+                            fill="#0B8FD9" opacity="0.6"
+                        />
+                        {/* Stroke lines */}
+                        <path
+                            d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85"
+                            fill="none" stroke="#56B5DA" strokeWidth="1.5"
+                        />
+                        <path
+                            d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30"
+                            fill="none" stroke="#3992C4" strokeWidth="1.5"
+                        />
+                        {/* X-axis labels */}
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                            <text key={day} x={40 + i * 51.5} y={175} textAnchor="middle" fontSize="8" fill="#828898">{day}</text>
+                        ))}
+                    </svg>
                 </div>
             </div>
 
-            {/* Active Alerts */}
-            <div className={`rounded-xl border p-3 backdrop-blur-sm transition-all duration-200 ${cardBg}`}>
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className={`text-[10px] uppercase tracking-widest font-semibold ${mutedText}`}>
-                        Active Alerts
-                    </h3>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500/10 text-[10px] font-bold text-red-400 ring-1 ring-red-500/20">{activeAlerts.length}</span>
+            {/* ─── Card 2: Energy Consumption (Grouped Bar Chart) ──── */}
+            <div className={s.card}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div className={s.cardTitle} style={{ marginBottom: 0 }}>Energy Consumption</div>
+                    <div className={s.chartLegend} style={{ marginBottom: 0 }}>
+                        <span className={s.legendDot}><span className={s.legendDotCircle} style={{ background: '#99E3BE' }} /> D1</span>
+                        <span className={s.legendDot}><span className={s.legendDotCircle} style={{ background: '#1BC0C4' }} /> D2</span>
+                        <span className={s.legendDot}><span className={s.legendDotCircle} style={{ background: '#9ED0F1' }} /> D3</span>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    {activeAlerts.map((alert) => (
+                <div className={s.chartContainer}>
+                    <svg viewBox="0 0 360 150" width="100%" preserveAspectRatio="xMidYMid meet">
+                        {/* Grid lines */}
+                        {[0, 50, 100, 150, 200].map((v) => {
+                            const y = 130 - (v / 200) * 110
+                            return (
+                                <g key={v}>
+                                    <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
+                                    <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
+                                </g>
+                            )
+                        })}
+                        {/* Bars for each day */}
+                        {[
+                            { day: 'Mon', d1: 140, d2: 100, d3: 120 },
+                            { day: 'Tue', d1: 80, d2: 110, d3: 90 },
+                            { day: 'Wed', d1: 120, d2: 95, d3: 85 },
+                            { day: 'Thu', d1: 180, d2: 120, d3: 110 },
+                            { day: 'Fri', d1: 160, d2: 170, d3: 130 },
+                            { day: 'Sat', d1: 40, d2: 50, d3: 35 },
+                            { day: 'Sun', d1: 175, d2: 90, d3: 60 },
+                        ].map((item, i) => {
+                            const gx = 55 + i * 44
+                            const barW = 10
+                            const maxH = 110
+                            return (
+                                <g key={item.day}>
+                                    <rect x={gx} y={130 - (item.d1 / 200) * maxH} width={barW} height={(item.d1 / 200) * maxH} rx={2} fill="#99E3BE" />
+                                    <rect x={gx + barW + 2} y={130 - (item.d2 / 200) * maxH} width={barW} height={(item.d2 / 200) * maxH} rx={2} fill="#1BC0C4" />
+                                    <rect x={gx + (barW + 2) * 2} y={130 - (item.d3 / 200) * maxH} width={barW} height={(item.d3 / 200) * maxH} rx={2} fill="#9ED0F1" />
+                                    <text x={gx + 17} y={143} textAnchor="middle" fontSize="8" fill="#828898">{item.day}</text>
+                                </g>
+                            )
+                        })}
+                    </svg>
+                </div>
+            </div>
+
+            {/* ─── Card 3: Active Alerts ──── */}
+            <div className={s.card}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className={s.cardTitle} style={{ marginBottom: 0 }}>
+                        <span style={{ verticalAlign: 'middle' }}>⚠️</span> Active Alerts
+                    </div>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                    {activeAlerts.map((alert, idx) => (
                         <button
                             key={alert.id}
                             onClick={() => onNavigate('timeline')}
-                            className={`w-full text-left rounded-lg p-2.5 transition-all group hover:bg-slate-50`}
+                            className={s.alertItem}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderTop: idx > 0 ? '1px solid rgba(152,166,212,0.2)' : 'none' }}
                         >
-                            <div className="flex items-center gap-2">
-                                <AlertTriangle
-                                    size={14}
-                                    className={`${alert.severity === 'critical' ? 'text-red-400' : 'text-amber-400'} transition-transform group-hover:scale-110`}
-                                />
-                                <span className={`text-xs font-medium ${bodyText}`}>{alert.zone} — {alert.sensor}</span>
+                            <div className={`${s.alertIcon} ${alert.severity === 'critical' ? s.alertIconCritical : s.alertIconWarning}`}>
+                                <AlertTriangle size={14} />
                             </div>
-                            <p className={`text-[10px] mt-1 pl-5.5 ${mutedText} line-clamp-2`}>{alert.message}</p>
+                            <div className={s.alertText}>
+                                <div className={s.alertTitle}>{alert.zone} — {alert.sensor}</div>
+                                <div className={s.alertDesc}>{alert.message}</div>
+                            </div>
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Energy Consumption */}
-            <div className={`rounded-xl border p-3 backdrop-blur-sm transition-all duration-200 ${cardBg}`}>
-                <h3 className={`text-[10px] uppercase tracking-widest font-semibold mb-3 ${mutedText}`}>
-                    Energy Consumption
-                </h3>
-                <div className="space-y-3">
-                    <EnergyBar label="Robot Arms" value={78} color="cyan" />
-                    <EnergyBar label="Conveyor System" value={62} color="blue" />
-                    <EnergyBar label="Paint Booth" value={45} color="emerald" />
-                    <EnergyBar label="Curing Oven" value={71} color="amber" />
-                </div>
-                <div className={`mt-4 pt-3 border-t flex justify-between items-center border-slate-200/50`}>
-                    <span className={`text-[10px] ${mutedText}`}>Plant Efficiency</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200`}>
-                        86.4%
-                    </span>
-                </div>
-            </div>
-
-            {/* Recent Workflows */}
-            <div className={`rounded-xl border p-3 backdrop-blur-sm transition-all duration-200 ${cardBg}`}>
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className={`text-[10px] uppercase tracking-widest font-semibold ${mutedText}`}>
-                        Recent Workflows
-                    </h3>
-                    <button
-                        onClick={() => onNavigate('workflows')}
-                        className={`text-[10px] font-medium transition-colors text-blue-600 hover:text-blue-700`}
-                    >
-                        View all
-                    </button>
-                </div>
-                <div className="space-y-1.5">
-                    {recentWorkflows.map((wf) => (
-                        <button
-                            key={wf.id}
-                            onClick={() => onNavigate('workflows')}
-                            className={`w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-slate-50`}
-                        >
-                            <span
-                                className={`h-2 w-2 rounded-full flex-shrink-0 shadow-sm ${wf.status === 'running'
-                                    ? 'bg-cyan-400 animate-pulse shadow-cyan-400/50'
-                                    : wf.status === 'completed'
-                                        ? 'bg-emerald-400 shadow-emerald-400/50'
-                                        : 'bg-red-400 shadow-red-400/50'
-                                    }`}
-                            />
-                            <span className={`text-xs ${bodyText} flex-1 truncate font-medium`}>{wf.name}</span>
-                            <span className={`text-[10px] ${mutedText}`}>{wf.timeAgo}</span>
-                        </button>
+            {/* ─── Card 4: Factory Status ──── */}
+            <div className={s.card}>
+                <div className={s.cardTitle}>Factory Status</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[
+                        { label: 'Robot Arms', status: 'green', value: '18/20 Online' },
+                        { label: 'Conveyor System', status: 'red', value: 'Maintenance' },
+                        { label: 'Paint Booth', status: 'green', value: 'Operational' },
+                    ].map((item) => (
+                        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className={`${s.statusDot} ${item.status === 'green' ? s.statusGreen : s.statusRed}`} />
+                            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tp-text-heading)', flex: 1 }}>{item.label}</span>
+                            <span style={{ fontSize: 10, color: 'var(--tp-text-muted)' }}>{item.value}</span>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -641,42 +660,18 @@ function RightPanel({
             {/* Quick Links to OpsHub */}
             <button
                 onClick={() => onNavigate('opshub')}
-                className={`w-full flex items-center gap-3 rounded-xl border p-3 transition-all group border-slate-200/80 bg-white/60 hover:border-blue-300 hover:bg-white/90 text-slate-700`}
+                className={s.card}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left' }}
             >
-                <div className={`p-2 rounded-lg transition-colors bg-slate-100 group-hover:bg-blue-50`}>
-                    <LayoutDashboard size={18} className={`text-blue-500`} />
+                <div style={{ padding: 8, borderRadius: 8, background: 'var(--tp-bg-main)' }}>
+                    <LayoutDashboard size={18} style={{ color: 'var(--tp-stroke)' }} />
                 </div>
-                <div className="text-left">
-                    <div className="text-xs font-semibold">OpsHub</div>
-                    <div className={`text-[10px] ${mutedText}`}>Cross-facility ops & work orders</div>
+                <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tp-text-heading)' }}>OpsHub</div>
+                    <div style={{ fontSize: 10, color: 'var(--tp-text-muted)' }}>Cross-facility ops & work orders</div>
                 </div>
             </button>
         </>
-    )
-}
-
-// ─── ENERGY BAR ────────────────────────────────────────────────────────────
-function EnergyBar({ label, value, color }: { label: string; value: number; color: string }) {
-    const colorMap: Record<string, string> = {
-        cyan: 'bg-cyan-500 shadow-cyan-500/50',
-        blue: 'bg-blue-500 shadow-blue-500/50',
-        emerald: 'bg-emerald-500 shadow-emerald-500/50',
-        amber: 'bg-amber-500 shadow-amber-500/50',
-    }
-
-    return (
-        <div>
-            <div className="flex justify-between mb-1">
-                <span className={`text-[10px] font-medium text-slate-600`}>{label}</span>
-                <span className={`text-[10px] font-bold text-slate-800`}>{value}%</span>
-            </div>
-            <div className={`h-1.5 rounded-full overflow-hidden bg-slate-200`}>
-                <div
-                    className={`h-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)] ${colorMap[color] ?? 'bg-cyan-500'}`}
-                    style={{ width: `${value}%` }}
-                />
-            </div>
-        </div>
     )
 }
 
