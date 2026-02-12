@@ -324,7 +324,7 @@ export function DigitalTwinNavigator({
             {viewMode !== 'details' && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-6 pointer-events-auto">
                     {/* Label */}
-                    <div className="flex items-center justify-center px-8 h-[56px] bg-[#B0B9CA]/90 backdrop-blur-md rounded-[20px] shadow-lg border border-white/20">
+                    <div className="flex items-center justify-left px-8 h-[56px] bg-[#B0B9CA]/90 backdrop-blur-md rounded-[20px] shadow-lg border border-white/20">
                         <span className="text-[#222939] font-bold text-lg tracking-tight">Nexus Floor Control</span>
                     </div>
 

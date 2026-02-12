@@ -4,13 +4,14 @@
 .navbar {
     display: flex;
     align-items: center;
-    height: 56px;
+    height: 60px;
     padding: 0 16px;
     background: var(--tp-bg-main);
     flex-shrink: 0;
     position: relative;
     z-index: 50;
     gap: 12px;
+    border-bottom: var(--tp-stroke-width) solid var(--tp-stroke);
 }
 
 /* ── Logo area ── */
@@ -19,6 +20,7 @@
     align-items: center;
     gap: 10px;
     margin-right: 4px;
+    height: 40px;
 }
 
 .navLogoImg {
@@ -48,6 +50,7 @@
     align-items: center;
     gap: 6px;
     margin-right: 4px;
+    height: 40px;
 }
 
 .navOps svg {
@@ -65,10 +68,12 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 6px 10px;
+    padding: 0 4px;
+    height: 40px;
     border-radius: var(--tp-radius-pill);
     border: var(--tp-stroke-width) solid var(--tp-stroke);
     background: var(--tp-bg-pill);
+    box-sizing: border-box;
 }
 
 .moduleBtn {
@@ -108,15 +113,16 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
-    border-radius: 30.312px;
-    border: none;
-    background: var(--tp-bg-hover);
+    padding: 0 16px;
+    height: 40px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
     color: var(--tp-text-heading);
     cursor: pointer;
-    transition: background 0.2s ease;
+    background: var(--tp-bg-pill);
+    box-sizing: border-box;
+    border: var(--tp-stroke-width) solid var(--tp-stroke);
 }
 
 .searchBtn:hover {
@@ -133,7 +139,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 0 16px;
+    height: 40px;
     border-radius: var(--tp-radius-pill);
     border: var(--tp-stroke-width) solid var(--tp-stroke);
     background: var(--tp-bg-pill);
@@ -142,6 +149,7 @@
     color: var(--tp-text-heading);
     cursor: pointer;
     transition: background 0.2s ease;
+    box-sizing: border-box;
 }
 
 .factoryPill:hover {
@@ -160,6 +168,7 @@
     padding-left: 12px;
     margin-left: 4px;
     border-left: 1px solid rgba(152, 166, 212, 0.4);
+    height: 40px;
 }
 
 .userAvatar {
