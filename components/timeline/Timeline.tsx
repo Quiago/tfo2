@@ -21,7 +21,7 @@ import {
     User,
     Zap,
 } from 'lucide-react';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
     Area,
     CartesianGrid,
@@ -288,8 +288,8 @@ function VideoFrameStrip({ data }: { data: SensorReading[] }) {
             const reading = data[i];
             const color =
                 reading.alertLevel === 'critical' ? '#ef4444' :
-                reading.alertLevel === 'warning' ? '#f97316' :
-                '#22c55e';
+                    reading.alertLevel === 'warning' ? '#f97316' :
+                        '#22c55e';
 
             const last = result[result.length - 1];
             if (last && last.color === color) {
@@ -351,8 +351,8 @@ function VideoFrameStrip({ data }: { data: SensorReading[] }) {
                                     <div>{seg.count} frame{seg.count > 1 ? 's' : ''}</div>
                                     <div style={{ color: seg.color }}>
                                         {seg.color === '#ef4444' ? 'Critical' :
-                                         seg.color === '#f97316' ? 'Warning' :
-                                         seg.color === '#22c55e' ? 'Normal' : 'No data'}
+                                            seg.color === '#f97316' ? 'Warning' :
+                                                seg.color === '#22c55e' ? 'Normal' : 'No data'}
                                     </div>
                                 </div>
                             )}
@@ -391,7 +391,7 @@ function SensorLayer({
             pressure_norm: normalizeForDisplay(sensor.pressure, 'pressure'),
             humidity_norm: normalizeForDisplay(sensor.humidity, 'humidity'),
             // Si es anomalía, guardamos el valor normalizado. Si no, null (Recharts ignora nulls)
-            anomaly_y: sensor.anomaly ? normalizeForDisplay(sensor.vibration, 'vibration') : null 
+            anomaly_y: sensor.anomaly ? normalizeForDisplay(sensor.vibration, 'vibration') : null
         }));
     }, [data, safePredictionStart]);
 
@@ -472,7 +472,7 @@ function SensorLayer({
                                 shape={(props: any) => {
                                     // Protección extra: si el valor es null, no renderizar nada
                                     if (props.payload.anomaly_y === null) return null;
-                                    
+
                                     return (
                                         <circle
                                             cx={props.cx}
@@ -1024,7 +1024,12 @@ function SensorFilterBar({
 }
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
-export function MultiLayerTimeline() {
+interface MultiLayerTimelineProps {
+    autoTriggerAnomaly?: boolean;
+    onAnomalyTriggered?: () => void;
+}
+
+export function MultiLayerTimeline({ autoTriggerAnomaly, onAnomalyTriggered }: MultiLayerTimelineProps) {
     const [granularity, setGranularity] = useState<TimeGranularity>('Day');
     const [expandedLayer, setExpandedLayer] = useState<string | null>(null);
     const [visibleSensors, setVisibleSensors] = useState<Record<string, boolean>>({
@@ -1034,6 +1039,14 @@ export function MultiLayerTimeline() {
         humidity: false,
         pressure: false,
     });
+
+    // Effect to handle auto-trigger from parent
+    useEffect(() => {
+        if (autoTriggerAnomaly) {
+            // Force expand sensors layer to show the anomaly
+            setExpandedLayer('sensors');
+        }
+    }, [autoTriggerAnomaly]);
 
     const granularities: TimeGranularity[] = [
         'Minute',
@@ -1060,6 +1073,14 @@ export function MultiLayerTimeline() {
         () => (timestamps.length > 0 ? timestamps[timestamps.length - 1] : null),
         [timestamps]
     );
+
+    // Trigger anomaly effect
+    useEffect(() => {
+        if (autoTriggerAnomaly) {
+            triggerAnomaly();
+            onAnomalyTriggered?.();
+        }
+    }, [autoTriggerAnomaly, triggerAnomaly, onAnomalyTriggered]);
 
     const layers: LayerConfig[] = [
         {

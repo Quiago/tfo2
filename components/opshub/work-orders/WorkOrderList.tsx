@@ -15,6 +15,7 @@ interface WorkOrderListProps {
 
 export function WorkOrderList({ onSelectWorkOrder, onBack }: WorkOrderListProps) {
     const workOrders = useOpshubStore(s => s.workOrders)
+    const removeWorkOrder = useOpshubStore(s => s.removeWorkOrder)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
 
@@ -97,6 +98,7 @@ export function WorkOrderList({ onSelectWorkOrder, onBack }: WorkOrderListProps)
                             key={wo.id}
                             workOrder={wo}
                             onClick={onSelectWorkOrder}
+                            onDelete={removeWorkOrder}
                         />
                     ))}
                 </div>

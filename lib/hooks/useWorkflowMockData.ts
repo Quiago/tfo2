@@ -167,9 +167,7 @@ export const MOCK_VOICE_INTENT: VoiceWorkflowIntent = {
         {
             type: 'checklist_gate',
             label: 'Check Heating Element',
-            config: {
-                items: [{ id: 'chk_1', label: 'Check Heating Element', required: true }]
-            },
+            config: { items: [{ id: 'chk_1', label: 'Check Heating Element', required: true }] },
         },
         {
             type: 'decision',
@@ -178,23 +176,54 @@ export const MOCK_VOICE_INTENT: VoiceWorkflowIntent = {
         },
         {
             type: 'checklist_gate',
-            label: 'Check Ventilation',
-            config: {
-                items: [{ id: 'chk_2', label: 'Check Ventilation', required: false }]
-            },
+            label: 'Replace Element',
+            config: { items: [{ id: 'chk_3', label: 'Replace Element', required: true }] },
+        },
+    ],
+    safetyCheck: { requiresLoto: true, ppeRequired: ['gloves', 'mask'] },
+}
+
+export const MOCK_VOICE_INTENT_BEARING: VoiceWorkflowIntent = {
+    title: 'Bearing Replacement Procedure',
+    description: 'Standard procedure for replacing bearing assembly on KUKA KR-120',
+    targetAsset: {
+        type: 'robot_arm',
+        brand: 'KUKA',
+        model: 'KR-120 R2500',
+        tags: ['robot', 'bearing', 'maintenance'],
+    },
+    trigger: {
+        type: 'voice_trigger',
+        keywords: ['Bearing Failure', 'Vibration'],
+    },
+    steps: [
+        {
+            type: 'checklist_gate',
+            label: 'LOTO: Depressurize',
+            config: { items: [{ id: 'loto_1', label: 'Lock Out / Tag Out', required: true }] },
         },
         {
             type: 'checklist_gate',
-            label: 'Replace Element',
-            config: {
-                items: [{ id: 'chk_3', label: 'Replace Element', required: true }]
-            },
+            label: 'Remove Housing Cover',
+            config: { items: [{ id: 'step_1', label: 'Unscrew 4 bolts (M8)', required: true }] },
+        },
+        {
+            type: 'checklist_gate',
+            label: 'Extract Bearing',
+            config: { items: [{ id: 'step_2', label: 'Use puller tool #4', required: true }] },
+        },
+        {
+            type: 'decision',
+            label: 'Shaft Damage?',
+            config: { condition: 'visual_check == damage', trueLabel: 'Yes', falseLabel: 'No' },
+        },
+        {
+            type: 'checklist_gate',
+            label: 'Install New Bearing',
+            config: { items: [{ id: 'step_3', label: 'Apply grease', required: true }, { id: 'step_4', label: 'Press fit new bearing', required: true }] },
         },
     ],
-    safetyCheck: {
-        requiresLoto: true,
-        ppeRequired: ['gloves', 'mask'],
-    },
+    safetyCheck: { requiresLoto: true, ppeRequired: ['gloves', 'glasses', 'steel_toe_boots'] },
 }
 
 // ─── All mock workflows ──────────────────────────────────────────

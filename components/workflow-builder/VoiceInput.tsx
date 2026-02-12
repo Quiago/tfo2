@@ -1,6 +1,6 @@
 'use client'
 
-import { MOCK_VOICE_INTENT } from '@/lib/hooks/useWorkflowMockData'
+import { MOCK_VOICE_INTENT, MOCK_VOICE_INTENT_BEARING } from '@/lib/hooks/useWorkflowMockData'
 import { useWorkflowStore } from '@/lib/store/workflow-store'
 import { Loader2, MessageSquare, Mic, MicOff, Send, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -40,12 +40,17 @@ export function VoiceInput({ className = '' }: VoiceInputProps) {
             // Simulate AI processing delay
             setTimeout(() => {
                 setIsProcessing(false)
-                setVoiceTranscript(
-                    'Create a new workflow for Paint Booth temperature control. If temperature is above 40 degrees, check the heating element. If it\'s okay, check ventilation. If not, replace the element.'
-                )
+
+                // DEMO LOGIC: Check for bearing intent keys
+                // In a real app we'd analyze specific keywords from the audio stream
+                const transcript = 'Create a workflow to replace the bearing assembly on the KUKA robot. Check for shaft damage and ensure LOTO procedures.'
+                const useBearingIntent = true
+
+                setVoiceTranscript(transcript)
+
                 // Simulate AI intent parsing result
                 setConfirmationCard({
-                    workflowIntent: MOCK_VOICE_INTENT,
+                    workflowIntent: useBearingIntent ? MOCK_VOICE_INTENT_BEARING : MOCK_VOICE_INTENT,
                     status: 'pending',
                 })
             }, 1500)
@@ -62,10 +67,12 @@ export function VoiceInput({ className = '' }: VoiceInputProps) {
         setIsProcessing(true)
         setVoiceTranscript(textInput)
 
+        const isBearing = textInput.toLowerCase().includes('bearing')
+
         setTimeout(() => {
             setIsProcessing(false)
             setConfirmationCard({
-                workflowIntent: MOCK_VOICE_INTENT,
+                workflowIntent: isBearing ? MOCK_VOICE_INTENT_BEARING : MOCK_VOICE_INTENT,
                 status: 'pending',
             })
             setTextInput('')
@@ -134,8 +141,8 @@ export function VoiceInput({ className = '' }: VoiceInputProps) {
                     onClick={handleMicPress}
                     disabled={isProcessing}
                     className={`relative flex h-14 w-14 items-center justify-center rounded-full transition-all ${isVoiceRecording
-                            ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
-                            : 'border-2 border-zinc-600 bg-zinc-800/80 text-zinc-300 backdrop-blur-sm hover:border-amber-500 hover:text-amber-400'
+                        ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+                        : 'border-2 border-zinc-600 bg-zinc-800/80 text-zinc-300 backdrop-blur-sm hover:border-amber-500 hover:text-amber-400'
                         } disabled:cursor-not-allowed disabled:opacity-40`}
                     title={isVoiceRecording ? 'Stop recording' : 'Start recording'}
                 >
@@ -149,17 +156,7 @@ export function VoiceInput({ className = '' }: VoiceInputProps) {
                         <Mic size={20} />
                     )}
                 </button>
-
-                {/* Spacer for symmetry */}
-                <div className="h-10 w-10" />
             </div>
-
-            {/* Recording hint */}
-            {isVoiceRecording && (
-                <p className="text-[10px] font-medium uppercase tracking-widest text-rose-400">
-                    Listening...
-                </p>
-            )}
         </div>
     )
 }

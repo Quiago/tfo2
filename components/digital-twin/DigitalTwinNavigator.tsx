@@ -26,7 +26,7 @@ interface DigitalTwinNavigatorProps {
     className?: string
     viewMode?: 'full' | 'details' | 'overview'
     isolatedMeshName?: string | null
-    onExpandClick?: (meshName: string) => void
+    onExpandClick?: (meshName: string, isAnomaly?: boolean) => void
     onCreateWorkOrder?: (meshName: string) => void
 }
 
@@ -304,8 +304,9 @@ export function DigitalTwinNavigator({
                         <button
                             onClick={() => {
                                 const name = overlay.meshName
+                                const isAnomaly = !!overlay.anomaly
                                 setOverlay(null)
-                                onExpandClick?.(name)
+                                onExpandClick?.(name, isAnomaly)
                             }}
                             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-cyan-500/20 backdrop-blur-sm text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 hover:border-cyan-400/60 transition-all shadow-lg"
                         >
@@ -326,7 +327,7 @@ export function DigitalTwinNavigator({
                     className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-xl border font-medium text-sm transition-all duration-300 ${alertActive
                         ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.3)] animate-pulse'
                         : 'bg-zinc-900/80 border-white/10 text-zinc-300 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5'
-                    }`}
+                        }`}
                 >
                     <AlertTriangle size={16} className={alertActive ? 'text-red-400' : ''} />
                     {alertActive ? 'DISMISS ALERT' : 'TRIGGER ALERT'}

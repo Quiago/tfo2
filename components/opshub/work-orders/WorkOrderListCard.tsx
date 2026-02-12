@@ -1,13 +1,14 @@
 'use client'
 
 import { AvatarStack } from '@/components/shared/AvatarStack'
-import { Calendar } from 'lucide-react'
+import { Calendar, Trash2 } from 'lucide-react'
 
 import { type WorkOrderCard, type WorkOrderStatus } from '@/lib/types/opshub'
 
 interface WorkOrderListCardProps {
     workOrder: WorkOrderCard
     onClick?: (id: string) => void
+    onDelete?: (id: string) => void
 }
 
 const statusConfig: Record<WorkOrderStatus, { color: string; label: string }> = {
@@ -32,15 +33,17 @@ function timeAgo(dateStr: string): string {
     return `${Math.floor(seconds / 86400)}d ago`
 }
 
-export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps) {
+export function WorkOrderListCard({ workOrder, onClick, onDelete }: WorkOrderListCardProps) {
     const sc = statusConfig[workOrder.status]
 
     return (
-        <button
-            onClick={() => onClick?.(workOrder.id)}
-            className="w-full text-left bg-zinc-900 border-b border-zinc-800 p-4 hover:bg-zinc-800/50 transition group first:rounded-t-lg last:rounded-b-lg last:border-0"
+        <div
+            className="group relative w-full text-left bg-zinc-900 border-b border-zinc-800 p-4 hover:bg-zinc-800/50 transition first:rounded-t-lg last:rounded-b-lg last:border-0"
         >
-            <div className="flex items-start justify-between gap-3">
+            <div
+                className="flex items-start justify-between gap-3 cursor-pointer"
+                onClick={() => onClick?.(workOrder.id)}
+            >
                 <div className="flex-1 min-w-0">
                     {/* ID - Status - Priority (Text Only) */}
                     <div className="flex items-center gap-0 text-xs font-mono mb-1">
@@ -56,7 +59,7 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-cyan-400 transition truncate">
+                    <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-cyan-400 transition truncate pr-8">
                         {workOrder.title}
                     </h3>
 
@@ -99,6 +102,22 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
                     />
                 )}
             </div>
-        </button>
+
+            {/* Delete Action - Show on hover */}
+            {onDelete && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm('Are you sure you want to delete this Work Order?')) {
+                            onDelete(workOrder.id)
+                        }
+                    }}
+                    className="absolute top-4 right-4 p-1.5 text-zinc-600 hover:text-red-400 hover:bg-zinc-800 rounded opacity-0 group-hover:opacity-100 transition"
+                    title="Delete Work Order"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            )}
+        </div>
     )
 }

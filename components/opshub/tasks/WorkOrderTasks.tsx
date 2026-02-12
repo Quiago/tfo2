@@ -1,6 +1,7 @@
 'use client'
 
 import { useOpshubStore } from '@/lib/store/opshub-store'
+import { useTfoStore } from '@/lib/store/tfo-store'
 import { WorkOrderTaskCard } from './WorkOrderTaskCard'
 
 interface WorkOrderTasksProps {
@@ -10,6 +11,8 @@ interface WorkOrderTasksProps {
 export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
     const workOrder = useOpshubStore(s => s.workOrders.find(w => w.id === workOrderId))
     const updateTask = useOpshubStore(s => s.updateTask)
+    const updateWorkOrder = useOpshubStore(s => s.updateWorkOrder)
+    const setActiveModule = useTfoStore(s => s.setActiveModule)
 
     if (!workOrder) return null
 
@@ -18,11 +21,27 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
 
     const handleStart = (taskId: string) => {
         updateTask(workOrderId, taskId, { status: 'in-progress' })
+        if (workOrder.status === 'open') {
+            updateWorkOrder(workOrderId, { status: 'in-progress' })
+        }
+    }
+
+    const handleCreateWorkflow = () => {
+        setActiveModule('workflows')
     }
 
     const handleComplete = (taskId: string) => {
         // Complete current task
         updateTask(workOrderId, taskId, { status: 'completed' })
+
+        // Check if ALL tasks are now completed (including this one)
+        const allCompleted = tasks.every(t =>
+            t.id === taskId || t.status === 'completed'
+        )
+
+        if (allCompleted) {
+            updateWorkOrder(workOrderId, { status: 'resolved' })
+        }
 
         // Check for dependents to unblock
         const currentTask = tasks.find(t => t.id === taskId)
@@ -74,6 +93,7 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
                                 blockedBy={task.dependsOn}
                                 onStart={() => handleStart(task.id)}
                                 onComplete={() => handleComplete(task.id)}
+                                onCreateWorkflow={handleCreateWorkflow}
                             />
                         </div>
                     ))

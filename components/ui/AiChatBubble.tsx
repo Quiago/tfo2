@@ -1,3 +1,5 @@
+'use client'
+
 import { MOCK_TEAM } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { ArrowUp, Minus, Sparkles, Square, X } from 'lucide-react'
@@ -27,6 +29,7 @@ export function AiChatBubble() {
     const selectedWorkOrderId = useOpshubStore(s => s.selectedWorkOrderId)
     const workOrders = useOpshubStore(s => s.workOrders)
     const addTask = useOpshubStore(s => s.addTask)
+    const updateTask = useOpshubStore(s => s.updateTask)
     const currentUser = useOpshubStore(s => s.currentUser)
 
     const scrollToBottom = useCallback(() => {
@@ -35,13 +38,7 @@ export function AiChatBubble() {
         }
     }, [])
 
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages, typing, scrollToBottom])
-
-    useEffect(() => {
-        if (open) inputRef.current?.focus()
-    }, [open])
+    // ... (useEffect hooks)
 
     const handleSend = useCallback((text?: string) => {
         const content = (text ?? input).trim()
@@ -60,16 +57,47 @@ export function AiChatBubble() {
 
             if (isDemoPrompt) {
                 // Find target Work Order (Selected OR Latest)
-                const targetWoId = selectedWorkOrderId || workOrders[workOrders.length - 1]?.id
+                const targetWo = selectedWorkOrderId
+                    ? workOrders.find(w => w.id === selectedWorkOrderId)
+                    : workOrders[workOrders.length - 1]
 
-                if (targetWoId) {
+                if (targetWo) {
+                    // 1. UPDATE RELIABILITY EXEC TASK (Current User's Task)
+                    // We assume the current user is the Reliability Engineer working on an open task
+                    const reliabTask = targetWo.tasks.find(t =>
+                        t.assignee.id === currentUser?.id && t.status !== 'completed'
+                    )
+
+                    if (reliabTask) {
+                        updateTask(targetWo.id, reliabTask.id, {
+                            status: 'in-progress',
+                            updates: [
+                                ...(reliabTask.updates || []),
+                                {
+                                    id: `u-${Date.now()}`,
+                                    author: {
+                                        id: 'ai-agent',
+                                        name: 'OpsFlow AI',
+                                        role: 'System',
+                                        avatarInitials: 'AI',
+                                        avatarColor: 'bg-cyan-500',
+                                        status: 'available',
+                                        facility: 'Global'
+                                    },
+                                    content: 'AI Analysis run: Cross-facility correlation confirmed (87% with Munich). Recommended immediate bearing replacement.',
+                                    createdAt: new Date().toISOString(),
+                                    attachments: []
+                                }
+                            ]
+                        })
+                    }
+
+                    // 2. CREATE MAINTENANCE TASK
                     // Find Maintenance Engineer (User 3 - Ahmed or similar)
-                    // In mock data: 'ahmed-nasser' is Maintenance Lead, close enough. 
                     const maintenanceEng = MOCK_TEAM.find(m => m.role.includes('Maintenance')) || MOCK_TEAM[2]
 
                     if (maintenanceEng) {
-                        // Create the task
-                        addTask(targetWoId, {
+                        addTask(targetWo.id, {
                             type: 'repair',
                             title: 'Replace Bearing Assembly (AI Generated)',
                             description: 'Based on the cross-facility analysis of the Munich incident, the bearing assembly shows 87% similarity in vibration patterns pre-failure. Immediate replacement recommended to prevent seizure.',
@@ -97,7 +125,7 @@ export function AiChatBubble() {
             setMessages((prev) => [...prev, aiMsg])
             setTyping(false)
         }, 1500)
-    }, [input, addTask, selectedWorkOrderId, workOrders, currentUser])
+    }, [input, addTask, updateTask, selectedWorkOrderId, workOrders, currentUser])
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -172,8 +200,8 @@ export function AiChatBubble() {
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-cyan-500/15 text-cyan-100'
-                                        : 'bg-zinc-800 text-zinc-300'
+                                    ? 'bg-cyan-500/15 text-cyan-100'
+                                    : 'bg-zinc-800 text-zinc-300'
                                     }`}>
                                     <div className="whitespace-pre-wrap">{msg.content}</div>
                                 </div>
@@ -207,8 +235,8 @@ export function AiChatBubble() {
                                 onClick={() => handleSend()}
                                 disabled={!input.trim()}
                                 className={`p-1 rounded-lg transition-colors flex-shrink-0 ${input.trim()
-                                        ? 'bg-cyan-500 text-white hover:bg-cyan-400'
-                                        : 'bg-zinc-700 text-zinc-500'
+                                    ? 'bg-cyan-500 text-white hover:bg-cyan-400'
+                                    : 'bg-zinc-700 text-zinc-500'
                                     }`}
                             >
                                 <ArrowUp size={14} />
@@ -222,8 +250,8 @@ export function AiChatBubble() {
             <button
                 onClick={() => setOpen(!open)}
                 className={`fixed bottom-5 right-5 z-[100] h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${open
-                        ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 scale-90'
-                        : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:scale-105'
+                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 scale-90'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:scale-105'
                     }`}
             >
                 {open ? <Square size={15} /> : <Sparkles size={18} />}

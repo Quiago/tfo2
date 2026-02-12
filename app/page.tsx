@@ -94,6 +94,7 @@ export default function TFODashboard() {
     // View Mode State: 'overview' vs 'details'
     const [viewMode, setViewMode] = useState<'overview' | 'details'>('overview')
     const [selectedAsset, setSelectedAsset] = useState<string | null>(null)
+    const [autoTriggerAnomaly, setAutoTriggerAnomaly] = useState(false)
 
     const isOverview = activeModule === 'overview'
 
@@ -175,9 +176,12 @@ export default function TFODashboard() {
                     <SuspendedDigitalTwin
                         viewMode={viewMode}
                         isolatedMeshName={selectedAsset}
-                        onExpandClick={(meshName) => {
+                        onExpandClick={(meshName, isAnomaly) => {
                             setSelectedAsset(meshName)
                             setViewMode('details')
+                            if (isAnomaly) {
+                                setAutoTriggerAnomaly(true)
+                            }
                         }}
                         onCreateWorkOrder={(meshName) => {
                             // Demo Simulation: Pre-fill context
@@ -236,7 +240,11 @@ export default function TFODashboard() {
 
                     {/* Timeline Container (85%) */}
                     <div className="h-[85%] min-h-0 relative bg-zinc-900 p-0 overflow-hidden">
-                        <MultiLayerTimeline />
+                        {/* @ts-ignore - Dynamic import props issue */}
+                        <MultiLayerTimeline
+                            autoTriggerAnomaly={autoTriggerAnomaly}
+                            onAnomalyTriggered={() => setAutoTriggerAnomaly(false)}
+                        />
                     </div>
                 </div>
 
@@ -302,7 +310,7 @@ function SuspendedDigitalTwin({
 }: {
     viewMode: 'overview' | 'details'
     isolatedMeshName: string | null
-    onExpandClick: (name: string) => void
+    onExpandClick: (name: string, isAnomaly?: boolean) => void
     onCreateWorkOrder: (name: string) => void
 }) {
     return (

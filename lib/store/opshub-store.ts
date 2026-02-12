@@ -153,7 +153,7 @@ interface OpshubState {
         assignedBy: TeamMember
         priority: TaskPriority
     }) => void
-    updateTask: (workOrderId: string, taskId: string, updates: Partial<Pick<WorkOrderTask, 'status' | 'title' | 'description' | 'note' | 'priority' | 'isBlocked'>>) => void
+    updateTask: (workOrderId: string, taskId: string, updates: Partial<Pick<WorkOrderTask, 'status' | 'title' | 'description' | 'note' | 'priority' | 'isBlocked' | 'updates'>>) => void
     removeTask: (workOrderId: string, taskId: string) => void
 
     // ── Filter Actions (existing) ───────────────────

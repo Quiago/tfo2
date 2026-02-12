@@ -24,6 +24,7 @@ interface WOTaskCardProps {
     blockedBy?: string[]
     onStart?: () => void
     onComplete?: () => void
+    onCreateWorkflow?: () => void
 }
 
 const typeIcon: Record<TaskType, React.ReactNode> = {
@@ -50,7 +51,7 @@ const statusConfig: Record<TaskStatus, { dot: string; label: string }> = {
 
 export function WorkOrderTaskCard({
     taskNumber, type, title, assigneeName, assigneeInitials, assigneeColor,
-    status, blockedBy, onStart, onComplete,
+    status, blockedBy, onStart, onComplete, onCreateWorkflow
 }: WOTaskCardProps) {
     const sc = statusConfig[status]
 
@@ -87,7 +88,16 @@ export function WorkOrderTaskCard({
             </div>
 
             {/* Actions */}
-            <div className="flex-shrink-0 self-center">
+            <div className="flex-shrink-0 self-center flex items-center gap-2">
+                {status === 'in-progress' && onCreateWorkflow && (
+                    <button
+                        onClick={onCreateWorkflow}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-900/50 hover:bg-amber-900/20 rounded-md transition"
+                        title="Create Workflow from Task"
+                    >
+                        <Settings className="w-3.5 h-3.5" /> Workflow
+                    </button>
+                )}
                 {status === 'pending' && onStart && (
                     <button onClick={onStart} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-900/50 hover:bg-cyan-900/20 rounded-md transition">
                         <Play className="w-3.5 h-3.5" /> Start
