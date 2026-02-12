@@ -12,7 +12,7 @@ export interface CameraPreset {
 export const CAMERA_PRESETS: CameraPreset[] = [
     {
         id: 'overview',
-        name: 'Paint Shop Overview',
+        name: '',
         description: 'Bird\'s eye view of the automotive paint shop floor',
         icon: '🏭',
         position: [0, 35, 55],

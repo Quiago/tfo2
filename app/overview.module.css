@@ -12,6 +12,7 @@
     z-index: 50;
     gap: 12px;
     border-bottom: var(--tp-stroke-width) solid var(--tp-stroke);
+    font-size: 14px;
 }
 
 /* ── Logo area ── */
@@ -30,7 +31,7 @@
 }
 
 .navBrand {
-    font-size: 14px;
+    /*font-size: 14px;*/
     font-weight: 600;
     letter-spacing: -0.02em;
     color: var(--tp-text-primary);
@@ -58,7 +59,7 @@
 }
 
 .navOpsText {
-    font-size: 12px;
+    /*font-size: 12px;*/
     font-weight: 500;
     color: var(--tp-text-heading);
 }
@@ -116,7 +117,7 @@
     padding: 0 16px;
     height: 40px;
     border-radius: 20px;
-    font-size: 12px;
+    /*font-size: 12px;*/
     font-weight: 500;
     color: var(--tp-text-heading);
     cursor: pointer;
@@ -144,7 +145,7 @@
     border-radius: var(--tp-radius-pill);
     border: var(--tp-stroke-width) solid var(--tp-stroke);
     background: var(--tp-bg-pill);
-    font-size: 12px;
+    /*font-size: 12px;*/
     font-weight: 600;
     color: var(--tp-text-heading);
     cursor: pointer;
@@ -181,7 +182,7 @@
 }
 
 .userName {
-    font-size: 12px;
+    /*font-size: 12px;*/
     font-weight: 500;
     color: var(--tp-text-heading);
 }
@@ -199,10 +200,11 @@
     height: 100%;
     z-index: 20;
     overflow-y: auto;
-    padding: 12px;
+    overflow-x: hidden;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     width: 25%;
     min-width: 320px;
     max-width: 400px;
@@ -213,9 +215,8 @@
 /* ── Card ── */
 .card {
     border-radius: var(--tp-radius-pill);
-    border: var(--tp-stroke-width) solid var(--tp-stroke);
     background: var(--tp-bg-card);
-    padding: 12px;
+    padding: 10px;
 }
 
 .cardTitle {
@@ -225,7 +226,7 @@
     text-transform: uppercase;
     color: var(--tp-text-heading);
     color: var(--tp-text-heading);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 /* ── Chart helpers ── */

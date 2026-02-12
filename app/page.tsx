@@ -127,7 +127,7 @@ export default function TFODashboard() {
     // Let's drop the iframe for better control as requested by the specific transition effect.
 
     return (
-        <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
+        <div className="flex h-screen flex-col bg-slate-50 text-slate-900 overflow-hidden">
             {/* ── NAVBAR ───────────────────────────────────────────────── */}
             <Navbar
                 activeModule={activeModule}
@@ -138,7 +138,7 @@ export default function TFODashboard() {
             />
 
             {/* ── BODY ─────────────────────────────────────────────────── */}
-            <main className="relative flex-1 overflow-hidden flex">
+            <main className="relative flex-1 overflow-hidden flex overflow-x-hidden">
 
                 {/* ── UNIFIED CONTENT CONTAINER ── 
                     We use a flex layout. 
@@ -147,7 +147,7 @@ export default function TFODashboard() {
                 */}
 
                 {/* ── LEFT COLUMN (Variable Width) ── */}
-                <div className={`flex flex-col border-r border-zinc-800 transition-all duration-700 ease-in-out ${viewMode === 'details' ? 'w-[20%]' : 'w-0 border-none'
+                <div className={`flex flex-col border-r border-zinc-800 transition-all duration-700 ease-in-out overflow-hidden ${viewMode === 'details' ? 'w-[20%]' : 'w-0 border-none'
                     }`}>
                     {/* Top: 3D Model Container (When in Details Mode) */}
                     {/* Actually, if we want the 3D model to shrink from Full to Top-Left, 
@@ -191,6 +191,7 @@ export default function TFODashboard() {
                             })
                             setActiveModule('opshub')
                         }}
+                        onTriggerAnomaly={() => setAutoTriggerAnomaly(true)}
                     />
                 </div>
 
@@ -296,11 +297,13 @@ function SuspendedDigitalTwin({
     isolatedMeshName,
     onExpandClick,
     onCreateWorkOrder,
+    onTriggerAnomaly,
 }: {
     viewMode: 'overview' | 'details'
     isolatedMeshName: string | null
     onExpandClick: (name: string, isAnomaly?: boolean) => void
     onCreateWorkOrder: (name: string) => void
+    onTriggerAnomaly: () => void
 }) {
     return (
         <DigitalTwinNavigator
@@ -316,12 +319,35 @@ function SuspendedDigitalTwin({
             isolatedMeshName={isolatedMeshName}
             onExpandClick={onExpandClick}
             onCreateWorkOrder={onCreateWorkOrder}
+            onTriggerAnomaly={onTriggerAnomaly}
         />
     )
 }
 
 // ─── NAVBAR COMPONENT ──────────────────────────────────────────────────────
 import s from './overview.module.css'
+
+function TripolarLogo({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+            <path d="M566.271 32.3738C555.165 42.0235 503.282 90.6547 442.599 143.994C390.827 189.506 338.811 217.307 299.203 216.186C281.72 215.713 264.6 211.988 248.419 205.484C247.771 205.213 247.139 204.948 246.49 204.677C242.181 202.812 237.808 200.75 233.339 198.481C232.712 198.146 232.106 197.833 231.479 197.493C208.79 185.733 182.646 169.282 156.593 144.892C133.818 123.595 110.815 101.606 90.1021 82.461C63.8045 58.1613 42.3689 38.7024 34.6534 31.6564C33.5056 30.5777 32.1134 30.9178 31.2845 31.7892C30.4077 32.6448 30.0729 34.0104 31.1304 35.1794C38.1764 42.879 57.6352 64.3093 81.9349 90.6069C101.102 111.32 123.09 134.323 144.366 157.098C168.761 183.172 185.207 209.316 196.988 232.005C197.323 232.611 197.641 233.217 197.955 233.844C200.224 238.307 202.286 242.686 204.172 247.017C204.443 247.665 204.709 248.271 204.98 248.924C211.489 265.104 215.214 282.225 215.681 299.729C216.781 339.337 189.001 391.332 143.489 443.104C90.1234 503.786 41.5187 555.67 31.8477 566.802C29.8285 569.113 33.0805 572.413 35.3282 570.346C49.1067 557.737 106.261 505.11 157.942 456.818C278.925 343.758 366.358 386.364 392.873 396.927C395.094 397.815 397.289 395.62 396.401 393.399C385.838 366.884 343.237 279.43 456.314 158.469C504.584 106.787 557.205 49.6327 569.82 35.8277C571.882 33.5853 568.587 30.3545 566.276 32.3738H566.271ZM330.341 263.585L263.069 330.857C262.724 331.202 262.166 330.851 262.32 330.389C262.527 303.695 261.964 286.056 261.964 263.043C261.836 262.681 262.166 262.352 262.527 262.479C286.903 263.585 307.255 263.585 329.868 262.841C330.33 262.687 330.681 263.245 330.336 263.585H330.341Z" fill="url(#paint0_linear_538_741)" />
+            <defs>
+                <linearGradient id="paint0_linear_538_741" x1="300.471" y1="30.981" x2="300.471" y2="570.999" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#505050" />
+                    <stop offset="1" />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+
+function UserAvatar({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 43 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+            <path d="M40.375 45.125V40.375C40.375 37.8554 39.3741 35.4391 37.5925 33.6575C35.8109 31.8759 33.3946 30.875 30.875 30.875H11.875C9.35544 30.875 6.93908 31.8759 5.15749 33.6575C3.37589 35.4391 2.375 37.8554 2.375 40.375V45.125M30.875 11.875C30.875 17.1217 26.6217 21.375 21.375 21.375C16.1283 21.375 11.875 17.1217 11.875 11.875C11.875 6.62829 16.1283 2.375 21.375 2.375C26.6217 2.375 30.875 6.62829 30.875 11.875Z" stroke="currentColor" strokeWidth="4.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
 
 function Navbar({
     activeModule,
@@ -340,12 +366,7 @@ function Navbar({
         <header className={s.navbar}>
             {/* ── Logo + Brand ── */}
             <div className={s.navLogo}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src="/light.png"
-                    alt="Tripolar"
-                    className={s.navLogoImg}
-                />
+                <TripolarLogo className={s.navLogoImg} />
                 <span className={s.navBrand}>Tripolar</span>
             </div>
 
@@ -355,7 +376,7 @@ function Navbar({
             {/* ── Operations label ── */}
             <div className={s.navOps}>
                 <LayoutGrid size={14} />
-                <span className={s.navOpsText}>operations</span>
+                <span className={s.navOpsText}>Operations</span>
             </div>
 
             {/* ── Module Icons Pill ── */}
@@ -390,12 +411,7 @@ function Navbar({
 
             {/* ── User Section ── */}
             <div className={s.userSection}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src="/light.png"
-                    alt="User"
-                    className={s.userAvatar}
-                />
+                <UserAvatar className={s.userAvatar} />
                 <span className={s.userName}>User</span>
                 <ChevronDown size={12} className={s.userChevron} />
             </div>

@@ -28,6 +28,7 @@ interface DigitalTwinNavigatorProps {
     isolatedMeshName?: string | null
     onExpandClick?: (meshName: string, isAnomaly?: boolean) => void
     onCreateWorkOrder?: (meshName: string) => void
+    onTriggerAnomaly?: () => void
 }
 
 interface OverlayState {
@@ -75,6 +76,7 @@ export function DigitalTwinNavigator({
     isolatedMeshName = null,
     onExpandClick,
     onCreateWorkOrder,
+    onTriggerAnomaly,
 }: DigitalTwinNavigatorProps) {
     const [activeId, setActiveId] = useState<string | null>(initialPreset)
     const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([0, 0, 0])
@@ -181,7 +183,8 @@ export function DigitalTwinNavigator({
         }
         setAlertActive(true)
         setAlertMeshPattern('kuka-kr120-right')
-    }, [alertActive])
+        onTriggerAnomaly?.()
+    }, [alertActive, onTriggerAnomaly])
 
     // Dismiss on Escape
     useEffect(() => {
@@ -359,7 +362,7 @@ export function DigitalTwinNavigator({
             {viewMode !== 'details' && (
                 <button
                     onClick={handleTriggerAlert}
-                    className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full border font-bold text-sm tracking-wide transition-all duration-300 shadow-xl ${alertActive
+                    className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-6 py-3 rounded-full border font-bold text-sm tracking-wide transition-all duration-300 shadow-xl ${alertActive
                         ? 'bg-red-500/90 border-red-400 text-white animate-pulse shadow-red-500/40'
                         : 'bg-zinc-900/60 border-zinc-700/50 text-zinc-300 hover:bg-red-500/80 hover:border-red-500 hover:text-white backdrop-blur-md'
                         }`}

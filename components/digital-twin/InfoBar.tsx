@@ -25,7 +25,6 @@ export function InfoBar({ activePresetName, cameraPosition, meshCount }: InfoBar
       </div>
       <div className="flex flex-col items-end gap-1">
         <div className="text-xs font-mono text-zinc-600">MESHES: {meshCount}</div>
-        <div className="text-[10px] text-zinc-700 uppercase tracking-[0.2em]">TRIPOLAR DIGITAL TWIN</div>
       </div>
     </div>
   );
