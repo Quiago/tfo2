@@ -1,9 +1,9 @@
 'use client'
 
-import { AssetTree } from '@/components/asset-details/AssetTree'
-import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
+
 import { DigitalTwinNavigator } from '@/components/digital-twin/DigitalTwinNavigator'
 import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
+import { OverviewExpand } from '@/components/overview/OverviewExpand'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { useTfoStore, type FacilityLocation } from '@/lib/store/tfo-store'
 import type { TfoModule } from '@/lib/types/tfo'
@@ -22,11 +22,7 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
 
 // Dynamic imports — SSR disabled for heavy components
-const MultiLayerTimeline = dynamic(
-    () =>
-        import('@/components/timeline/Timeline').then((m) => m.MultiLayerTimeline),
-    { ssr: false, loading: () => <ModuleLoader label="Timeline" /> }
-)
+
 
 const WorkflowBuilder = dynamic(
     () =>
@@ -195,54 +191,19 @@ export default function TFODashboard() {
                     />
                 </div>
 
-                {/* Asset Tree - Slides up after 3D shrinks */}
-                <div
-                    style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.3s' }}
-                    className={`absolute bg-zinc-900 border-r border-zinc-800
-                    ${viewMode === 'details'
-                            ? 'left-0 top-[40%] w-[20%] h-[60%] opacity-100'
-                            : 'left-0 top-[100%] w-[20%] h-0 opacity-0'
-                        }`}
-                >
-                    <AssetTree
-                        selectedAssetId={selectedAsset || undefined}
-                        onSelect={(id) => {
-                            setSelectedAsset(id)
-                            // If user clicks tree, trigger isolation logic too
-                        }}
-                    />
-                </div>
+                <OverviewExpand
+                    viewMode={viewMode}
+                    selectedAsset={selectedAsset}
+                    autoTriggerAnomaly={autoTriggerAnomaly}
+                    onAnomalyTriggered={() => setAutoTriggerAnomaly(false)}
+                    onSelectAsset={(id) => {
+                        setSelectedAsset(id)
+                        // If user clicks tree, trigger isolation logic too
+                    }}
+                    setActiveModule={setActiveModule}
+                />
 
-                {/* Right Column - Expands from right after 3D shrinks */}
-                <div
-                    style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.15s' }}
-                    className={`absolute right-0 top-0 h-full flex flex-col bg-zinc-900
-                    ${viewMode === 'details'
-                            ? 'w-[80%] opacity-100'
-                            : 'w-0 opacity-0 overflow-hidden'
-                        }`}
-                >
-                    {/* Top Bar — Machine summary + action buttons */}
-                    <div className="h-[15%] min-h-0 border-b border-zinc-800">
-                        <MachineSummaryBar
-                            onCreateWorkOrder={() => {
-                                if (selectedAsset) {
-                                    setPendingCreateWorkOrder({ equipmentName: selectedAsset, meshName: selectedAsset })
-                                }
-                                setActiveModule('opshub')
-                            }}
-                        />
-                    </div>
 
-                    {/* Timeline Container (85%) */}
-                    <div className="h-[85%] min-h-0 relative bg-zinc-900 p-0 overflow-hidden">
-                        {/* @ts-ignore - Dynamic import props issue */}
-                        <MultiLayerTimeline
-                            autoTriggerAnomaly={autoTriggerAnomaly}
-                            onAnomalyTriggered={() => setAutoTriggerAnomaly(false)}
-                        />
-                    </div>
-                </div>
 
                 {/* ── OVERVIEW PANELS (overlay on DT, Fade out in Details Mode) ──── */}
                 {isOverview && viewMode === 'overview' && (
