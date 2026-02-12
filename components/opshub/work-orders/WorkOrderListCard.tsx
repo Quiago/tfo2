@@ -3,21 +3,7 @@
 import { AvatarStack } from '@/components/shared/AvatarStack'
 import { Calendar } from 'lucide-react'
 
-// TODO: import from opshub types when available
-export type WorkOrderStatus = 'open' | 'in-progress' | 'resolved' | 'closed'
-
-export interface WorkOrderCard {
-    id: string
-    number: string
-    title: string
-    status: WorkOrderStatus
-    priority: 'critical' | 'high' | 'medium' | 'low'
-    team: { initials: string; color: string }[]
-    createdAt: string
-    tags: string[]
-    equipmentName?: string
-    factoryName?: string
-}
+import { type WorkOrderCard, type WorkOrderStatus } from '@/lib/types/opshub'
 
 interface WorkOrderListCardProps {
     workOrder: WorkOrderCard
@@ -76,7 +62,7 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
 
                     {/* Meta */}
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500">
-                        {workOrder.factoryName && <span>{workOrder.factoryName}</span>}
+                        {workOrder.facility && <span>{workOrder.facility}</span>}
                         {workOrder.equipmentName && (
                             <>
                                 <span className="text-zinc-700">&middot;</span>
@@ -104,7 +90,13 @@ export function WorkOrderListCard({ workOrder, onClick }: WorkOrderListCardProps
 
                 {/* Team avatars */}
                 {workOrder.team.length > 0 && (
-                    <AvatarStack members={workOrder.team} max={3} />
+                    <AvatarStack
+                        members={workOrder.team.map(m => ({
+                            initials: m.avatarInitials,
+                            color: m.avatarColor,
+                        }))}
+                        max={3}
+                    />
                 )}
             </div>
         </button>

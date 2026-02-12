@@ -144,6 +144,8 @@ export interface TeamMember {
 }
 
 // ─── Work Order ─────────────────────────────────────────────────
+export type WorkOrderStatus = 'open' | 'in-progress' | 'resolved' | 'closed'
+
 export interface WorkOrderCard {
     id: string
     number: string // "WO-2026-0847"
@@ -151,7 +153,7 @@ export interface WorkOrderCard {
     description: string
     equipmentId: string
     equipmentName: string
-    status: 'open' | 'in-progress' | 'resolved' | 'closed'
+    status: WorkOrderStatus
     priority: TaskPriority
     createdAt: string
     resolvedAt?: string

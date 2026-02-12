@@ -1,5 +1,5 @@
-'use client'
-
+import { MOCK_TEAM } from '@/lib/hooks/useOpshubMockData'
+import { useOpshubStore } from '@/lib/store/opshub-store'
 import { ArrowUp, Minus, Sparkles, Square, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -11,8 +11,7 @@ interface Message {
 
 const SUGGESTIONS = [
     'Summarize recent alerts',
-    'Create a maintenance workflow',
-    'Analyze sensor trends',
+    'Generate a report based on timeline data and the associated Munich incident context. Assign a specific task to the Maintenance Engineer (User 3).',
     'Show energy report',
 ]
 
@@ -23,6 +22,12 @@ export function AiChatBubble() {
     const [typing, setTyping] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
+
+    // Store access for demo actions
+    const selectedWorkOrderId = useOpshubStore(s => s.selectedWorkOrderId)
+    const workOrders = useOpshubStore(s => s.workOrders)
+    const addTask = useOpshubStore(s => s.addTask)
+    const currentUser = useOpshubStore(s => s.currentUser)
 
     const scrollToBottom = useCallback(() => {
         if (scrollRef.current) {
@@ -47,17 +52,52 @@ export function AiChatBubble() {
         setInput('')
         setTyping(true)
 
-        // Simulate AI response
+        // DEMO LOGIC: Intercept specific prompt
+        const isDemoPrompt = content.includes('Munich incident') && content.includes('Maintenance Engineer')
+
         setTimeout(() => {
+            let aiResponse = `I'll help you with that. Analyzing "${content}"...`
+
+            if (isDemoPrompt) {
+                // Find target Work Order (Selected OR Latest)
+                const targetWoId = selectedWorkOrderId || workOrders[workOrders.length - 1]?.id
+
+                if (targetWoId) {
+                    // Find Maintenance Engineer (User 3 - Ahmed or similar)
+                    // In mock data: 'ahmed-nasser' is Maintenance Lead, close enough. 
+                    const maintenanceEng = MOCK_TEAM.find(m => m.role.includes('Maintenance')) || MOCK_TEAM[2]
+
+                    if (maintenanceEng) {
+                        // Create the task
+                        addTask(targetWoId, {
+                            type: 'repair',
+                            title: 'Replace Bearing Assembly (AI Generated)',
+                            description: 'Based on the cross-facility analysis of the Munich incident, the bearing assembly shows 87% similarity in vibration patterns pre-failure. Immediate replacement recommended to prevent seizure.',
+                            assignee: maintenanceEng,
+                            assignedBy: currentUser || MOCK_TEAM[0], // Current user or default
+                            priority: 'high'
+                        })
+
+                        aiResponse = `Analysis complete. I've detected a high correlation (87%) with the Munich incident. \n\nI have automatically created a **Repair Task** for **${maintenanceEng.name}** to replace the bearing assembly immediately.`
+                    } else {
+                        aiResponse = "I could not find a Maintenance Engineer to assign the task to."
+                    }
+                } else {
+                    aiResponse = "Please open a Work Order first to assign tasks."
+                }
+            } else if (content.includes('Summarize')) {
+                aiResponse = "Recent alerts show a spike in vibration on Motor A7 and minor temperature fluctuations in the Cooling System. Overall facility health is 92%."
+            }
+
             const aiMsg: Message = {
                 id: `a-${Date.now()}`,
                 role: 'assistant',
-                content: `I'll help you with that. Analyzing "${content}"... This is a mock response. In production, this would connect to the Vercel AI SDK streaming endpoint.`,
+                content: aiResponse,
             }
             setMessages((prev) => [...prev, aiMsg])
             setTyping(false)
-        }, 1200)
-    }, [input])
+        }, 1500)
+    }, [input, addTask, selectedWorkOrderId, workOrders, currentUser])
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -131,12 +171,11 @@ export function AiChatBubble() {
 
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
-                                    msg.role === 'user'
+                                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === 'user'
                                         ? 'bg-cyan-500/15 text-cyan-100'
                                         : 'bg-zinc-800 text-zinc-300'
-                                }`}>
-                                    {msg.content}
+                                    }`}>
+                                    <div className="whitespace-pre-wrap">{msg.content}</div>
                                 </div>
                             </div>
                         ))}
@@ -167,11 +206,10 @@ export function AiChatBubble() {
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim()}
-                                className={`p-1 rounded-lg transition-colors flex-shrink-0 ${
-                                    input.trim()
+                                className={`p-1 rounded-lg transition-colors flex-shrink-0 ${input.trim()
                                         ? 'bg-cyan-500 text-white hover:bg-cyan-400'
                                         : 'bg-zinc-700 text-zinc-500'
-                                }`}
+                                    }`}
                             >
                                 <ArrowUp size={14} />
                             </button>
@@ -183,11 +221,10 @@ export function AiChatBubble() {
             {/* Floating Button */}
             <button
                 onClick={() => setOpen(!open)}
-                className={`fixed bottom-5 right-5 z-[100] h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
-                    open
+                className={`fixed bottom-5 right-5 z-[100] h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${open
                         ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 scale-90'
                         : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:scale-105'
-                }`}
+                    }`}
             >
                 {open ? <Square size={15} /> : <Sparkles size={18} />}
             </button>

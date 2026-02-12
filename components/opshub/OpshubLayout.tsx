@@ -1,6 +1,6 @@
 'use client'
 
-import { useOpshubMockData } from '@/lib/hooks/useOpshubMockData'
+import { MOCK_TEAM, useOpshubMockData } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { CreateWorkOrderForm, type WorkOrderFormData } from './CreateWorkOrderForm'
 import { OpshubHome } from './feed/OpshubHome'
@@ -20,24 +20,40 @@ export function OpshubLayout() {
     const currentUser = useOpshubStore(s => s.currentUser)
 
     // Priority 1: Creating a work order (from DT overlay or summary bar)
+    const createWorkOrderWithTask = useOpshubStore(s => s.createWorkOrderWithTask)
+
     if (pendingCreateWorkOrder) {
         return (
             <div className="flex flex-col h-full w-full bg-zinc-950 overflow-y-auto">
                 <CreateWorkOrderForm
+                    initialData={pendingCreateWorkOrder} // Pass auto-fill data
                     prefillEquipment={pendingCreateWorkOrder.equipmentName}
-                    onSubmit={(data: WorkOrderFormData) => {
-                        addWorkOrder({
-                            ...data,
-                            owner: currentUser ?? {
-                                id: 'demo-user',
-                                name: 'Demo Operator',
-                                role: 'Plant Manager',
-                                facility: data.facility,
-                                avatarInitials: 'DO',
-                                avatarColor: 'bg-cyan-500',
-                                status: 'available',
-                            },
-                        })
+                    onSubmit={(woData: WorkOrderFormData, taskData) => {
+                        const owner = currentUser ?? {
+                            id: 'demo-user',
+                            name: 'Demo Operator',
+                            role: 'Plant Manager',
+                            facility: woData.facility,
+                            avatarInitials: 'DO',
+                            avatarColor: 'bg-cyan-500',
+                            status: 'available',
+                        }
+
+                        const assignee = MOCK_TEAM.find(m => m.id === taskData.assigneeId) || owner
+
+                        // Use the new atomic action
+                        createWorkOrderWithTask(
+                            { ...woData, owner },
+                            {
+                                type: 'investigation',
+                                title: `Initial Investigation`,
+                                description: taskData.instructions,
+                                assignee: assignee,
+                                assignedBy: owner,
+                                priority: woData.priority
+                            }
+                        )
+
                         setPendingCreateWorkOrder(null)
                         setActiveTab('work-orders')
                     }}

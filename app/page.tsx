@@ -2,7 +2,6 @@
 
 import { AssetTree } from '@/components/asset-details/AssetTree'
 import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
-import { AiChatBubble } from '@/components/ui/AiChatBubble'
 import { DigitalTwinNavigator } from '@/components/digital-twin/DigitalTwinNavigator'
 import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
 import { useOpshubStore } from '@/lib/store/opshub-store'
@@ -181,7 +180,16 @@ export default function TFODashboard() {
                             setViewMode('details')
                         }}
                         onCreateWorkOrder={(meshName) => {
-                            setPendingCreateWorkOrder({ equipmentName: meshName, meshName })
+                            // Demo Simulation: Pre-fill context
+                            setPendingCreateWorkOrder({
+                                equipmentName: meshName,
+                                meshName,
+                                title: `${meshName} - Anomaly Check`,
+                                description: 'Investigate vibration deviation similar to Munich incident. Check bearing assembly for signs of wear or misalignment.',
+                                priority: 'high',
+                                facility: 'Dubai Plant',
+                                tags: ['Predictive', 'AI-Detected']
+                            })
                             setActiveModule('opshub')
                         }}
                     />
@@ -279,11 +287,6 @@ export default function TFODashboard() {
                 )}
             </main>
 
-            {/* ── FOOTER ───────────────────────────────────────────────── */}
-            <Footer darkMode={darkMode} facilityMetrics={facilityMetrics} />
-
-            {/* ── AI CHAT BUBBLE (all views) ─────────────────────────── */}
-            <AiChatBubble />
         </div>
     )
 }
