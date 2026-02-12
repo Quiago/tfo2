@@ -1,5 +1,6 @@
 'use client'
 
+import s from '@/app/overview.module.css'
 import type { LucideIcon } from 'lucide-react'
 import {
     Activity,
@@ -103,11 +104,11 @@ export function AssetTree({
     onSelect: (id: string) => void
 }) {
     return (
-        <div className="h-full flex flex-col bg-zinc-900 border-r border-zinc-800">
-            <div className="p-3 border-b border-zinc-800">
-                <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Explorer</h3>
+        <div className="h-full flex flex-col bg-transparent">
+            <div className={s.treeHeader}>
+                Explorer
             </div>
-            <div className="flex-1 overflow-auto p-2 space-y-0.5">
+            <div className="flex-1 overflow-auto py-2 space-y-0.5">
                 {SECTIONS.map((section) => (
                     <SectionRow
                         key={section.id}
@@ -137,30 +138,28 @@ function SectionRow({
         <div>
             <button
                 onClick={() => setExpanded(!expanded)}
-                className="w-full flex items-center gap-2 py-1.5 px-2 rounded text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                className={s.treeItem}
+                style={{ width: 'calc(100% - 8px)' }}
             >
                 {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                <Icon size={14} className="text-zinc-500" />
-                <span className="text-xs font-medium">{section.label}</span>
-                <span className="ml-auto text-[10px] text-zinc-600">{section.children.length}</span>
+                <Icon size={14} style={{ opacity: 0.7 }} />
+                <span>{section.label}</span>
+                <span className="ml-auto text-[10px] opacity-60">{section.children.length}</span>
             </button>
 
             {expanded && (
-                <div className="ml-3 border-l border-zinc-800">
+                <div className="ml-3 border-l border-zinc-300 dark:border-zinc-700 pl-1 my-1">
                     {section.children.map((item) => {
                         const isSelected = selectedId === item.id
                         return (
                             <button
                                 key={item.id}
                                 onClick={() => onSelect(item.id)}
-                                className={`w-full flex items-center gap-2 py-1 px-3 text-left transition-colors ${
-                                    isSelected
-                                        ? 'text-cyan-400 bg-cyan-500/10'
-                                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                                }`}
+                                className={`${isSelected ? s.treeSubItemActive : s.treeSubItem}`}
+                                style={{ width: 'calc(100% - 8px)' }}
                             >
                                 <FileText size={11} className="flex-shrink-0" />
-                                <span className="text-[11px] truncate">{item.label}</span>
+                                <span className="truncate">{item.label}</span>
                             </button>
                         )
                     })}

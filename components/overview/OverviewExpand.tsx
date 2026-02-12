@@ -1,5 +1,4 @@
-'use client'
-
+import s from '@/app/overview.module.css'
 import { AssetTree } from '@/components/asset-details/AssetTree'
 import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
 import { useOpshubStore } from '@/lib/store/opshub-store'
@@ -13,7 +12,7 @@ const MultiLayerTimeline = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="flex h-full w-full items-center justify-center bg-zinc-950">
+            <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-cyan-500" />
                     <span className="text-xs text-zinc-500">Loading Timeline...</span>
@@ -44,13 +43,12 @@ export function OverviewExpand({
 
     return (
         <>
-            {/* Asset Tree - Slides up after 3D shrinks */}
+            {/* Asset Tree Card - Bottom Left (Below 3D) */}
             <div
-                style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.3s' }}
-                className={`absolute bg-zinc-900 border-r border-zinc-800
+                className={`absolute ${s.card} flex flex-col overflow-hidden transition-opacity duration-300
                 ${viewMode === 'details'
-                        ? 'left-0 top-[40%] w-[20%] h-[60%] opacity-100'
-                        : 'left-0 top-[100%] w-[20%] h-0 opacity-0'
+                        ? 'left-4 top-[calc(80px+35%+1rem)] w-[calc(20%-1rem)] h-[calc(100%-80px-35%-2rem)] opacity-100'
+                        : 'left-0 top-[100%] w-[25%] h-0 opacity-0 pointer-events-none'
                     }`}
             >
                 <AssetTree
@@ -59,17 +57,16 @@ export function OverviewExpand({
                 />
             </div>
 
-            {/* Right Column - Expands from right after 3D shrinks */}
+            {/* Right Panel Container - Timeline + Summary */}
             <div
-                style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.1, 1) 0.15s' }}
-                className={`absolute right-0 top-0 h-full flex flex-col bg-zinc-900
+                className={`absolute right-4 top-[80px] bottom-4 flex flex-col gap-4 transition-opacity duration-300
                 ${viewMode === 'details'
-                        ? 'w-[80%] opacity-100'
-                        : 'w-0 opacity-0 overflow-hidden'
+                        ? 'w-[calc(80%-2rem)] opacity-100'
+                        : 'w-0 opacity-0 overflow-hidden pointer-events-none'
                     }`}
             >
-                {/* Top Bar — Machine summary + action buttons */}
-                <div className="h-[15%] min-h-0 border-b border-zinc-800">
+                {/* Machine Summary Card */}
+                <div className={`${s.card} flex-shrink-0`}>
                     <MachineSummaryBar
                         onCreateWorkOrder={() => {
                             if (selectedAsset) {
@@ -80,8 +77,8 @@ export function OverviewExpand({
                     />
                 </div>
 
-                {/* Timeline Container (85%) */}
-                <div className="h-[85%] min-h-0 relative bg-zinc-900 p-0 overflow-hidden">
+                {/* Timeline Card */}
+                <div className={`${s.timelineCard} flex-grow`}>
                     {/* @ts-ignore - Dynamic import props issue */}
                     <MultiLayerTimeline
                         autoTriggerAnomaly={autoTriggerAnomaly}

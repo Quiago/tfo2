@@ -22,6 +22,11 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
 
 // Dynamic imports — SSR disabled for heavy components
+const MultiLayerTimeline = dynamic(
+    () =>
+        import('@/components/timeline/Timeline').then((m) => m.MultiLayerTimeline),
+    { ssr: false, loading: () => <ModuleLoader label="Timeline" /> }
+)
 
 
 const WorkflowBuilder = dynamic(
@@ -143,7 +148,7 @@ export default function TFODashboard() {
                 */}
 
                 {/* ── LEFT COLUMN (Variable Width) ── */}
-                <div className={`flex flex-col border-r border-zinc-800 transition-all duration-700 ease-in-out overflow-hidden ${viewMode === 'details' ? 'w-[20%]' : 'w-0 border-none'
+                <div className={`flex flex-col transition-all duration-700 ease-in-out overflow-hidden ${viewMode === 'details' ? 'w-[20%]' : 'w-0'
                     }`}>
                     {/* Top: 3D Model Container (When in Details Mode) */}
                     {/* Actually, if we want the 3D model to shrink from Full to Top-Left, 
@@ -155,12 +160,12 @@ export default function TFODashboard() {
                 {/* ── DYNAMIC LAYOUT ── */}
 
                 {/* 3D Model Container - Transitions between Full Screen and Top-Left */}
+                {/* 3D Model Container - Top Left in Details Mode */}
                 <div
-                    style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.1, 1)', background: 'var(--tp-bg-main)' }}
-                    className={`absolute border-b border-zinc-200 z-10
+                    className={`absolute z-10 bg-[var(--tp-bg-main)]
                     ${viewMode === 'overview'
                             ? 'inset-0'
-                            : 'top-0 left-0 w-[20%] h-[40%]'
+                            : 'top-[80px] left-4 w-[calc(20%-1rem)] h-[35%] rounded-[20px] overflow-hidden border-2 border-[#98A6D4] shadow-lg'
                         }`}
                 >
                     {/* We need to render the DigitalTwinNavigator directly for props to work */}
