@@ -160,8 +160,8 @@ export default function TFODashboard() {
 
                 {/* 3D Model Container - Transitions between Full Screen and Top-Left */}
                 <div
-                    style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.1, 1)' }}
-                    className={`absolute bg-zinc-950 border-b border-zinc-800 z-10
+                    style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.1, 1)', background: 'var(--tp-bg-main)' }}
+                    className={`absolute border-b border-zinc-200 z-10
                     ${viewMode === 'overview'
                             ? 'inset-0'
                             : 'top-0 left-0 w-[20%] h-[40%]'

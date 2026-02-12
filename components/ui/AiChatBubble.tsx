@@ -2,7 +2,7 @@
 
 import { MOCK_TEAM } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
-import { ArrowUp, Minus, Sparkles, Square, X } from 'lucide-react'
+import { ArrowUp, Minus, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface Message {
@@ -16,6 +16,19 @@ const SUGGESTIONS = [
     'Generate a report based on timeline data and the associated Munich incident context. Assign a specific task to the Maintenance Engineer (User 3).',
     'Show energy report',
 ]
+
+function OpsFlowLogo({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+            <path
+                d="M119.067 0.309507C116.599 2.45389 105.069 13.2608 91.584 25.114C80.0792 35.2278 68.5201 41.4059 59.7182 41.1567C55.8333 41.0516 52.0286 40.2239 48.433 38.7785C48.289 38.7183 48.1484 38.6593 48.0044 38.5991C47.0467 38.1846 46.0749 37.7264 45.0818 37.2222C44.9425 37.1478 44.8079 37.0781 44.6685 37.0026C39.6264 34.3894 33.8167 30.7336 28.0271 25.3136C22.9661 20.5808 17.8543 15.6945 13.2514 11.44C7.4075 6.04007 2.64404 1.71588 0.929479 0.150098C0.67442 -0.0896099 0.365043 -0.0140369 0.180833 0.179619C-0.0140032 0.369732 -0.0883954 0.673205 0.146589 0.932988C1.71237 2.64401 6.03656 7.40629 11.4365 13.2502C15.6957 17.8531 20.582 22.9649 25.31 28.0259C30.7312 33.8202 34.3859 39.6299 37.0038 44.6721C37.0782 44.8067 37.149 44.9413 37.2187 45.0806C37.7229 46.0725 38.1811 47.0455 38.6003 48.0079C38.6605 48.152 38.7195 48.2866 38.7798 48.4318C40.2263 52.0274 41.054 55.8321 41.1579 59.7217C41.4024 68.5236 35.229 80.078 25.1152 91.5828C13.2562 105.068 2.45511 116.597 0.306004 119.071C-0.142711 119.585 0.579956 120.318 1.07945 119.859C4.14133 117.057 16.8423 105.362 28.3271 94.6306C55.2122 69.5061 74.6415 78.9739 80.5339 81.3214C81.0274 81.5186 81.5151 81.0309 81.3179 80.5374C78.9704 74.645 69.5037 55.211 94.6318 28.3306C105.358 16.8458 117.052 4.14484 119.855 1.07705C120.314 0.578736 119.581 -0.139207 119.068 0.309507L119.067 0.309507ZM66.6379 51.6897L51.6886 66.639C51.6118 66.7158 51.4878 66.6378 51.5221 66.5351C51.5681 60.603 51.443 56.6834 51.443 51.5693C51.4146 51.489 51.4878 51.4158 51.5681 51.4441C56.9849 51.6897 61.5075 51.6897 66.5328 51.5244C66.6355 51.4902 66.7134 51.6141 66.6367 51.6897L66.6379 51.6897Z"
+                fill="currentColor"
+            />
+            <circle cx="20.6181" cy="62.1763" r="6" transform="rotate(-45 20.6181 62.1763)" fill="currentColor" />
+            <circle cx="60.8681" cy="21.9258" r="6" transform="rotate(-45 60.8681 21.9258)" fill="currentColor" />
+        </svg>
+    )
+}
 
 export function AiChatBubble() {
     const [open, setOpen] = useState(false)
@@ -247,14 +260,15 @@ export function AiChatBubble() {
             )}
 
             {/* Floating Button */}
+            {/* Floating Button (Pencil Design: White Circle with Purple Stroke) */}
             <button
                 onClick={() => setOpen(!open)}
-                className={`fixed bottom-5 right-5 z-[100] h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${open
-                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 scale-90'
-                    : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:scale-105'
+                className={`fixed bottom-6 right-6 z-[100] h-[60px] w-[60px] rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_4px_20px_rgba(145,153,200,0.3)] border-2 ${open
+                    ? 'bg-zinc-800 border-zinc-600 text-zinc-400 rotate-90 hover:bg-zinc-700 hover:text-white'
+                    : 'bg-[#FDFEFE] border-[#9199C8] text-[#9199C8] hover:scale-110 hover:shadow-[0_6px_28px_rgba(145,153,200,0.45)]'
                     }`}
             >
-                {open ? <Square size={15} /> : <Sparkles size={18} />}
+                {open ? <X size={24} /> : <OpsFlowLogo className="w-8 h-8" />}
             </button>
 
             <style jsx global>{`

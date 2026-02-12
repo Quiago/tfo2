@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useThree } from '@react-three/fiber'
-import { AlertTriangle, ClipboardPlus, Maximize2 } from 'lucide-react'
+import { Activity, AlertTriangle, ClipboardPlus, Maximize2, Thermometer, Zap } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { CameraSystemHandle } from './CameraSystem'
@@ -320,17 +320,49 @@ export function DigitalTwinNavigator({
                 </div>
             )}
 
-            {/* Trigger Alert Button */}
+            {/* ── CENTER OVERLAY (Pencil Design) ── */}
+            {viewMode !== 'details' && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-6 pointer-events-auto">
+                    {/* Label */}
+                    <div className="flex items-center justify-center px-8 h-[56px] bg-[#B0B9CA]/90 backdrop-blur-md rounded-[20px] shadow-lg border border-white/20">
+                        <span className="text-[#222939] font-bold text-lg tracking-tight">Nexus Floor Control</span>
+                    </div>
+
+                    {/* Map Toggle Buttons */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            title="Heat Map"
+                            className="w-[56px] h-[56px] flex items-center justify-center bg-[#252B38]/90 backdrop-blur-md rounded-[18px] text-white/90 hover:bg-[#343b4d] hover:text-white hover:scale-105 transition-all shadow-lg border border-white/10"
+                        >
+                            <Thermometer size={24} />
+                        </button>
+                        <button
+                            title="Energy Map"
+                            className="w-[56px] h-[56px] flex items-center justify-center bg-[#252B38]/90 backdrop-blur-md rounded-[18px] text-white/90 hover:bg-[#343b4d] hover:text-white hover:scale-105 transition-all shadow-lg border border-white/10"
+                        >
+                            <Zap size={24} />
+                        </button>
+                        <button
+                            title="Health Map"
+                            className="w-[56px] h-[56px] flex items-center justify-center bg-[#252B38]/90 backdrop-blur-md rounded-[18px] text-white/90 hover:bg-[#343b4d] hover:text-white hover:scale-105 transition-all shadow-lg border border-white/10"
+                        >
+                            <Activity size={24} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Trigger Alert Button (Moved to bottom) */}
             {viewMode !== 'details' && (
                 <button
                     onClick={handleTriggerAlert}
-                    className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-xl border font-medium text-sm transition-all duration-300 ${alertActive
-                        ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.3)] animate-pulse'
-                        : 'bg-zinc-900/80 border-white/10 text-zinc-300 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5'
+                    className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full border font-bold text-sm tracking-wide transition-all duration-300 shadow-xl ${alertActive
+                        ? 'bg-red-500/90 border-red-400 text-white animate-pulse shadow-red-500/40'
+                        : 'bg-zinc-900/60 border-zinc-700/50 text-zinc-300 hover:bg-red-500/80 hover:border-red-500 hover:text-white backdrop-blur-md'
                         }`}
                 >
-                    <AlertTriangle size={16} className={alertActive ? 'text-red-400' : ''} />
-                    {alertActive ? 'DISMISS ALERT' : 'TRIGGER ALERT'}
+                    <AlertTriangle size={18} className={alertActive ? 'text-white' : ''} />
+                    {alertActive ? 'DISMISS CRITICAL ALERT' : 'TRIGGER ANOMALY'}
                 </button>
             )}
 
