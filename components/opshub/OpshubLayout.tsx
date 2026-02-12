@@ -2,20 +2,10 @@
 
 import { useOpshubMockData } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
-import { ClipboardList, Home, ListTodo } from 'lucide-react'
-import { MyTasks } from './MyTasks'
-import { OpshubHome } from './OpshubHome'
-import { WorkOrderDetail } from './WorkOrderDetail'
-import { WorkOrderList } from './WorkOrderList'
-
-// TODO: import from opshub types when available
-export type OpshubTab = 'home' | 'my-tasks' | 'work-orders'
-
-const TABS: { id: OpshubTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'home', label: 'Home', icon: <Home className="w-4 h-4" /> },
-    { id: 'my-tasks', label: 'My Tasks', icon: <ListTodo className="w-4 h-4" /> },
-    { id: 'work-orders', label: 'Work Orders', icon: <ClipboardList className="w-4 h-4" /> },
-]
+import { CreateWorkOrderForm, type WorkOrderFormData } from './CreateWorkOrderForm'
+import { OpshubHome } from './feed/OpshubHome'
+import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
+import { WorkOrderList } from './work-orders/WorkOrderList'
 
 export function OpshubLayout() {
     useOpshubMockData()
@@ -24,67 +14,70 @@ export function OpshubLayout() {
     const setActiveTab = useOpshubStore(s => s.setActiveTab)
     const selectedWorkOrderId = useOpshubStore(s => s.selectedWorkOrderId)
     const setSelectedWorkOrderId = useOpshubStore(s => s.setSelectedWorkOrderId)
-    const anomalies = useOpshubStore(s => s.anomalies)
+    const pendingCreateWorkOrder = useOpshubStore(s => s.pendingCreateWorkOrder)
+    const setPendingCreateWorkOrder = useOpshubStore(s => s.setPendingCreateWorkOrder)
+    const addWorkOrder = useOpshubStore(s => s.addWorkOrder)
+    const currentUser = useOpshubStore(s => s.currentUser)
 
-    const pendingCount = anomalies.filter(a => a.status === 'pending' || a.status === 'investigating').length
-
-    // If a work order is selected, show detail view
-    if (selectedWorkOrderId) {
+    // Priority 1: Creating a work order (from DT overlay or summary bar)
+    if (pendingCreateWorkOrder) {
         return (
-            <div className="flex flex-col h-full w-full bg-zinc-950">
-                <WorkOrderDetail
-                    workOrderId={selectedWorkOrderId}
-                    onBack={() => setSelectedWorkOrderId(null)}
+            <div className="flex flex-col h-full w-full bg-zinc-950 overflow-y-auto">
+                <CreateWorkOrderForm
+                    prefillEquipment={pendingCreateWorkOrder.equipmentName}
+                    onSubmit={(data: WorkOrderFormData) => {
+                        addWorkOrder({
+                            ...data,
+                            owner: currentUser ?? {
+                                id: 'demo-user',
+                                name: 'Demo Operator',
+                                role: 'Plant Manager',
+                                facility: data.facility,
+                                avatarInitials: 'DO',
+                                avatarColor: 'bg-cyan-500',
+                                status: 'available',
+                            },
+                        })
+                        setPendingCreateWorkOrder(null)
+                        setActiveTab('work-orders')
+                    }}
+                    onCancel={() => setPendingCreateWorkOrder(null)}
                 />
             </div>
         )
     }
 
-    // Home tab has no tab bar (GitHub feed style)
-    if (activeTab === 'home') {
+    // Priority 2: Viewing a specific work order detail
+    if (selectedWorkOrderId) {
         return (
             <div className="flex flex-col h-full w-full bg-zinc-950">
-                <OpshubHome />
+                <WorkOrderDetail
+                    workOrderId={selectedWorkOrderId}
+                    onBack={() => {
+                        setSelectedWorkOrderId(null)
+                        // Stay on work-orders list if that's where we came from
+                    }}
+                />
             </div>
         )
     }
 
-    // Other tabs (My Tasks, Work Orders) have the tab bar
+    // Priority 3: Work orders list view
+    if (activeTab === 'work-orders') {
+        return (
+            <div className="flex flex-col h-full w-full bg-zinc-950">
+                <WorkOrderList
+                    onSelectWorkOrder={setSelectedWorkOrderId}
+                    onBack={() => setActiveTab('home')}
+                />
+            </div>
+        )
+    }
+
+    // Default: Feed / Home view
     return (
         <div className="flex flex-col h-full w-full bg-zinc-950">
-            {/* Tab Bar */}
-            <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-zinc-800 bg-zinc-950">
-                {TABS.map(tab => {
-                    const isActive = activeTab === tab.id
-                    const badge = tab.id === 'home' && pendingCount > 0 ? pendingCount : null
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors relative ${isActive
-                                ? 'text-cyan-400 bg-zinc-900 border-b-2 border-cyan-500'
-                                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
-                                }`}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                            {badge !== null && (
-                                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full min-w-[18px] text-center">
-                                    {badge}
-                                </span>
-                            )}
-                        </button>
-                    )
-                })}
-            </div>
-
-            {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto">
-                {activeTab === 'my-tasks' && <MyTasks />}
-                {activeTab === 'work-orders' && (
-                    <WorkOrderList onSelectWorkOrder={setSelectedWorkOrderId} />
-                )}
-            </div>
+            <OpshubHome />
         </div>
     )
 }

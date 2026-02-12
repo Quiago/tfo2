@@ -5,6 +5,7 @@ import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
 import { AiChatBubble } from '@/components/ui/AiChatBubble'
 import { DigitalTwinNavigator } from '@/components/digital-twin/DigitalTwinNavigator'
 import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
+import { useOpshubStore } from '@/lib/store/opshub-store'
 import { useTfoStore, type FacilityLocation } from '@/lib/store/tfo-store'
 import type { TfoModule } from '@/lib/types/tfo'
 import {
@@ -70,6 +71,8 @@ function ModuleLoader({ label }: { label: string }) {
 export default function TFODashboard() {
     const { activeModule, setActiveModule, darkMode, toggleDarkMode, facilityMetrics, activeAlerts, recentWorkflows, locations, activeLocationId, setActiveLocation } =
         useTfoStore()
+
+    const setPendingCreateWorkOrder = useOpshubStore(s => s.setPendingCreateWorkOrder)
 
     const activeLocation = locations.find((l) => l.id === activeLocationId) ?? locations[0]
 
@@ -178,7 +181,8 @@ export default function TFODashboard() {
                             setViewMode('details')
                         }}
                         onCreateWorkOrder={(meshName) => {
-                            console.log(`[TFO] Create work order for: ${meshName}`)
+                            setPendingCreateWorkOrder({ equipmentName: meshName, meshName })
+                            setActiveModule('opshub')
                         }}
                     />
                 </div>
@@ -212,7 +216,14 @@ export default function TFODashboard() {
                 >
                     {/* Top Bar — Machine summary + action buttons */}
                     <div className="h-[15%] min-h-0 border-b border-zinc-800">
-                        <MachineSummaryBar />
+                        <MachineSummaryBar
+                            onCreateWorkOrder={() => {
+                                if (selectedAsset) {
+                                    setPendingCreateWorkOrder({ equipmentName: selectedAsset, meshName: selectedAsset })
+                                }
+                                setActiveModule('opshub')
+                            }}
+                        />
                     </div>
 
                     {/* Timeline Container (85%) */}

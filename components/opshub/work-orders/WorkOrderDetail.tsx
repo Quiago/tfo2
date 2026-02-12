@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { WorkOrderActivity } from './WorkOrderActivity'
 import { WorkOrderDiscussion } from './WorkOrderDiscussion'
 import { WorkOrderOverview } from './WorkOrderOverview'
-import { WorkOrderTasks } from './WorkOrderTasks'
+import { WorkOrderTasks } from '../tasks/WorkOrderTasks'
 import { WorkOrderTeamSidebar, type TeamMember } from './WorkOrderTeamSidebar'
 import { WorkOrderWorkflows } from './WorkOrderWorkflows'
 

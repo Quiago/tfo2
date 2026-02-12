@@ -1,6 +1,6 @@
 'use client'
 
-import { ClipboardList, Search } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Search } from 'lucide-react'
 import { useState } from 'react'
 import { WorkOrderListCard, type WorkOrderCard, type WorkOrderStatus } from './WorkOrderListCard'
 
@@ -54,9 +54,10 @@ type FilterStatus = 'all' | WorkOrderStatus
 
 interface WorkOrderListProps {
     onSelectWorkOrder?: (id: string) => void
+    onBack?: () => void
 }
 
-export function WorkOrderList({ onSelectWorkOrder }: WorkOrderListProps) {
+export function WorkOrderList({ onSelectWorkOrder, onBack }: WorkOrderListProps) {
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
 
@@ -85,6 +86,11 @@ export function WorkOrderList({ onSelectWorkOrder }: WorkOrderListProps) {
         <div className="max-w-4xl mx-auto py-6 px-4">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
+                    {onBack && (
+                        <button onClick={onBack} className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition">
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                    )}
                     <ClipboardList className="w-5 h-5 text-cyan-400" />
                     <h1 className="text-xl font-bold text-zinc-100">Work Orders</h1>
                     <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400 rounded-full">

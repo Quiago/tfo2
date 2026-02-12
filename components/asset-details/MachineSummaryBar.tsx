@@ -11,7 +11,7 @@ const STATS = [
     { label: 'Cycle Count', value: '1,204', color: 'text-zinc-300' },
 ]
 
-export function MachineSummaryBar() {
+export function MachineSummaryBar({ onCreateWorkOrder }: { onCreateWorkOrder?: () => void }) {
     return (
         <div className="h-full bg-zinc-900 flex items-center gap-6 px-5 overflow-x-auto">
             {/* Stats */}
@@ -26,7 +26,10 @@ export function MachineSummaryBar() {
             <div className="flex-1" />
 
             {/* Action buttons */}
-            <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white border border-zinc-700 transition-colors flex-shrink-0">
+            <button
+                onClick={onCreateWorkOrder}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white border border-zinc-700 transition-colors flex-shrink-0"
+            >
                 <Plus size={13} />
                 Create Work Order
             </button>

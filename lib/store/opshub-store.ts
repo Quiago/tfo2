@@ -12,6 +12,8 @@ import type {
     OpshubPost,
     OpshubTab,
     OpshubViewMode,
+    TaskPriority,
+    TaskType,
     TeamMember,
     WorkflowRepo,
     WorkOrderCard,
@@ -43,6 +45,7 @@ interface OpshubState {
     viewMode: OpshubViewMode
     selectedWorkOrderId: string | null
     selectedInnerTab: WorkOrderInnerTab
+    pendingCreateWorkOrder: { equipmentName: string; meshName: string } | null
 
     // User / Demo
     currentUser: TeamMember | null
@@ -83,6 +86,7 @@ interface OpshubState {
     setSelectedWorkOrderId: (id: string | null) => void
     setSelectedInnerTab: (tab: WorkOrderInnerTab) => void
     setCurrency: (currency: 'EUR' | 'SAR') => void
+    setPendingCreateWorkOrder: (data: { equipmentName: string; meshName: string } | null) => void
 
     // ── User / Demo ─────────────────────────────────
     setCurrentUser: (user: TeamMember | null) => void
@@ -100,6 +104,31 @@ interface OpshubState {
     // ── Workflow Actions (existing) ─────────────────
     starWorkflow: (repoId: string) => void
     forkWorkflow: (repoId: string, targetFactoryId: string) => void
+
+    // ── Work Order CRUD Actions ─────────────────────
+    addWorkOrder: (data: {
+        title: string
+        description: string
+        equipmentName: string
+        priority: TaskPriority
+        facility: string
+        tags: string[]
+        owner: TeamMember
+    }) => void
+    updateWorkOrder: (id: string, updates: Partial<Pick<WorkOrderCard, 'title' | 'description' | 'status' | 'priority' | 'tags' | 'rootCause' | 'costSaved'>>) => void
+    removeWorkOrder: (id: string) => void
+
+    // ── Task CRUD Actions ───────────────────────────
+    addTask: (workOrderId: string, task: {
+        type: TaskType
+        title: string
+        description: string
+        assignee: TeamMember
+        assignedBy: TeamMember
+        priority: TaskPriority
+    }) => void
+    updateTask: (workOrderId: string, taskId: string, updates: Partial<Pick<WorkOrderTask, 'status' | 'title' | 'description' | 'note' | 'priority' | 'isBlocked'>>) => void
+    removeTask: (workOrderId: string, taskId: string) => void
 
     // ── Filter Actions (existing) ───────────────────
     setSelectedFactory: (factoryId: string | null) => void
@@ -159,6 +188,7 @@ export const useOpshubStore = create<OpshubState>()(
         viewMode: 'executive',
         selectedWorkOrderId: null,
         selectedInnerTab: 'overview',
+        pendingCreateWorkOrder: null,
         currentUser: null,
         demoUserIndex: 0,
         currency: 'EUR',
@@ -184,6 +214,7 @@ export const useOpshubStore = create<OpshubState>()(
         setSelectedWorkOrderId: (id) => set((state) => { state.selectedWorkOrderId = id }),
         setSelectedInnerTab: (tab) => set((state) => { state.selectedInnerTab = tab }),
         setCurrency: (currency) => set((state) => { state.currency = currency }),
+        setPendingCreateWorkOrder: (data) => set((state) => { state.pendingCreateWorkOrder = data }),
 
         // ── User / Demo ─────────────────────────────────
         setCurrentUser: (user) => set((state) => { state.currentUser = user }),
@@ -297,6 +328,79 @@ export const useOpshubStore = create<OpshubState>()(
                 targetFacilityId: targetFactoryId,
             }
             state.feed.unshift(newPost)
+        }),
+
+        // ── Work Order CRUD Actions ─────────────────────
+        addWorkOrder: (data) => set((state) => {
+            const woNumber = state.workOrders.length + 847
+            const now = new Date().toISOString()
+            const newWorkOrder: WorkOrderCard = {
+                id: generateId('wo'),
+                number: `WO-2026-${String(woNumber).padStart(4, '0')}`,
+                title: data.title,
+                description: data.description,
+                equipmentId: generateId('eq'),
+                equipmentName: data.equipmentName,
+                status: 'open',
+                priority: data.priority,
+                createdAt: now,
+                owner: data.owner,
+                team: [data.owner],
+                tags: data.tags,
+                tasks: [],
+                facility: data.facility,
+            }
+            state.workOrders.push(newWorkOrder)
+        }),
+
+        updateWorkOrder: (id, updates) => set((state) => {
+            const wo = state.workOrders.find(w => w.id === id)
+            if (!wo) return
+            Object.assign(wo, updates)
+        }),
+
+        removeWorkOrder: (id) => set((state) => {
+            state.workOrders = state.workOrders.filter(w => w.id !== id)
+        }),
+
+        // ── Task CRUD Actions ───────────────────────────
+        addTask: (workOrderId, taskData) => set((state) => {
+            const wo = state.workOrders.find(w => w.id === workOrderId)
+            if (!wo) return
+            const now = new Date().toISOString()
+            const newTask: WorkOrderTask = {
+                id: generateId('task'),
+                number: wo.tasks.length + 1,
+                workOrderId,
+                type: taskData.type,
+                title: taskData.title,
+                description: taskData.description,
+                assignee: taskData.assignee,
+                assignedBy: taskData.assignedBy,
+                priority: taskData.priority,
+                status: 'pending',
+                dependsOn: [],
+                isBlocked: false,
+                updates: [],
+                createdAt: now,
+                updatedAt: now,
+            }
+            wo.tasks.push(newTask)
+        }),
+
+        updateTask: (workOrderId, taskId, updates) => set((state) => {
+            const wo = state.workOrders.find(w => w.id === workOrderId)
+            if (!wo) return
+            const task = wo.tasks.find(t => t.id === taskId)
+            if (!task) return
+            Object.assign(task, updates)
+            task.updatedAt = new Date().toISOString()
+        }),
+
+        removeTask: (workOrderId, taskId) => set((state) => {
+            const wo = state.workOrders.find(w => w.id === workOrderId)
+            if (!wo) return
+            wo.tasks = wo.tasks.filter(t => t.id !== taskId)
         }),
 
         // ── Filter Actions (existing) ───────────────────

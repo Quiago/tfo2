@@ -6,7 +6,7 @@ import { AnomalyList } from './AnomalyList'
 import { OpshubFeed } from './OpshubFeed'
 import { RiskSummaryCard } from './RiskSummaryCard'
 import { TotalRiskPanel } from './TotalRiskPanel'
-import { WorkOrderShortcutList } from './WorkOrderShortcutList'
+import { WorkOrderShortcutList } from '../work-orders/WorkOrderShortcutList'
 
 export function OpshubHome() {
     const factories = useOpshubStore(s => s.factories)
