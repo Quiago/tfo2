@@ -119,14 +119,16 @@ export function FactoryScene({
 
             {/* Model */}
             <Suspense fallback={null}>
-                <FactoryModel
-                    url={modelUrl}
-                    onMeshCount={onMeshCount}
-                    onMeshClick={onMeshClick}
-                    alertMeshPattern={alertMeshPattern}
-                    onAlertMeshFound={onAlertMeshFound}
-                    isolatedMeshName={isolatedMeshName}
-                />
+                <group position={[-3, 0, 3]}>
+                    <FactoryModel
+                        url={modelUrl}
+                        onMeshCount={onMeshCount}
+                        onMeshClick={onMeshClick}
+                        alertMeshPattern={alertMeshPattern}
+                        onAlertMeshFound={onAlertMeshFound}
+                        isolatedMeshName={isolatedMeshName}
+                    />
+                </group>
             </Suspense>
 
             {/* Hotspots */}

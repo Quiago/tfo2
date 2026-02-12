@@ -524,42 +524,44 @@ function RightPanel({
             <div className={s.card}>
                 <div className={s.cardTitle}>Production Efficiency (Last 7d)</div>
                 <div className={s.chartContainer}>
-                    <svg viewBox="0 0 360 180" width="100%" preserveAspectRatio="xMidYMid meet">
-                        {/* Grid lines */}
-                        {[0, 20, 40, 60, 80, 100].map((v) => {
-                            const y = 160 - (v / 100) * 140
-                            return (
-                                <g key={v}>
-                                    <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
-                                    <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
-                                </g>
-                            )
-                        })}
-                        {/* Area layers — lower (light cyan) */}
-                        <path
-                            d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85
+                    <svg viewBox="0 0 360 135" width="100%" preserveAspectRatio="xMidYMid meet">
+                        <g transform="scale(1, 0.65)">
+                            {/* Grid lines */}
+                            {[0, 20, 40, 60, 80, 100].map((v) => {
+                                const y = 160 - (v / 100) * 140
+                                return (
+                                    <g key={v}>
+                                        <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
+                                        <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
+                                    </g>
+                                )
+                            })}
+                            {/* Area layers — lower (light cyan) */}
+                            <path
+                                d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85
                                L350,160 L40,160 Z"
-                            fill="#66DBFF" opacity="0.7"
-                        />
-                        {/* Area layers — upper (darker blue) */}
-                        <path
-                            d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30
+                                fill="#66DBFF" opacity="0.7"
+                            />
+                            {/* Area layers — upper (darker blue) */}
+                            <path
+                                d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30
                                L350,160 L40,160 Z"
-                            fill="#0B8FD9" opacity="0.6"
-                        />
-                        {/* Stroke lines */}
-                        <path
-                            d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85"
-                            fill="none" stroke="#56B5DA" strokeWidth="1.5"
-                        />
-                        <path
-                            d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30"
-                            fill="none" stroke="#3992C4" strokeWidth="1.5"
-                        />
-                        {/* X-axis labels */}
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                            <text key={day} x={40 + i * 51.5} y={175} textAnchor="middle" fontSize="8" fill="#828898">{day}</text>
-                        ))}
+                                fill="#0B8FD9" opacity="0.6"
+                            />
+                            {/* Stroke lines */}
+                            <path
+                                d="M40,130 C80,125 120,120 160,128 C200,136 240,108 280,100 C300,96 330,88 350,85"
+                                fill="none" stroke="#56B5DA" strokeWidth="1.5"
+                            />
+                            <path
+                                d="M40,115 C80,100 120,108 160,95 C200,82 240,60 280,48 C300,42 330,35 350,30"
+                                fill="none" stroke="#3992C4" strokeWidth="1.5"
+                            />
+                            {/* X-axis labels */}
+                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                                <text key={day} x={40 + i * 51.5} y={175} textAnchor="middle" fontSize="8" fill="#828898">{day}</text>
+                            ))}
+                        </g>
                     </svg>
                 </div>
             </div>
@@ -575,64 +577,74 @@ function RightPanel({
                     </div>
                 </div>
                 <div className={s.chartContainer}>
-                    <svg viewBox="0 0 360 150" width="100%" preserveAspectRatio="xMidYMid meet">
-                        {/* Grid lines */}
-                        {[0, 50, 100, 150, 200].map((v) => {
-                            const y = 130 - (v / 200) * 110
-                            return (
-                                <g key={v}>
-                                    <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
-                                    <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
-                                </g>
-                            )
-                        })}
-                        {/* Bars for each day */}
-                        {[
-                            { day: 'Mon', d1: 140, d2: 100, d3: 120 },
-                            { day: 'Tue', d1: 80, d2: 110, d3: 90 },
-                            { day: 'Wed', d1: 120, d2: 95, d3: 85 },
-                            { day: 'Thu', d1: 180, d2: 120, d3: 110 },
-                            { day: 'Fri', d1: 160, d2: 170, d3: 130 },
-                            { day: 'Sat', d1: 40, d2: 50, d3: 35 },
-                            { day: 'Sun', d1: 175, d2: 90, d3: 60 },
-                        ].map((item, i) => {
-                            const gx = 55 + i * 44
-                            const barW = 10
-                            const maxH = 110
-                            return (
-                                <g key={item.day}>
-                                    <rect x={gx} y={130 - (item.d1 / 200) * maxH} width={barW} height={(item.d1 / 200) * maxH} rx={2} fill="#99E3BE" />
-                                    <rect x={gx + barW + 2} y={130 - (item.d2 / 200) * maxH} width={barW} height={(item.d2 / 200) * maxH} rx={2} fill="#1BC0C4" />
-                                    <rect x={gx + (barW + 2) * 2} y={130 - (item.d3 / 200) * maxH} width={barW} height={(item.d3 / 200) * maxH} rx={2} fill="#9ED0F1" />
-                                    <text x={gx + 17} y={143} textAnchor="middle" fontSize="8" fill="#828898">{item.day}</text>
-                                </g>
-                            )
-                        })}
+                    <svg viewBox="0 0 360 115" width="100%" preserveAspectRatio="xMidYMid meet">
+                        <g transform="scale(1, 0.65)">
+                            {/* Grid lines */}
+                            {[0, 50, 100, 150, 200].map((v) => {
+                                const y = 130 - (v / 200) * 110
+                                return (
+                                    <g key={v}>
+                                        <line x1="40" y1={y} x2="350" y2={y} stroke="#828898" strokeWidth="0.5" strokeDasharray="2,3" />
+                                        <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="#828898">{v}</text>
+                                    </g>
+                                )
+                            })}
+                            {/* Bars for each day */}
+                            {[
+                                { day: 'Mon', d1: 140, d2: 100, d3: 120 },
+                                { day: 'Tue', d1: 80, d2: 110, d3: 90 },
+                                { day: 'Wed', d1: 120, d2: 95, d3: 85 },
+                                { day: 'Thu', d1: 180, d2: 120, d3: 110 },
+                                { day: 'Fri', d1: 160, d2: 170, d3: 130 },
+                                { day: 'Sat', d1: 40, d2: 50, d3: 35 },
+                                { day: 'Sun', d1: 175, d2: 90, d3: 60 },
+                            ].map((item, i) => {
+                                const gx = 55 + i * 44
+                                const barW = 10
+                                const maxH = 110
+                                return (
+                                    <g key={item.day}>
+                                        <rect x={gx} y={130 - (item.d1 / 200) * maxH} width={barW} height={(item.d1 / 200) * maxH} rx={2} fill="#99E3BE" />
+                                        <rect x={gx + barW + 2} y={130 - (item.d2 / 200) * maxH} width={barW} height={(item.d2 / 200) * maxH} rx={2} fill="#1BC0C4" />
+                                        <rect x={gx + (barW + 2) * 2} y={130 - (item.d3 / 200) * maxH} width={barW} height={(item.d3 / 200) * maxH} rx={2} fill="#9ED0F1" />
+                                        <text x={gx + 17} y={143} textAnchor="middle" fontSize="8" fill="#828898">{item.day}</text>
+                                    </g>
+                                )
+                            })}
+                        </g>
                     </svg>
                 </div>
             </div>
 
             {/* ─── Card 3: Active Alerts ──── */}
-            <div className={s.card}>
+            <div className={s.card} style={{ height: 140, display: 'flex', flexDirection: 'column', paddingBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div className={s.cardTitle} style={{ marginBottom: 0 }}>
                         <span style={{ verticalAlign: 'middle' }}>⚠️</span> Active Alerts
                     </div>
                 </div>
-                <div style={{ marginTop: 12 }}>
+                <div style={{ marginTop: 4, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
                     {activeAlerts.map((alert, idx) => (
                         <button
                             key={alert.id}
                             onClick={() => onNavigate('timeline')}
                             className={s.alertItem}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderTop: idx > 0 ? '1px solid rgba(152,166,212,0.2)' : 'none' }}
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '2px 0',
+                                borderTop: idx > 0 ? '1px solid rgba(152,166,212,0.2)' : 'none'
+                            }}
                         >
-                            <div className={`${s.alertIcon} ${alert.severity === 'critical' ? s.alertIconCritical : s.alertIconWarning}`}>
-                                <AlertTriangle size={14} />
+                            <div className={`${s.alertIcon} ${alert.severity === 'critical' ? s.alertIconCritical : s.alertIconWarning}`} style={{ width: 24, height: 24 }}>
+                                <AlertTriangle size={12} />
                             </div>
                             <div className={s.alertText}>
-                                <div className={s.alertTitle}>{alert.zone} — {alert.sensor}</div>
-                                <div className={s.alertDesc}>{alert.message}</div>
+                                <div className={s.alertTitle} style={{ fontSize: 10, lineHeight: '1.2' }}>{alert.zone} — {alert.sensor}</div>
+                                <div className={s.alertDesc} style={{ fontSize: 9, lineHeight: '1.2', marginTop: 0 }}>{alert.message}</div>
                             </div>
                         </button>
                     ))}
@@ -656,21 +668,6 @@ function RightPanel({
                     ))}
                 </div>
             </div>
-
-            {/* Quick Links to OpsHub */}
-            <button
-                onClick={() => onNavigate('opshub')}
-                className={s.card}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left' }}
-            >
-                <div style={{ padding: 8, borderRadius: 8, background: 'var(--tp-bg-main)' }}>
-                    <LayoutDashboard size={18} style={{ color: 'var(--tp-stroke)' }} />
-                </div>
-                <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tp-text-heading)' }}>OpsHub</div>
-                    <div style={{ fontSize: 10, color: 'var(--tp-text-muted)' }}>Cross-facility ops & work orders</div>
-                </div>
-            </button>
         </>
     )
 }

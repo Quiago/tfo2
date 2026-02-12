@@ -320,16 +320,19 @@ export function DigitalTwinNavigator({
                 </div>
             )}
 
-            {/* ── CENTER OVERLAY (Pencil Design) ── */}
+            {/* ── OVERLAYS (Pencil Design) ── */}
             {viewMode !== 'details' && (
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-6 pointer-events-auto">
-                    {/* Label */}
-                    <div className="flex items-center justify-left px-8 h-[56px] bg-[#B0B9CA]/90 backdrop-blur-md rounded-[20px] shadow-lg border border-white/20">
-                        <span className="text-[#222939] font-bold text-lg tracking-tight">Nexus Floor Control</span>
+                <>
+                    {/* Label (Top-Left, Transparent) */}
+                    <div className="absolute top-6 left-8 z-40 pointer-events-none">
+                        <span className="text-[#222939] font-bold text-2xl tracking-tight drop-shadow-sm select-none">Nexus Floor Control</span>
                     </div>
 
-                    {/* Map Toggle Buttons */}
-                    <div className="flex items-center gap-3">
+                    {/* Map Toggle Buttons (Top-Right, next to Right Panel) */}
+                    <div
+                        className="absolute top-6 z-40 flex items-center gap-3 pointer-events-auto"
+                        style={{ right: 'calc(clamp(320px, 25%, 400px) + 20px)' }}
+                    >
                         <button
                             title="Heat Map"
                             className="w-[56px] h-[56px] flex items-center justify-center bg-[#252B38]/90 backdrop-blur-md rounded-[18px] text-white/90 hover:bg-[#343b4d] hover:text-white hover:scale-105 transition-all shadow-lg border border-white/10"
@@ -349,7 +352,7 @@ export function DigitalTwinNavigator({
                             <Activity size={24} />
                         </button>
                     </div>
-                </div>
+                </>
             )}
 
             {/* Trigger Alert Button (Moved to bottom) */}
