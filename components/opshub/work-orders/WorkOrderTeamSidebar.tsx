@@ -1,18 +1,8 @@
 'use client'
 
 import { UserAvatar } from '@/components/shared/UserAvatar'
+import { TeamMember } from '@/lib/types/opshub'
 import { DollarSign, Plus, Tag } from 'lucide-react'
-
-// TODO: import from opshub types when available
-export interface TeamMember {
-    id: string
-    name: string
-    initials: string
-    color: string
-    role: string
-    status: 'available' | 'busy' | 'in-field' | 'offline'
-    isAI?: boolean
-}
 
 interface WorkOrderTeamSidebarProps {
     team: TeamMember[]
@@ -44,8 +34,8 @@ export function WorkOrderTeamSidebar({ team, riskAmount, tags, aiStatus }: WorkO
                     {team.map(member => (
                         <div key={member.id} className="flex items-center gap-2.5">
                             <UserAvatar
-                                initials={member.initials}
-                                color={member.color}
+                                initials={member.avatarInitials}
+                                color={member.avatarColor}
                                 size="md"
                                 status={member.status}
                                 isAI={member.isAI}

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 
 export type TaskType = 'investigation' | 'execution' | 'verification' | 'approval'
-export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'blocked'
+export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'blocked' | 'accepted'
 
 interface WOTaskCardProps {
     taskNumber: number
@@ -45,6 +45,7 @@ const statusConfig: Record<TaskStatus, { dot: string; label: string }> = {
     'in-progress': { dot: 'bg-cyan-500 animate-pulse', label: 'In Progress' },
     completed: { dot: 'bg-emerald-500', label: 'Completed' },
     blocked: { dot: 'bg-red-500', label: 'Blocked' },
+    accepted: { dot: 'bg-emerald-500', label: 'Accepted' },
 }
 
 export function WorkOrderTaskCard({

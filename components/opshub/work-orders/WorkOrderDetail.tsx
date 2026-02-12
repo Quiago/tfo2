@@ -1,5 +1,6 @@
 'use client'
 
+import { useOpshubStore } from '@/lib/store/opshub-store'
 import {
     ArrowLeft,
     FileText,
@@ -9,11 +10,11 @@ import {
     Workflow
 } from 'lucide-react'
 import { useState } from 'react'
+import { WorkOrderTasks } from '../tasks/WorkOrderTasks'
 import { WorkOrderActivity } from './WorkOrderActivity'
 import { WorkOrderDiscussion } from './WorkOrderDiscussion'
 import { WorkOrderOverview } from './WorkOrderOverview'
-import { WorkOrderTasks } from '../tasks/WorkOrderTasks'
-import { WorkOrderTeamSidebar, type TeamMember } from './WorkOrderTeamSidebar'
+import { WorkOrderTeamSidebar } from './WorkOrderTeamSidebar'
 import { WorkOrderWorkflows } from './WorkOrderWorkflows'
 
 // TODO: import from opshub types when available
@@ -27,30 +28,7 @@ const INNER_TABS: { id: WorkOrderInnerTab; label: string; icon: React.ReactNode 
     { id: 'activity', label: 'Activity', icon: <History className="w-4 h-4" /> },
 ]
 
-// Mock data for the detail view
-const MOCK_TEAM: TeamMember[] = [
-    { id: 'u1', name: 'Klaus Muller', initials: 'KM', color: '#3b82f6', role: 'Lead Technician', status: 'in-field' },
-    { id: 'u2', name: 'Anna Schmidt', initials: 'AS', color: '#8b5cf6', role: 'Reliability Engineer', status: 'available' },
-    { id: 'u3', name: 'Hans Weber', initials: 'HW', color: '#f59e0b', role: 'Shift Supervisor', status: 'busy' },
-    { id: 'ai', name: 'AI Agent', initials: 'AI', color: '#7c3aed', role: 'AI Agent', status: 'available', isAI: true },
-]
 
-const MOCK_WO_OVERVIEW = {
-    status: 'in-progress',
-    priority: 'critical',
-    createdAt: '2026-02-09T14:30:00Z',
-    equipmentName: 'Motor A7 — Conveyor Drive Line 3',
-    equipmentId: 'eq-motor-a7',
-    location: 'Line 3, Hall B, Ground Floor',
-    factoryName: 'Munich Plant',
-    rootCause: 'Inner race bearing defect detected via vibration analysis (1.2kHz peak). Degradation pattern consistent with fatigue failure after ~18,000 operating hours.',
-    spareParts: [
-        { name: 'Deep Groove Ball Bearing', partNumber: 'SKF-6205', quantity: 1, inStock: true },
-        { name: 'Bearing Seal Kit', partNumber: 'SKF-CR-47697', quantity: 1, inStock: true },
-        { name: 'Lubricant — High Temp', partNumber: 'SKF-LGMT-2/1', quantity: 1, inStock: false },
-    ],
-    costSummary: { labor: 450, parts: 280, downtime: 1200, total: 1930 },
-}
 
 interface WorkOrderDetailProps {
     workOrderId: string
@@ -58,7 +36,47 @@ interface WorkOrderDetailProps {
 }
 
 export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
+    const workOrder = useOpshubStore(s => s.workOrders.find(w => w.id === workOrderId))
     const [innerTab, setInnerTab] = useState<WorkOrderInnerTab>('overview')
+
+    if (!workOrder) {
+        return (
+            <div className="flex items-center justify-center h-full text-zinc-500">
+                Work Order not found
+            </div>
+        )
+    }
+
+    const statusColors: Record<string, string> = {
+        open: 'text-emerald-400',
+        'in-progress': 'text-cyan-400',
+        resolved: 'text-purple-400',
+        closed: 'text-zinc-500',
+    }
+
+    const priorityColors: Record<string, string> = {
+        critical: 'text-red-400',
+        high: 'text-orange-400',
+        medium: 'text-amber-400',
+        low: 'text-blue-400',
+    }
+
+    // Adapt store data for WorkOrderOverview
+    // We might need to make some props in WorkOrderOverview optional or map them
+    const overviewData = {
+        status: workOrder.status,
+        priority: workOrder.priority,
+        createdAt: workOrder.createdAt,
+        resolvedAt: workOrder.resolvedAt,
+        equipmentName: workOrder.equipmentName,
+        equipmentId: workOrder.equipmentId,
+        location: 'Factory Floor', // Mock default for now or add to store
+        factoryName: workOrder.facility || 'Unknown Facility',
+        rootCause: undefined, // Add to store if needed
+        spareParts: [], // Add to store if needed
+        costSummary: undefined, // Add to store if needed
+    }
+
 
     return (
         <div className="flex flex-col h-full">
@@ -68,13 +86,13 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
                     <ArrowLeft className="w-4 h-4" />
                 </button>
                 <div className="flex flex-col gap-0.5">
-                    <h1 className="text-sm font-semibold text-zinc-100">Motor A7 Bearing Replacement — Line 3</h1>
+                    <h1 className="text-sm font-semibold text-zinc-100">{workOrder.title}</h1>
                     <div className="flex items-center gap-2 text-xs font-mono">
-                        <span className="text-zinc-500">WO-4821</span>
+                        <span className="text-zinc-500">{workOrder.number}</span>
                         <span className="text-zinc-600">-</span>
-                        <span className="text-cyan-400 font-medium">in_progress</span>
+                        <span className={`font-medium ${statusColors[workOrder.status]}`}>{workOrder.status}</span>
                         <span className="text-zinc-600">-</span>
-                        <span className="text-red-400 font-medium">critical</span>
+                        <span className={`font-medium ${priorityColors[workOrder.priority]}`}>{workOrder.priority}</span>
                     </div>
                 </div>
             </div>
@@ -87,8 +105,8 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
                             key={tab.id}
                             onClick={() => setInnerTab(tab.id)}
                             className={`flex items-center gap-2 w-full px-4 py-2 text-sm transition ${innerTab === tab.id
-                                    ? 'text-cyan-400 bg-cyan-950/30 border-r-2 border-cyan-500'
-                                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
+                                ? 'text-cyan-400 bg-cyan-950/30 border-r-2 border-cyan-500'
+                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
                                 }`}
                         >
                             {tab.icon}
@@ -99,8 +117,8 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
 
                 {/* Center: tab content */}
                 <div className="flex-1 overflow-y-auto p-6">
-                    {innerTab === 'overview' && <WorkOrderOverview workOrder={MOCK_WO_OVERVIEW} />}
-                    {innerTab === 'tasks' && <WorkOrderTasks />}
+                    {innerTab === 'overview' && <WorkOrderOverview workOrder={overviewData} />}
+                    {innerTab === 'tasks' && <WorkOrderTasks workOrderId={workOrderId} />}
                     {innerTab === 'workflows' && <WorkOrderWorkflows />}
                     {innerTab === 'discussion' && <WorkOrderDiscussion />}
                     {innerTab === 'activity' && <WorkOrderActivity />}
@@ -108,10 +126,10 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
 
                 {/* Right: team sidebar */}
                 <WorkOrderTeamSidebar
-                    team={MOCK_TEAM}
-                    riskAmount={8500}
-                    tags={['motors', 'predictive', 'bearing', 'line-3']}
-                    aiStatus="Generated recommendation. Awaiting resolution."
+                    team={workOrder.team}
+                    riskAmount={0} // Default 0 for new WOs
+                    tags={workOrder.tags}
+                    aiStatus={undefined}
                 />
             </div>
         </div>
