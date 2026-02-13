@@ -31,11 +31,11 @@ const MOCK_LINKED: LinkedWorkflow[] = [
     },
 ]
 
-export function WorkOrderWorkflows({ hasAIRecommendation = true, linkedWorkflows = MOCK_LINKED }: WorkOrderWorkflowsProps) {
+export function WorkOrderWorkflows({ hasAIRecommendation = true, linkedWorkflows = MOCK_LINKED, onApprove }: WorkOrderWorkflowsProps & { onApprove?: () => void }) {
     return (
         <div className={s.tabContainer}>
             {/* AI Recommendation */}
-            {hasAIRecommendation && <AIRecommendationCard />}
+            {hasAIRecommendation && <AIRecommendationCard onApprove={onApprove} />}
 
             {/* Linked Workflow Repos - Tree View */}
             <div className={s.tabSection}>

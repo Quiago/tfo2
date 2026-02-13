@@ -1,108 +1,125 @@
 'use client'
 
+import { useTfoStore } from '@/lib/store/tfo-store'
 import { useWorkflowStore, type BuilderMode } from '@/lib/store/workflow-store'
-import { LayoutGrid, Workflow, Play, Download, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import type { Workflow as WorkflowType } from '@/lib/types/workflow'
+import s from '@/styles/workflow/workflow.module.css'
+import { CloudUpload, Download, LayoutGrid, PanelLeftClose, PanelLeftOpen, Play, Workflow } from 'lucide-react'
 
 interface WorkflowToolbarProps {
-  workflow: WorkflowType
-  mode: BuilderMode
-  onModeToggle: () => void
-  isMobile: boolean
+    workflow: WorkflowType
+    mode: BuilderMode
+    onModeToggle: () => void
+    isMobile: boolean
 }
 
 export function WorkflowToolbar({ workflow, mode, onModeToggle, isMobile }: WorkflowToolbarProps) {
-  const { isPanelOpen, togglePanel, exportToJSON, isExecuting, setExecuting, addExecutionLog, clearExecutionLog } = useWorkflowStore()
+    const { isPanelOpen, togglePanel, exportToJSON, isExecuting, setExecuting, addExecutionLog, clearExecutionLog } = useWorkflowStore()
+    const { publishWorkflowUpdate } = useTfoStore()
 
-  const handleExport = () => {
-    const json = exportToJSON()
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${workflow.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const handleExport = () => {
+        const json = exportToJSON()
+        const blob = new Blob([json], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${workflow.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
 
-  const handleRun = () => {
-    if (isExecuting) return
-    clearExecutionLog()
-    setExecuting(true)
+    const handlePublish = () => {
+        publishWorkflowUpdate(workflow)
+        alert(`Workflow "${workflow.title}" published to Cross-Facility Learning Center!`)
+    }
 
-    // Simulate execution of each node
-    const nodes = workflow.nodes
-    let i = 0
-    const interval = setInterval(() => {
-      if (i >= nodes.length) {
-        clearInterval(interval)
-        setExecuting(false)
-        return
-      }
-      addExecutionLog(nodes[i].id, 'success', `Executed: ${nodes[i].label}`)
-      i++
-    }, 800)
-  }
+    const handleRun = () => {
+        if (isExecuting) return
+        clearExecutionLog()
+        setExecuting(true)
 
-  return (
-    <div className="flex items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
-      {/* Panel toggle (desktop only) */}
-      {!isMobile && mode === 'canvas' && (
-        <button
-          onClick={togglePanel}
-          className="flex h-7 w-7 items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          title={isPanelOpen ? 'Hide palette' : 'Show palette'}
-        >
-          {isPanelOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
-        </button>
-      )}
+        // Simulate execution of each node
+        const nodes = workflow.nodes
+        let i = 0
+        const interval = setInterval(() => {
+            if (i >= nodes.length) {
+                clearInterval(interval)
+                setExecuting(false)
+                return
+            }
+            addExecutionLog(nodes[i].id, 'success', `Executed: ${nodes[i].label}`)
+            i++
+        }, 800)
+    }
 
-      {/* Workflow title */}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-200">{workflow.title}</p>
-        <p className="truncate text-[10px] text-zinc-600">
-          {workflow.nodes.length} nodes &middot; {workflow.edges.length} connections &middot; v{workflow.version}
-        </p>
-      </div>
+    return (
+        <div className={s.toolbar}>
+            {/* Panel toggle (desktop only) */}
+            {!isMobile && mode === 'canvas' && (
+                <button
+                    onClick={togglePanel}
+                    className={s.toolbarIconButton}
+                    title={isPanelOpen ? 'Hide palette' : 'Show palette'}
+                >
+                    {isPanelOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+                </button>
+            )}
 
-      {/* Mode toggle */}
-      {!isMobile && (
-        <button
-          onClick={onModeToggle}
-          className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-[10px] font-medium text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
-        >
-          {mode === 'canvas' ? (
-            <>
-              <LayoutGrid size={12} />
-              Cards
-            </>
-          ) : (
-            <>
-              <Workflow size={12} />
-              Canvas
-            </>
-          )}
-        </button>
-      )}
+            {/* Workflow title */}
+            <div className={s.toolbarTitleSection}>
+                <p className={s.toolbarTitle}>{workflow.title}</p>
+                <p className={s.toolbarSubtitle}>
+                    {workflow.nodes.length} nodes &middot; {workflow.edges.length} connections &middot; v{workflow.version}
+                </p>
+            </div>
 
-      {/* Run button */}
-      <button
-        onClick={handleRun}
-        disabled={isExecuting || workflow.nodes.length === 0}
-        className="flex items-center gap-1.5 rounded-md bg-emerald-600/80 px-2.5 py-1 text-[10px] font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-40"
-      >
-        <Play size={10} fill="currentColor" />
-        {isExecuting ? 'Running...' : 'Run'}
-      </button>
+            {/* Mode toggle */}
+            {!isMobile && (
+                <button
+                    onClick={onModeToggle}
+                    className={s.toolbarButton}
+                >
+                    {mode === 'canvas' ? (
+                        <>
+                            <LayoutGrid size={12} />
+                            Cards
+                        </>
+                    ) : (
+                        <>
+                            <Workflow size={12} />
+                            Canvas
+                        </>
+                    )}
+                </button>
+            )}
 
-      {/* Export button */}
-      <button
-        onClick={handleExport}
-        className="flex h-7 w-7 items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-        title="Export JSON"
-      >
-        <Download size={14} />
-      </button>
-    </div>
-  )
+            {/* Run button */}
+            <button
+                onClick={handleRun}
+                disabled={isExecuting || workflow.nodes.length === 0}
+                className={s.runButton}
+            >
+                <Play size={10} fill="currentColor" />
+                {isExecuting ? 'Running...' : 'Run'}
+            </button>
+
+            {/* Publish button */}
+            <button
+                onClick={handlePublish}
+                className={s.toolbarIconButton}
+                title="Publish to Cross-Facility Hub"
+            >
+                <CloudUpload size={14} />
+            </button>
+
+            {/* Export button */}
+            <button
+                onClick={handleExport}
+                className={s.toolbarIconButton}
+                title="Export JSON"
+            >
+                <Download size={14} />
+            </button>
+        </div>
+    )
 }

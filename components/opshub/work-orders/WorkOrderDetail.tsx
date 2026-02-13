@@ -1,6 +1,8 @@
 'use client'
 
 import { useOpshubStore } from '@/lib/store/opshub-store'
+import { useTfoStore } from '@/lib/store/tfo-store'
+import { useWorkflowStore } from '@/lib/store/workflow-store'
 import {
     ArrowLeft,
     FileText,
@@ -80,6 +82,18 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
         low: s.priorityLow,
     }[workOrder.priority] || s.priorityLow
 
+    // Navigation to Workflow Builder
+    const generateWorkflowFromRecommendation = useWorkflowStore(s => s.generateWorkflowFromRecommendation)
+    const setActiveModule = useTfoStore(s => s.setActiveModule)
+
+    const handleApproveRecommendation = () => {
+        // 1. Generate the workflow in the store (starts streaming)
+        generateWorkflowFromRecommendation()
+
+        // 2. Navigate to the Workflow Builder module
+        setActiveModule('workflows')
+    }
+
     return (
         <div className={s.detailsContainer}>
             {/* Header */}
@@ -122,7 +136,11 @@ export function WorkOrderDetail({ workOrderId, onBack }: WorkOrderDetailProps) {
                 <div className={s.mainContent}>
                     {innerTab === 'overview' && <WorkOrderOverview workOrder={overviewData} />}
                     {innerTab === 'tasks' && <WorkOrderTasks workOrderId={workOrderId} />}
-                    {innerTab === 'workflows' && <WorkOrderWorkflows />}
+                    {innerTab === 'workflows' && (
+                        <WorkOrderWorkflows
+                            onApprove={handleApproveRecommendation}
+                        />
+                    )}
                     {innerTab === 'discussion' && <WorkOrderDiscussion />}
                     {innerTab === 'activity' && <WorkOrderActivity />}
                 </div>

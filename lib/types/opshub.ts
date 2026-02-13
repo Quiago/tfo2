@@ -182,8 +182,11 @@ export interface WorkOrderTask {
     dueDate?: string
     note?: string
     dependsOn: string[]
+    blockedBy?: string[]
     isBlocked: boolean
     checklist?: ChecklistStep[]
+    steps?: string[]
+    estimatedDuration?: string
     updates: TaskUpdate[]
     createdAt: string
     updatedAt: string

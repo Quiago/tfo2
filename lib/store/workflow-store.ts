@@ -1,73 +1,74 @@
+import type {
+    ConfirmationCard,
+    NodeConfig,
+    VoiceWorkflowIntent,
+    Workflow,
+    WorkflowEdge,
+    WorkflowNode,
+    WorkflowNodeType
+} from '@/lib/types/workflow'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import type {
-  Workflow,
-  WorkflowNode,
-  WorkflowEdge,
-  VoiceWorkflowIntent,
-  ConfirmationCard,
-  CardStatus,
-  WorkflowNodeType,
-  NodeConfig,
-} from '@/lib/types/workflow'
 
 // ─── UI Mode ─────────────────────────────────────────────────────
 export type BuilderMode = 'canvas' | 'cards' | 'voice'
 
 // ─── Store Shape ─────────────────────────────────────────────────
 interface WorkflowBuilderState {
-  // Current workflow being edited
-  workflow: Workflow | null
+    // Current workflow being edited
+    workflow: Workflow | null
 
-  // UI state
-  mode: BuilderMode
-  selectedNodeId: string | null
-  isPanelOpen: boolean
-  isVoiceRecording: boolean
-  voiceTranscript: string
+    // UI state
+    mode: BuilderMode
+    selectedNodeId: string | null
+    isPanelOpen: boolean
+    isVoiceRecording: boolean
+    voiceTranscript: string
 
-  // Mobile confirmation cards
-  confirmationCard: ConfirmationCard | null
+    // Mobile confirmation cards
+    confirmationCard: ConfirmationCard | null
 
-  // Streaming state (nodes appearing one by one)
-  isStreaming: boolean
+    // Streaming state (nodes appearing one by one)
+    isStreaming: boolean
 
-  // Execution state
-  isExecuting: boolean
-  executionLog: { nodeId: string; status: string; message: string; timestamp: number }[]
+    // Execution state
+    isExecuting: boolean
+    executionLog: { nodeId: string; status: string; message: string; timestamp: number }[]
 
-  // Actions — Workflow CRUD
-  createWorkflow: (title: string, description?: string) => void
-  loadWorkflow: (workflow: Workflow) => void
-  updateWorkflowMeta: (updates: Partial<Pick<Workflow, 'title' | 'description' | 'tags' | 'targetAsset' | 'safetyCheck' | 'isPublic' | 'status'>>) => void
+    // Actions — Workflow CRUD
+    // Actions — Workflow CRUD
+    createWorkflow: (title: string, description?: string) => void
+    loadWorkflow: (workflow: Workflow) => void
+    updateWorkflowMeta: (updates: Partial<Pick<Workflow, 'title' | 'description' | 'tags' | 'targetAsset' | 'safetyCheck' | 'isPublic' | 'status'>>) => void
+    generateWorkflowFromRecommendation: () => void
 
-  // Actions — Node CRUD
-  addNode: (type: WorkflowNodeType, position: { x: number; y: number }, config?: NodeConfig) => string
-  updateNode: (nodeId: string, updates: Partial<Pick<WorkflowNode, 'label' | 'config' | 'position'>>) => void
-  removeNode: (nodeId: string) => void
-  selectNode: (nodeId: string | null) => void
+    // Actions — Node CRUD
+    addNode: (type: WorkflowNodeType, position: { x: number; y: number }, config?: NodeConfig) => string
+    updateNode: (nodeId: string, updates: Partial<Pick<WorkflowNode, 'label' | 'config' | 'position'>>) => void
+    removeNode: (nodeId: string) => void
+    selectNode: (nodeId: string | null) => void
 
-  // Actions — Edge CRUD
-  addEdge: (source: string, target: string, sourceHandle?: string, label?: string) => void
-  removeEdge: (edgeId: string) => void
+    // Actions — Edge CRUD
+    addEdge: (source: string, target: string, sourceHandle?: string, label?: string) => void
+    removeEdge: (edgeId: string) => void
 
-  // Actions — Voice / AI
-  setVoiceRecording: (isRecording: boolean) => void
-  setVoiceTranscript: (transcript: string) => void
-  setConfirmationCard: (card: ConfirmationCard | null) => void
-  confirmWorkflowIntent: () => void
+    // Actions — Voice / AI
+    setVoiceRecording: (isRecording: boolean) => void
+    setVoiceTranscript: (transcript: string) => void
+    setConfirmationCard: (card: ConfirmationCard | null) => void
+    confirmWorkflowIntent: () => void
 
-  // Actions — Mode
-  setMode: (mode: BuilderMode) => void
-  togglePanel: () => void
+    // Actions — Mode
+    setMode: (mode: BuilderMode) => void
+    togglePanel: () => void
 
-  // Actions — Execution
-  setExecuting: (isExecuting: boolean) => void
-  addExecutionLog: (nodeId: string, status: string, message: string) => void
-  clearExecutionLog: () => void
+    // Actions — Execution
+    setExecuting: (isExecuting: boolean) => void
+    addExecutionLog: (nodeId: string, status: string, message: string) => void
+    clearExecutionLog: () => void
 
-  // Export
-  exportToJSON: () => string
+    // Export
+    exportToJSON: () => string
 }
 
 // ─── ID Generator ────────────────────────────────────────────────
@@ -76,281 +77,356 @@ const generateId = (prefix: string) => `${prefix}_${Date.now()}_${++nodeCounter}
 
 // ─── Auto-Layout Helper ─────────────────────────────────────────
 const autoLayoutPosition = (index: number): { x: number; y: number } => ({
-  x: 300,
-  y: 80 + index * 140,
+    x: 100 + index * 240,
+    y: 300,
 })
 
 // ─── Intent → Nodes/Edges Converter ─────────────────────────────
 function intentToNodesAndEdges(intent: VoiceWorkflowIntent): { nodes: WorkflowNode[]; edges: WorkflowEdge[] } {
-  const nodes: WorkflowNode[] = []
-  const edges: WorkflowEdge[] = []
+    const nodes: WorkflowNode[] = []
+    const edges: WorkflowEdge[] = []
 
-  // Create trigger node
-  const triggerId = generateId('node')
-  nodes.push({
-    id: triggerId,
-    type: intent.trigger.type,
-    label: intent.trigger.keywords?.length
-      ? `Trigger: "${intent.trigger.keywords.join(', ')}"`
-      : 'Start',
-    config: intent.trigger.keywords ? { keywords: intent.trigger.keywords } : {},
-    position: autoLayoutPosition(0),
-  })
-
-  let prevId = triggerId
-
-  // Create step nodes
-  intent.steps.forEach((step, i) => {
-    const nodeId = generateId('node')
+    // Create trigger node
+    const triggerId = generateId('node')
     nodes.push({
-      id: nodeId,
-      type: step.type,
-      label: step.label,
-      config: step.config,
-      position: autoLayoutPosition(i + 1),
+        id: triggerId,
+        type: intent.trigger.type,
+        label: intent.trigger.keywords?.length
+            ? `Trigger: "${intent.trigger.keywords.join(', ')}"`
+            : 'Start',
+        config: intent.trigger.keywords ? { keywords: intent.trigger.keywords } : {},
+        position: autoLayoutPosition(0),
     })
 
-    // Connect to previous
-    edges.push({
-      id: generateId('edge'),
-      source: prevId,
-      target: nodeId,
-      animated: true,
+    let prevId = triggerId
+
+    // Create step nodes
+    intent.steps.forEach((step, i) => {
+        const nodeId = generateId('node')
+        nodes.push({
+            id: nodeId,
+            type: step.type,
+            label: step.label,
+            config: step.config,
+            position: autoLayoutPosition(i + 1),
+        })
+
+        // Connect to previous
+        edges.push({
+            id: generateId('edge'),
+            source: prevId,
+            target: nodeId,
+            animated: true,
+        })
+
+        prevId = nodeId
     })
 
-    prevId = nodeId
-  })
-
-  return { nodes, edges }
+    return { nodes, edges }
 }
 
 // ─── Store ───────────────────────────────────────────────────────
 export const useWorkflowStore = create<WorkflowBuilderState>()(
-  immer((set, get) => ({
-    workflow: null,
-    mode: 'canvas',
-    selectedNodeId: null,
-    isPanelOpen: true,
-    isVoiceRecording: false,
-    voiceTranscript: '',
-    confirmationCard: null,
-    isStreaming: false,
-    isExecuting: false,
-    executionLog: [],
+    immer((set, get) => ({
+        workflow: null,
+        mode: 'canvas',
+        selectedNodeId: null,
+        isPanelOpen: true,
+        isVoiceRecording: false,
+        voiceTranscript: '',
+        confirmationCard: null,
+        isStreaming: false,
+        isExecuting: false,
+        executionLog: [],
 
-    // ── Workflow CRUD ─────────────────────────────
-    createWorkflow: (title, description = '') => {
-      set((state) => {
-        state.workflow = {
-          id: generateId('wf'),
-          title,
-          description,
-          authorId: 'user_current',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          version: 1,
-          isPublic: false,
-          status: 'draft',
-          nodes: [],
-          edges: [],
-          tags: [],
-          executionCount: 0,
-        }
-      })
-    },
-
-    loadWorkflow: (workflow) => {
-      set((state) => {
-        state.workflow = workflow
-        state.selectedNodeId = null
-      })
-    },
-
-    updateWorkflowMeta: (updates) => {
-      set((state) => {
-        if (!state.workflow) return
-        Object.assign(state.workflow, updates)
-        state.workflow.updatedAt = new Date().toISOString()
-      })
-    },
-
-    // ── Node CRUD ─────────────────────────────────
-    addNode: (type, position, config = {}) => {
-      const id = generateId('node')
-      const meta = (
-        // Dynamic import would be cleaner but for Zustand sync we inline
-        { label: type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }
-      )
-      set((state) => {
-        if (!state.workflow) return
-        state.workflow.nodes.push({
-          id,
-          type,
-          label: meta.label,
-          config,
-          position,
-        })
-        state.workflow.updatedAt = new Date().toISOString()
-      })
-      return id
-    },
-
-    updateNode: (nodeId, updates) => {
-      set((state) => {
-        if (!state.workflow) return
-        const node = state.workflow.nodes.find(n => n.id === nodeId)
-        if (node) {
-          if (updates.label !== undefined) node.label = updates.label
-          if (updates.config !== undefined) node.config = updates.config
-          if (updates.position !== undefined) node.position = updates.position
-          state.workflow.updatedAt = new Date().toISOString()
-        }
-      })
-    },
-
-    removeNode: (nodeId) => {
-      set((state) => {
-        if (!state.workflow) return
-        state.workflow.nodes = state.workflow.nodes.filter(n => n.id !== nodeId)
-        state.workflow.edges = state.workflow.edges.filter(
-          e => e.source !== nodeId && e.target !== nodeId
-        )
-        if (state.selectedNodeId === nodeId) state.selectedNodeId = null
-        state.workflow.updatedAt = new Date().toISOString()
-      })
-    },
-
-    selectNode: (nodeId) => {
-      set((state) => { state.selectedNodeId = nodeId })
-    },
-
-    // ── Edge CRUD ─────────────────────────────────
-    addEdge: (source, target, sourceHandle, label) => {
-      set((state) => {
-        if (!state.workflow) return
-        // Prevent duplicates
-        const exists = state.workflow.edges.some(
-          e => e.source === source && e.target === target && e.sourceHandle === sourceHandle
-        )
-        if (exists) return
-        state.workflow.edges.push({
-          id: generateId('edge'),
-          source,
-          target,
-          sourceHandle,
-          label,
-          animated: true,
-        })
-        state.workflow.updatedAt = new Date().toISOString()
-      })
-    },
-
-    removeEdge: (edgeId) => {
-      set((state) => {
-        if (!state.workflow) return
-        state.workflow.edges = state.workflow.edges.filter(e => e.id !== edgeId)
-      })
-    },
-
-    // ── Voice / AI ────────────────────────────────
-    setVoiceRecording: (isRecording) => {
-      set((state) => { state.isVoiceRecording = isRecording })
-    },
-
-    setVoiceTranscript: (transcript) => {
-      set((state) => { state.voiceTranscript = transcript })
-    },
-
-    setConfirmationCard: (card) => {
-      set((state) => { state.confirmationCard = card })
-    },
-
-    confirmWorkflowIntent: () => {
-      const { confirmationCard, workflow } = get()
-      if (!confirmationCard || !workflow) return
-
-      const intent = confirmationCard.userEdits
-        ? { ...confirmationCard.workflowIntent, ...confirmationCard.userEdits }
-        : confirmationCard.workflowIntent
-
-      const { nodes, edges } = intentToNodesAndEdges(intent)
-
-      // Set metadata immediately, clear overlay, start streaming
-      set((state) => {
-        if (!state.workflow) return
-        state.workflow.nodes = []
-        state.workflow.edges = []
-        state.workflow.title = intent.title
-        state.workflow.description = intent.description
-        state.workflow.targetAsset = intent.targetAsset
-        state.workflow.safetyCheck = intent.safetyCheck
-        state.workflow.updatedAt = new Date().toISOString()
-        state.confirmationCard = null
-        state.voiceTranscript = ''
-        state.isStreaming = true
-      })
-
-      // Stream nodes in one-by-one with delay
-      const STREAM_DELAY = 600 // ms between each node
-      nodes.forEach((node, i) => {
-        setTimeout(() => {
-          set((state) => {
-            if (!state.workflow) return
-            state.workflow.nodes.push(node)
-            // Add the edge connecting to this node (if any)
-            const incomingEdge = edges.find(e => e.target === node.id)
-            if (incomingEdge) {
-              state.workflow.edges.push(incomingEdge)
-            }
-            // Also add any edges where this node is the source for decision branches
-            // that connect to already-existing nodes
-            edges
-              .filter(e => e.source === node.id)
-              .forEach(e => {
-                const targetExists = state.workflow!.nodes.some(n => n.id === e.target)
-                if (targetExists && !state.workflow!.edges.some(ex => ex.id === e.id)) {
-                  state.workflow!.edges.push(e)
+        // ── Workflow CRUD ─────────────────────────────
+        createWorkflow: (title, description = '') => {
+            set((state) => {
+                state.workflow = {
+                    id: generateId('wf'),
+                    title,
+                    description,
+                    authorId: 'user_current',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    version: 1,
+                    isPublic: false,
+                    status: 'draft',
+                    nodes: [],
+                    edges: [],
+                    tags: [],
+                    executionCount: 0,
                 }
-              })
-            state.workflow.updatedAt = new Date().toISOString()
-            // Mark streaming complete after last node
-            if (i === nodes.length - 1) {
-              state.isStreaming = false
-            }
-          })
-        }, (i + 1) * STREAM_DELAY)
-      })
-    },
+            })
+        },
 
-    // ── Mode ──────────────────────────────────────
-    setMode: (mode) => {
-      set((state) => { state.mode = mode })
-    },
+        loadWorkflow: (workflow) => {
+            set((state) => {
+                state.workflow = workflow
+                state.selectedNodeId = null
+            })
+        },
 
-    togglePanel: () => {
-      set((state) => { state.isPanelOpen = !state.isPanelOpen })
-    },
+        updateWorkflowMeta: (updates) => {
+            set((state) => {
+                if (!state.workflow) return
+                Object.assign(state.workflow, updates)
+                state.workflow.updatedAt = new Date().toISOString()
+            })
+        },
 
-    // ── Execution ─────────────────────────────────
-    setExecuting: (isExecuting) => {
-      set((state) => { state.isExecuting = isExecuting })
-    },
+        // ── Node CRUD ─────────────────────────────────
+        addNode: (type, position, config = {}) => {
+            const id = generateId('node')
+            const meta = (
+                // Dynamic import would be cleaner but for Zustand sync we inline
+                { label: type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }
+            )
+            set((state) => {
+                if (!state.workflow) return
+                state.workflow.nodes.push({
+                    id,
+                    type,
+                    label: meta.label,
+                    config,
+                    position,
+                })
+                state.workflow.updatedAt = new Date().toISOString()
+            })
+            return id
+        },
 
-    addExecutionLog: (nodeId, status, message) => {
-      set((state) => {
-        state.executionLog.push({ nodeId, status, message, timestamp: Date.now() })
-      })
-    },
+        updateNode: (nodeId, updates) => {
+            set((state) => {
+                if (!state.workflow) return
+                const node = state.workflow.nodes.find(n => n.id === nodeId)
+                if (node) {
+                    if (updates.label !== undefined) node.label = updates.label
+                    if (updates.config !== undefined) node.config = updates.config
+                    if (updates.position !== undefined) node.position = updates.position
+                    state.workflow.updatedAt = new Date().toISOString()
+                }
+            })
+        },
 
-    clearExecutionLog: () => {
-      set((state) => { state.executionLog = [] })
-    },
+        removeNode: (nodeId) => {
+            set((state) => {
+                if (!state.workflow) return
+                state.workflow.nodes = state.workflow.nodes.filter(n => n.id !== nodeId)
+                state.workflow.edges = state.workflow.edges.filter(
+                    e => e.source !== nodeId && e.target !== nodeId
+                )
+                if (state.selectedNodeId === nodeId) state.selectedNodeId = null
+                state.workflow.updatedAt = new Date().toISOString()
+            })
+        },
 
-    // ── Export ─────────────────────────────────────
-    exportToJSON: () => {
-      const { workflow } = get()
-      if (!workflow) return '{}'
-      return JSON.stringify(workflow, null, 2)
-    },
-  }))
+        selectNode: (nodeId) => {
+            set((state) => { state.selectedNodeId = nodeId })
+        },
+
+        // ── Edge CRUD ─────────────────────────────────
+        addEdge: (source, target, sourceHandle, label) => {
+            set((state) => {
+                if (!state.workflow) return
+                // Prevent duplicates
+                const exists = state.workflow.edges.some(
+                    e => e.source === source && e.target === target && e.sourceHandle === sourceHandle
+                )
+                if (exists) return
+                state.workflow.edges.push({
+                    id: generateId('edge'),
+                    source,
+                    target,
+                    sourceHandle,
+                    label,
+                    animated: true,
+                })
+                state.workflow.updatedAt = new Date().toISOString()
+            })
+        },
+
+        removeEdge: (edgeId) => {
+            set((state) => {
+                if (!state.workflow) return
+                state.workflow.edges = state.workflow.edges.filter(e => e.id !== edgeId)
+            })
+        },
+
+        // ── Voice / AI ────────────────────────────────
+        setVoiceRecording: (isRecording) => {
+            set((state) => { state.isVoiceRecording = isRecording })
+        },
+
+        setVoiceTranscript: (transcript) => {
+            set((state) => { state.voiceTranscript = transcript })
+        },
+
+        setConfirmationCard: (card) => {
+            set((state) => { state.confirmationCard = card })
+        },
+
+        confirmWorkflowIntent: () => {
+            const { confirmationCard, workflow } = get()
+            if (!confirmationCard || !workflow) return
+
+            const intent = confirmationCard.userEdits
+                ? { ...confirmationCard.workflowIntent, ...confirmationCard.userEdits }
+                : confirmationCard.workflowIntent
+
+            const { nodes, edges } = intentToNodesAndEdges(intent)
+
+            // Set metadata immediately, clear overlay, start streaming
+            set((state) => {
+                if (!state.workflow) return
+                state.workflow.nodes = []
+                state.workflow.edges = []
+                state.workflow.title = intent.title
+                state.workflow.description = intent.description
+                state.workflow.targetAsset = intent.targetAsset
+                state.workflow.safetyCheck = intent.safetyCheck
+                state.workflow.updatedAt = new Date().toISOString()
+                state.confirmationCard = null
+                state.voiceTranscript = ''
+                state.isStreaming = true
+            })
+
+            // Stream nodes in one-by-one with delay
+            const STREAM_DELAY = 600 // ms between each node
+            nodes.forEach((node, i) => {
+                setTimeout(() => {
+                    set((state) => {
+                        if (!state.workflow) return
+                        state.workflow.nodes.push(node)
+                        // Add the edge connecting to this node (if any)
+                        const incomingEdge = edges.find(e => e.target === node.id)
+                        if (incomingEdge) {
+                            state.workflow.edges.push(incomingEdge)
+                        }
+                        // Also add any edges where this node is the source for decision branches
+                        // that connect to already-existing nodes
+                        edges
+                            .filter(e => e.source === node.id)
+                            .forEach(e => {
+                                const targetExists = state.workflow!.nodes.some(n => n.id === e.target)
+                                if (targetExists && !state.workflow!.edges.some(ex => ex.id === e.id)) {
+                                    state.workflow!.edges.push(e)
+                                }
+                            })
+                        state.workflow.updatedAt = new Date().toISOString()
+                        // Mark streaming complete after last node
+                        if (i === nodes.length - 1) {
+                            state.isStreaming = false
+                        }
+                    })
+                }, (i + 1) * STREAM_DELAY)
+            })
+        },
+
+        // Action to generate workflow from AI Recommendation (OpsHub)
+        generateWorkflowFromRecommendation: () => {
+            // 1. Reset and set metadata
+            set((state) => {
+                state.workflow = {
+                    id: generateId('wf'),
+                    title: 'Bearing Failure Prevention (Auto-Generated)',
+                    description: 'AI-generated workflow based on vibration analysis pattern matching. Intended to prevent inner race degradation failure.',
+                    authorId: 'ai-agent',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    version: 1,
+                    isPublic: false,
+                    status: 'draft',
+                    nodes: [],
+                    edges: [],
+                    tags: ['AI-Generated', 'Bearing', 'Predictive'],
+                    executionCount: 0,
+                }
+                state.isStreaming = true
+                state.mode = 'canvas' // Ensure we are in canvas mode
+            })
+
+            // 2. Define the nodes for this specific workflow using VALID WorkflowNodeType values
+            const nodesToAdd: WorkflowNode[] = [
+                {
+                    id: 'n-trigger', type: 'sensor_trigger', label: 'Trigger: High Vibration (> 4mm/s)',
+                    position: autoLayoutPosition(0), config: { condition: 'Vibration > 4mm/s' }
+                },
+                {
+                    id: 'n-condition', type: 'decision', label: 'Check: Is Motor Critical?',
+                    position: autoLayoutPosition(1), config: { condition: 'Criticality == High' }
+                },
+                {
+                    id: 'n-action-1', type: 'create_ticket', label: 'Action: Create High Priority Work Order',
+                    position: autoLayoutPosition(2), config: { service: 'jira', titleTemplate: 'High Vibration Alert', descriptionTemplate: 'Auto-generated from sensor', priority: 'high' }
+                },
+                {
+                    id: 'n-action-2', type: 'log_entry', label: 'Action: Reserve Spare Part (SKF-6205)',
+                    position: autoLayoutPosition(3), config: { message: 'Reserving SKF-6205 from inventory' }
+                },
+                {
+                    id: 'n-notification', type: 'send_alert', label: 'Notify: Shift Supervisor',
+                    position: autoLayoutPosition(4), config: { channel: 'active_alert', messageTemplate: 'Critical motor vibration detected' }
+                }
+            ]
+
+            const edgesToAdd: WorkflowEdge[] = [
+                { id: 'e1', source: 'n-trigger', target: 'n-condition', animated: true },
+                { id: 'e2', source: 'n-condition', target: 'n-action-1', label: 'Yes', animated: true },
+                { id: 'e3', source: 'n-action-1', target: 'n-action-2', animated: true },
+                { id: 'e4', source: 'n-action-2', target: 'n-notification', animated: true },
+            ]
+
+            // 3. Stream them in
+            const STREAM_DELAY = 800
+            nodesToAdd.forEach((node, i) => {
+                setTimeout(() => {
+                    set((state) => {
+                        if (!state.workflow) return
+                        state.workflow.nodes.push(node)
+
+                        // Add edges connecting to this new node
+                        const incomingEdges = edgesToAdd.filter(e => e.target === node.id)
+                        state.workflow.edges.push(...incomingEdges)
+
+                        state.workflow.updatedAt = new Date().toISOString()
+                        if (i === nodesToAdd.length - 1) {
+                            state.isStreaming = false
+                        }
+                    })
+                }, (i + 1) * STREAM_DELAY)
+            })
+        },
+
+        // ── Mode ──────────────────────────────────────
+        setMode: (mode) => {
+            set((state) => { state.mode = mode })
+        },
+
+        togglePanel: () => {
+            set((state) => { state.isPanelOpen = !state.isPanelOpen })
+        },
+
+        // ── Execution ─────────────────────────────────
+        setExecuting: (isExecuting) => {
+            set((state) => { state.isExecuting = isExecuting })
+        },
+
+        addExecutionLog: (nodeId, status, message) => {
+            set((state) => {
+                state.executionLog.push({ nodeId, status, message, timestamp: Date.now() })
+            })
+        },
+
+        clearExecutionLog: () => {
+            set((state) => { state.executionLog = [] })
+        },
+
+        // ── Export ─────────────────────────────────────
+        exportToJSON: () => {
+            const { workflow } = get()
+            if (!workflow) return '{}'
+            return JSON.stringify(workflow, null, 2)
+        },
+    }))
 )

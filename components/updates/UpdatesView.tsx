@@ -20,49 +20,22 @@ const CATEGORIES = [
     { id: 'logistics', label: 'Logistics', icon: Box },
 ]
 
-const UPDATES = [
-    {
-        id: 1,
-        title: 'Security Patch TPX-2025-001',
-        version: 'v2.4.0',
-        description: 'Critical vulnerability in OPC UA communication stack. Addresses CVE-2025-1234 remote code execution risk.',
-        author: 'Edge Compute Nodes, HMI Terminals (8 devices)',
-        stats: {
-            installs: 124,
-            rating: 4.8,
-            impact: '€12k / yr'
-        },
-        category: 'energy',
-        date: 'February 10, 2025',
-        size: '247 MB',
-        downtime: '12-15 minutes',
-        type: 'CRITICAL'
-    },
-    {
-        id: 2,
-        title: 'KUKA KR300-2 Controller Update',
-        version: 'v1.1.2',
-        description: 'Improves joint precision and reduces vibration in axis 3. Resolves known issue #KR-2024-487.',
-        author: 'Robot Arm Controllers (6 devices)',
-        stats: {
-            installs: 89,
-            rating: 4.9,
-            impact: '98% Uptime'
-        },
-        category: 'maintenance',
-        date: 'February 8, 2025',
-        size: '189 MB',
-        downtime: '18-22 minutes',
-        type: 'FIRMWARE'
-    }
-]
+import { useTfoStore } from '@/lib/store/tfo-store'
 
 export function UpdatesView() {
     const [selectedCategory, setSelectedCategory] = useState('all')
+    const { systemUpdates, activeLocationId } = useTfoStore()
+
+    // Filter updates:
+    // 1. Must NOT match current active location (show only remote updates)
+    // 2. OR if it has no sourceFactoryId (legacy/system updates), keep it
+    const availableUpdates = systemUpdates.filter(u =>
+        !u.sourceFactoryId || u.sourceFactoryId !== activeLocationId
+    ).sort((a, b) => Number(b.id) - Number(a.id)) // Ensure newest (timestamp IDs) appear first
 
     const filteredUpdates = selectedCategory === 'all'
-        ? UPDATES
-        : UPDATES.filter(u => u.category === selectedCategory)
+        ? availableUpdates
+        : availableUpdates.filter(u => u.category === selectedCategory)
 
     return (
         <div className={s.updatesContainer}>
@@ -130,6 +103,9 @@ export function UpdatesView() {
                     <h2 className={s.sectionHeader}>
                         <LayoutGrid className={s.iconSm} />
                         Available Updates
+                        <span className="ml-4 text-xs font-normal text-zinc-500">
+                            (Current Location: {activeLocationId})
+                        </span>
                     </h2>
 
                     <div className={s.updateList}>
@@ -143,6 +119,12 @@ export function UpdatesView() {
                                                 <span className={update.type === 'CRITICAL' ? s.dotCritical : s.dotFirmware}>●</span>
                                                 <span className={s.updateType}>{update.type} - </span>
                                                 <h4 className={s.cardTitle}>{update.title}</h4>
+                                                {/* Debug Info */}
+                                                {update.sourceFactoryId && (
+                                                    <span className="ml-2 text-[10px] text-zinc-400 border border-zinc-700 px-1 rounded">
+                                                        Src: {update.sourceFactoryId}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className={s.cardSubtext}>
                                                 Affects: {update.author}
