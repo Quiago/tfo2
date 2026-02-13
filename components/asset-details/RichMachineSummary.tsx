@@ -3,6 +3,7 @@
 import { useOpshubStore } from '@/lib/store/opshub-store';
 import { AlertTriangle, Calendar, CheckCircle2, Play } from 'lucide-react';
 import { useMemo } from 'react';
+import s from '@/styles/overview-expanded/expanded.module.css'
 
 // Ultra Compact SVG Gauge
 const Gauge = ({ value }: { value: number }) => {
@@ -51,23 +52,34 @@ const ProgressBar = ({ value, color, label }: { value: number, color: string, la
     </div>
 )
 
-export function RichMachineSummary() {
+export function RichMachineSummary({ selectedAsset }: { selectedAsset?: string | null }) {
     const allWorkOrders = useOpshubStore(s => s.workOrders)
-    const currentUser = useOpshubStore(s => s.currentUser)
 
-    // Get latest pending task for current user
+    // Get latest pending task for the selected asset (or global if none selected, though usually selected in this view)
     const latestTask = useMemo(() => {
-        if (!currentUser) return null
-        const myTasks = allWorkOrders.flatMap(wo =>
-            wo.tasks.filter(t => t.assignee.id === currentUser.id && t.status !== 'completed')
+        let relevantWOs = allWorkOrders
+
+        if (selectedAsset) {
+            // Match by equipment name or ID (store uses equipmentName often as the key from DT)
+            relevantWOs = allWorkOrders.filter(wo =>
+                wo.equipmentName === selectedAsset ||
+                wo.equipmentId === selectedAsset
+            )
+        }
+
+        // Get all pending/in-progress tasks
+        const tasks = relevantWOs.flatMap(wo =>
+            wo.tasks.filter(t => t.status === 'pending' || t.status === 'in-progress')
         )
-        return myTasks.length > 0 ? myTasks[0] : null
-    }, [allWorkOrders, currentUser])
+
+        // Sort by newest first
+        return tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] || null
+    }, [allWorkOrders, selectedAsset])
 
     return (
-        <div className="flex flex-col gap-1 w-full h-full overflow-hidden">
-            {/* Top Row: Stats Grid - flex-1 to take space, min-h-0 to allow shrinking */}
-            <div className="grid grid-cols-4 gap-2 flex-1 min-h-0">
+        <div className={s.summaryCard}>
+            {/* Top Row: Stats Grid - 60% height */}
+            <div className="grid grid-cols-4 gap-2 h-[60%] min-h-0">
                 {/* 1. Health */}
                 <div className="flex flex-col items-center justify-center p-1 bg-white rounded-[var(--tp-radius-md)] border border-[var(--tp-stroke-subtle)]">
                     <Gauge value={92} />
@@ -110,31 +122,56 @@ export function RichMachineSummary() {
                 </div>
             </div>
 
-            {/* Bottom Row: Latest Task Card - Fixed Height (Very Small) */}
+            {/* Bottom Row: Latest Task Card - 40% height */}
             {latestTask ? (
-                <div className="flex items-center justify-between w-full bg-white rounded-[var(--tp-radius-md)] border border-[var(--tp-stroke-subtle)] p-1.5 shadow-sm h-[38px] flex-shrink-0">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 flex-shrink-0">
-                            <AlertTriangle size={10} />
+                <div className="grid grid-cols-12 gap-2 w-full bg-white rounded-[var(--tp-radius-md)] border border-[var(--tp-stroke-subtle)] p-2 shadow-sm h-[40%] flex-shrink-0 items-center">
+
+                    {/* Col 1: Identity (Icon + Title) - 4 cols */}
+                    <div className="col-span-4 flex items-center gap-3 overflow-hidden h-full">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex-shrink-0">
+                            <AlertTriangle size={14} />
                         </div>
-                        <div className="flex flex-col overflow-hidden leading-tight">
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] font-bold text-orange-600 uppercase">Priority</span>
+                        <div className="flex flex-col justify-center overflow-hidden">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className="text-[9px] font-bold text-orange-600 uppercase tracking-wide">High Priority</span>
+                                <span className="text-[9px] text-zinc-400">•</span>
+                                <span className="text-[9px] text-zinc-500 font-medium">#{latestTask.number}</span>
                             </div>
-                            <span className="text-[11px] font-semibold text-[var(--tp-text-heading)] truncate w-[180px]">{latestTask.title}</span>
+                            <span className="text-xs font-bold text-[var(--tp-text-heading)] truncate leading-tight" title={latestTask.title}>
+                                {latestTask.title}
+                            </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <button className="flex items-center gap-1.5 px-3 py-1 bg-[var(--tp-text-heading)] text-white rounded text-[10px] font-semibold hover:opacity-90 transition-opacity">
-                            <Play size={10} fill="currentColor" />
-                            <span>Start</span>
+                    {/* Col 2: Description - 5 cols */}
+                    <div className="col-span-5 flex flex-col justify-center h-full border-l border-gray-100 pl-3 overflow-hidden">
+                        <span className="text-[9px] font-semibold text-[var(--tp-text-muted)] uppercase mb-0.5">Description</span>
+                        <p className="text-[10px] text-zinc-600 leading-snug line-clamp-2" title={latestTask.description}>
+                            {latestTask.description || 'No additional details provided for this task.'}
+                        </p>
+                    </div>
+
+                    {/* Col 3: Details & Action - 3 cols */}
+                    <div className="col-span-3 flex items-center justify-end gap-2 h-full pl-2 border-l border-gray-100">
+                        <div className="flex flex-col items-end mr-1">
+                            <span className="text-[9px] text-[var(--tp-text-muted)] uppercase">Assignee</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${latestTask.assignee.avatarColor || 'bg-gray-500'}`}>
+                                    {latestTask.assignee.avatarInitials}
+                                </div>
+                                <span className="text-[10px] font-semibold text-zinc-700 truncate max-w-[60px]">
+                                    {latestTask.assignee.name.split(' ')[0]}
+                                </span>
+                            </div>
+                        </div>
+                        <button className="flex items-center justify-center w-6 h-6 bg-[var(--tp-text-heading)] text-white rounded-md hover:opacity-90 transition-opacity shadow-sm">
+                            <Play size={10} fill="currentColor" className="ml-0.5" />
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center justify-center w-full bg-white rounded-[var(--tp-radius-md)] border border-[var(--tp-stroke-subtle)] p-1 h-[38px] text-zinc-400 text-[10px] flex-shrink-0">
-                    <CheckCircle2 size={12} className="mr-1.5" />
+                <div className="flex items-center justify-center w-full bg-white rounded-[var(--tp-radius-md)] border border-[var(--tp-stroke-subtle)] p-1 h-[40%] text-zinc-400 text-xs flex-shrink-0">
+                    <CheckCircle2 size={16} className="mr-2" />
                     No pending tasks
                 </div>
             )}

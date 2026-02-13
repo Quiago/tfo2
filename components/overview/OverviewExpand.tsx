@@ -67,7 +67,7 @@ export function OverviewExpand({
             >
                 {/* Machine Summary Card (Rich Stats) */}
                 <div className={`${s.card} h-[30%] flex-shrink-0 p-2`}>
-                    <RichMachineSummary />
+                    <RichMachineSummary selectedAsset={selectedAsset} />
                 </div>
 
                 {/* Timeline Card */}

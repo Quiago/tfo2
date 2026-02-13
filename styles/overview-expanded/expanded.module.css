@@ -78,6 +78,13 @@
 }
 
 /* ─── Machine Summary ─── */
+.summaryCard{
+    display:flex;
+    flex-direction: column;
+    gap:2px;
+    width:100%;
+    overflow:hidden;
+}
 .summaryBar {
     height: 100%;
     display: flex;
