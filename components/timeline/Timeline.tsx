@@ -414,7 +414,7 @@ function SensorLayer({
             <div className="flex w-full">
                 {/* Historical Chart */}
                 <div className="w-[80%]">
-                    <ResponsiveContainer width="100%" height={height}>
+                    <ResponsiveContainer width="100%" height={height} minWidth={0}>
                         <ComposedChart
                             data={historicalData}
                             margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
@@ -497,7 +497,7 @@ function SensorLayer({
 
                 {/* Forecast Chart */}
                 <div className="w-[20%]">
-                    <ResponsiveContainer width="100%" height={height}>
+                    <ResponsiveContainer width="100%" height={height} minWidth={0}>
                         <ComposedChart
                             data={forecastData}
                             margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
@@ -579,7 +579,7 @@ function EnergyLayer({
         <div className="flex w-full">
             {/* Historical Chart - 80% */}
             <div className="w-[80%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ComposedChart
                         data={historicalData}
                         margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
@@ -635,7 +635,7 @@ function EnergyLayer({
 
             {/* Forecast Chart - 20% */}
             <div className="w-[20%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ComposedChart
                         data={forecastData}
                         margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
@@ -724,7 +724,7 @@ function ActionsLayer({
         <div className="flex w-full bg-[#171921]">
             {/* Historical Scatter - 80% */}
             <div className="w-[80%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ScatterChart
                         margin={{ top: 5, right: 0, bottom: 20, left: 0 }}
                         syncId="actions-layer"
@@ -796,7 +796,7 @@ function ActionsLayer({
 
             {/* Forecast Scatter - 20% */}
             <div className="w-[20%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ScatterChart
                         margin={{ top: 5, right: 20, bottom: 20, left: 0 }}
                         syncId="actions-layer"
@@ -898,7 +898,7 @@ function ProductLayer({
         <div className="flex w-full">
             {/* Historical Chart - 80% */}
             <div className="w-[80%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ComposedChart
                         data={historicalData}
                         margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
@@ -953,7 +953,7 @@ function ProductLayer({
 
             {/* Forecast Chart - 20% */}
             <div className="w-[20%]">
-                <ResponsiveContainer width="100%" height={height}>
+                <ResponsiveContainer width="100%" height={height} minWidth={0}>
                     <ComposedChart
                         data={forecastData}
                         margin={{ top: 5, right: 20, bottom: 0, left: 0 }}

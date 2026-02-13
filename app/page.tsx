@@ -61,9 +61,16 @@ export default function TFODashboard() {
 
     const activeLocation = locations.find((l) => l.id === activeLocationId) ?? locations[0]
 
+    const setSelectedWorkOrderId = useOpshubStore(s => s.setSelectedWorkOrderId)
+
     const handleModuleChange = useCallback(
-        (mod: TfoModule) => setActiveModule(mod),
-        [setActiveModule]
+        (mod: TfoModule) => {
+            setActiveModule(mod)
+            if (mod === 'opshub') {
+                setSelectedWorkOrderId(null)
+            }
+        },
+        [setActiveModule, setSelectedWorkOrderId]
     )
 
     // Track which modules have been visited (lazy mount, never unmount)

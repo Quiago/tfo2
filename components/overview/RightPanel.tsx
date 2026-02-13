@@ -51,7 +51,7 @@ export function RightPanel({
             <div className={`${rp.card} h-[28%]`}>
                 <div className={rp.cardTitle}>Production Efficiency (Last 7d)</div>
                 <div className={`${rp.chartContainer} h-[calc(100%-20px)]`}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={PRODUCTION_DATA}>
                             <defs>
                                 <linearGradient id="colorProd" x1="0" y1="0" x2="0" y2="1">
@@ -106,7 +106,7 @@ export function RightPanel({
                     </div>
                 </div>
                 <div className={`${rp.chartContainer} h-[calc(100%-28px)]`}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <BarChart data={ENERGY_DATA} barGap={2}>
                             <CartesianGrid vertical={false} stroke="var(--tp-chart-grid)" strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis
