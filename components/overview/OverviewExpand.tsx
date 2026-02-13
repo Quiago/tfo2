@@ -1,5 +1,5 @@
 import { AssetTree } from '@/components/asset-details/AssetTree'
-import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
+import { RichMachineSummary } from '@/components/asset-details/RichMachineSummary'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import type { TfoModule } from '@/lib/types/tfo'
 import s from '@/styles/overview-expanded/expanded.module.css'
@@ -47,7 +47,7 @@ export function OverviewExpand({
             <div
                 className={`absolute ${s.card} flex flex-col overflow-hidden transition-opacity duration-300
                 ${viewMode === 'details'
-                        ? 'left-4 top-[calc(80px+35%+1rem)] w-[calc(20%-1rem)] h-[calc(100%-80px-35%-2rem)] opacity-100'
+                        ? 'left-4 top-[calc(35%+2rem)] w-[calc(20%-1rem)] bottom-4 opacity-100'
                         : 'left-0 top-[100%] w-[25%] h-0 opacity-0 pointer-events-none'
                     }`}
             >
@@ -59,22 +59,15 @@ export function OverviewExpand({
 
             {/* Right Panel Container - Timeline + Summary */}
             <div
-                className={`absolute right-4 top-[80px] bottom-4 flex flex-col gap-4 transition-opacity duration-300
+                className={`absolute right-4 top-4 bottom-4 flex flex-col gap-4 transition-opacity duration-300
                 ${viewMode === 'details'
                         ? 'w-[calc(80%-2rem)] opacity-100'
                         : 'w-0 opacity-0 overflow-hidden pointer-events-none'
                     }`}
             >
-                {/* Machine Summary Card */}
-                <div className={`${s.card} flex-shrink-0`}>
-                    <MachineSummaryBar
-                        onCreateWorkOrder={() => {
-                            if (selectedAsset) {
-                                setPendingCreateWorkOrder({ equipmentName: selectedAsset, meshName: selectedAsset })
-                            }
-                            setActiveModule('opshub')
-                        }}
-                    />
+                {/* Machine Summary Card (Rich Stats) */}
+                <div className={`${s.card} flex-shrink-0 p-4`}>
+                    <RichMachineSummary />
                 </div>
 
                 {/* Timeline Card */}

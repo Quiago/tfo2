@@ -150,10 +150,10 @@ export default function TFODashboard() {
                 {/* 3D Model Container - Transitions between Full Screen and Top-Left */}
                 {/* 3D Model Container - Top Left in Details Mode */}
                 <div
-                    className={`absolute z-10 bg-[var(--tp-bg-main)]
+                    className={`absolute z-10 
                     ${viewMode === 'overview'
-                            ? 'inset-0'
-                            : 'top-[80px] left-4 w-[calc(20%-1rem)] h-[35%] rounded-[20px] overflow-hidden border-2 border-[#98A6D4] shadow-lg'
+                            ? 'inset-0 bg-[var(--tp-bg-main)]'
+                            : 'top-4 left-4 w-[calc(20%-1rem)] h-[35%] rounded-[var(--tp-radius-pill)] overflow-hidden border-2 border-[#98A6D4] shadow-lg bg-[var(--tp-bg-card)]'
                         }`}
                 >
                     {/* We need to render the DigitalTwinNavigator directly for props to work */}
@@ -199,45 +199,55 @@ export default function TFODashboard() {
 
 
                 {/* ── OVERVIEW PANELS (overlay on DT, Fade out in Details Mode) ──── */}
-                {isOverview && viewMode === 'overview' && (
-                    <RightPanel
-                        onNavigate={handleModuleChange}
-                        activeAlerts={activeAlerts}
-                    />
-                )}
+                {
+                    isOverview && viewMode === 'overview' && (
+                        <RightPanel
+                            onNavigate={handleModuleChange}
+                            activeAlerts={activeAlerts}
+                        />
+                    )
+                }
 
                 {/* Back Button for Details Mode */}
-                {viewMode === 'details' && (
-                    <button
-                        onClick={() => {
-                            setViewMode('overview')
-                            setSelectedAsset(null)
-                        }}
-                        className="absolute top-2 right-2 z-50 bg-zinc-800 hover:bg-zinc-700 text-white p-2 rounded shadow border border-zinc-600"
-                    >
-                        <Minimize2 size={16} />
-                    </button>
-                )}
+                {
+                    viewMode === 'details' && (
+                        <button
+                            onClick={() => {
+                                setViewMode('overview')
+                                setSelectedAsset(null)
+                            }}
+                            className="absolute top-2 right-2 z-50 bg-zinc-800 hover:bg-zinc-700 text-white p-2 rounded shadow border border-zinc-600"
+                        >
+                            <Minimize2 size={16} />
+                        </button>
+                    )
+                }
 
                 {/* ── OTHER MODULES (lazy mount, visibility toggle) ───── */}
-                {mounted.has('timeline') && (
-                    <div className={`absolute inset-0 overflow-auto bg-white dark:bg-zinc-950 ${activeModule === 'timeline' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
-                        <MultiLayerTimeline />
-                    </div>
-                )}
-                {mounted.has('workflows') && (
-                    <div className={`absolute inset-0 ${activeModule === 'workflows' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
-                        <WorkflowBuilder className="h-full" />
-                    </div>
-                )}
-                {mounted.has('opshub') && (
-                    <div className={`absolute inset-0 overflow-hidden ${activeModule === 'opshub' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
-                        <OpshubLayout />
-                    </div>
-                )}
-            </main>
+                {
+                    mounted.has('timeline') && (
+                        <div className={`absolute inset-0 overflow-auto bg-white dark:bg-zinc-950 ${activeModule === 'timeline' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
+                            <MultiLayerTimeline />
+                        </div>
+                    )
+                }
+                {
+                    mounted.has('workflows') && (
+                        <div className={`absolute inset-0 ${activeModule === 'workflows' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
+                            <WorkflowBuilder className="h-full" />
+                        </div>
+                    )
+                }
+                {
+                    mounted.has('opshub') && (
+                        <div className={`absolute inset-0 overflow-hidden ${activeModule === 'opshub' ? 'z-30' : 'z-0 invisible pointer-events-none'}`}>
+                            <OpshubLayout />
+                        </div>
+                    )
+                }
+            </main >
 
-        </div>
+        </div >
     )
 }
 
