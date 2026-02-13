@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     LayoutGrid,
     MapPin,
+    RefreshCw,
     Search,
     Workflow
 } from 'lucide-react'
@@ -20,6 +21,7 @@ export const MODULES: { id: TfoModule; label: string; icon: React.ReactNode; des
     { id: 'timeline', label: 'Timeline', icon: <Activity size={16} />, description: 'Sensor time-series' },
     { id: 'workflows', label: 'Workflows', icon: <Workflow size={16} />, description: 'Process automation' },
     { id: 'opshub', label: 'OpsHub', icon: <LayoutDashboard size={16} />, description: 'Cross-facility ops' },
+    { id: 'updates', label: 'Updates', icon: <RefreshCw size={16} />, description: 'Latest automations' },
 ]
 
 // ─── Subcomponents ──────────────────────────────────────────────────────────

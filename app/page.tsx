@@ -6,6 +6,7 @@ import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
 import { Navbar } from '@/components/layout/Navbar'
 import { OverviewExpand } from '@/components/overview/OverviewExpand'
 import { RightPanel } from '@/components/overview/RightPanel'
+import { UpdatesView } from '@/components/updates/UpdatesView'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { useTfoStore } from '@/lib/store/tfo-store'
 import type { TfoModule } from '@/lib/types/tfo'
@@ -252,6 +253,13 @@ export default function TFODashboard() {
                         </div>
                     )
                 }
+                {
+                    activeModule === 'updates' && (
+                        <div className="absolute inset-0 z-30 bg-white">
+                            <UpdatesView />
+                        </div>
+                    )
+                }
             </main >
 
         </div >
@@ -292,7 +300,3 @@ function SuspendedDigitalTwin({
         />
     )
 }
-
-
-
-
