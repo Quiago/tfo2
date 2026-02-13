@@ -10,11 +10,18 @@ interface WorkOrderTasksProps {
     workOrderId: string
 }
 
+import { useState } from 'react'
+import { TaskDetail } from './TaskDetail'
+
+// ... imports
+
 export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
     const workOrder = useOpshubStore(s => s.workOrders.find(w => w.id === workOrderId))
     const updateTask = useOpshubStore(s => s.updateTask)
     const updateWorkOrder = useOpshubStore(s => s.updateWorkOrder)
     const setActiveModule = useTfoStore(s => s.setActiveModule)
+
+    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
     if (!workOrder) return null
 
@@ -22,6 +29,7 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
     const completedCount = tasks.filter(t => t.status === 'completed').length
 
     const handleStart = (taskId: string) => {
+        // Stop propagation helper if needed, but since card click opens detail, we might want separate actions
         updateTask(workOrderId, taskId, { status: 'in-progress' })
         if (workOrder.status === 'open') {
             updateWorkOrder(workOrderId, { status: 'in-progress' })
@@ -33,10 +41,8 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
     }
 
     const handleComplete = (taskId: string) => {
-        // Complete current task
         updateTask(workOrderId, taskId, { status: 'completed' })
-
-        // Check if ALL tasks are now completed (including this one)
+        // ... (existing completion logic)
         const allCompleted = tasks.every(t =>
             t.id === taskId || t.status === 'completed'
         )
@@ -51,12 +57,26 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
             tasks.forEach(t => {
                 if (t.dependsOn?.includes(String(currentTask.number))) {
                     const remainingDeps = t.dependsOn.filter(d => d !== String(currentTask.number))
-                    // If no more deps, unblock it (set to pending if it was blocked)
                     if (t.isBlocked && remainingDeps.length === 0) {
                         updateTask(workOrderId, t.id, { isBlocked: false, status: 'pending' })
                     }
                 }
             })
+        }
+    }
+
+    // Detail View Logic
+    if (selectedTaskId) {
+        const selectedTask = tasks.find(t => t.id === selectedTaskId)
+        if (selectedTask) {
+            return (
+                <TaskDetail
+                    task={selectedTask}
+                    onBack={() => setSelectedTaskId(null)}
+                    onStart={selectedTask.status === 'pending' ? () => handleStart(selectedTask.id) : undefined}
+                    onComplete={selectedTask.status === 'in-progress' ? () => handleComplete(selectedTask.id) : undefined}
+                />
+            )
         }
     }
 
@@ -81,15 +101,17 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
             {/* Task list with dependency lines */}
             <div className={s.tabSection}>
                 <div className={s.sectionTitle}>Task List</div>
-                <div className={s.sectionCard}>
+                <div className={s.sectionCard} style={{ background: 'transparent', border: 'none', overflow: 'visible' }}>
+                    {/* Override section card for cleaner look with new separate cards */}
                     {tasks.length === 0 ? (
-                        <div className="p-8 text-center text-zinc-500 text-sm">
+                        <div className="p-8 text-center text-zinc-500 text-sm bg-[var(--tp-bg-card)] border border-[var(--tp-stroke)] rounded-lg">
                             No tasks assigned.
                         </div>
                     ) : (
-                        tasks.map((task, i) => (
-                            <div key={task.id} className={`${i !== tasks.length - 1 ? 'border-b border-zinc-800/50' : ''}`}>
+                        <div className="flex flex-col gap-0">
+                            {tasks.map((task, i) => (
                                 <WorkOrderTaskCard
+                                    key={task.id}
                                     taskNumber={task.number}
                                     type={task.type}
                                     title={task.title}
@@ -98,12 +120,13 @@ export function WorkOrderTasks({ workOrderId }: WorkOrderTasksProps) {
                                     assigneeColor={task.assignee.avatarColor}
                                     status={task.status}
                                     blockedBy={task.dependsOn}
-                                    onStart={() => handleStart(task.id)}
-                                    onComplete={() => handleComplete(task.id)}
-                                    onCreateWorkflow={handleCreateWorkflow}
+                                    onStart={(e) => { e?.stopPropagation(); handleStart(task.id); }}
+                                    onComplete={(e) => { e?.stopPropagation(); handleComplete(task.id); }}
+                                    onCreateWorkflow={(e) => { e?.stopPropagation(); handleCreateWorkflow(); }}
+                                    onClick={() => setSelectedTaskId(task.id)}
                                 />
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>

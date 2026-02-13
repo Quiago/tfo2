@@ -23,9 +23,10 @@ interface WOTaskCardProps {
     assigneeColor: string
     status: TaskStatus
     blockedBy?: string[]
-    onStart?: () => void
-    onComplete?: () => void
-    onCreateWorkflow?: () => void
+    onStart?: (e?: React.MouseEvent) => void
+    onComplete?: (e?: React.MouseEvent) => void
+    onCreateWorkflow?: (e?: React.MouseEvent) => void
+    onClick?: () => void
 }
 
 const typeIcon: Record<TaskType, React.ReactNode> = {
@@ -50,14 +51,15 @@ const statusConfig: Record<TaskStatus, { dot: string; label: string }> = {
     accepted: { dot: 'bg-emerald-500', label: 'Accepted' },
 }
 
-export function WorkOrderTaskCard({
-    taskNumber, type, title, assigneeName, assigneeInitials, assigneeColor,
-    status, blockedBy, onStart, onComplete, onCreateWorkflow
-}: WOTaskCardProps) {
+export function WorkOrderTaskCard(props: WOTaskCardProps) {
+    const {
+        taskNumber, type, title, assigneeName, assigneeInitials, assigneeColor,
+        status, blockedBy, onStart, onComplete, onCreateWorkflow
+    } = props
     const sc = statusConfig[status]
 
     return (
-        <div className={s.card}>
+        <div className={s.card} onClick={props.onClick}>
             <div className={s.cardHeader}>
                 <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-opacity-10 ${typeColor[type]?.replace('text-', 'bg-') || 'bg-gray-100'}`}>
