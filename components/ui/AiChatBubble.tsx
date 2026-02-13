@@ -111,7 +111,7 @@ export function AiChatBubble() {
 
                     if (maintenanceEng) {
                         addTask(targetWo.id, {
-                            type: 'repair',
+                            type: 'execution',
                             title: 'Replace Bearing Assembly (AI Generated)',
                             description: 'Based on the cross-facility analysis of the Munich incident, the bearing assembly shows 87% similarity in vibration patterns pre-failure. Immediate replacement recommended to prevent seizure.',
                             assignee: maintenanceEng,

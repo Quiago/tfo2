@@ -45,7 +45,6 @@ export function OpshubLayout() {
                         createWorkOrderWithTask(
                             { ...woData, owner },
                             {
-                                type: 'investigation',
                                 title: `Initial Investigation`,
                                 description: taskData.instructions,
                                 assignee: assignee,
