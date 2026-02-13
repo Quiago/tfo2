@@ -1,8 +1,8 @@
-import s from '@/app/overview.module.css'
 import { AssetTree } from '@/components/asset-details/AssetTree'
 import { MachineSummaryBar } from '@/components/asset-details/MachineSummaryBar'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import type { TfoModule } from '@/lib/types/tfo'
+import s from '@/styles/overview-expanded/expanded.module.css'
 import dynamic from 'next/dynamic'
 
 // Dynamic imports — SSR disabled for heavy components

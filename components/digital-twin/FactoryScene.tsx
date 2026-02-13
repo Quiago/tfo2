@@ -74,7 +74,7 @@ export function FactoryScene({
         <>
             {/* Lighting */}
             <Environment
-                preset={environment as 'warehouse'}
+                preset="city"
                 background={false}
                 environmentIntensity={0.8}
             />

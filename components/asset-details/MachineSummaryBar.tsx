@@ -1,6 +1,6 @@
 'use client'
 
-import s from '@/app/overview.module.css'
+import s from '@/styles/overview-expanded/expanded.module.css'
 import { ExternalLink, Plus } from 'lucide-react'
 
 const STATS = [
