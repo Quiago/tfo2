@@ -2,6 +2,7 @@
 
 import { MOCK_TEAM } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
+import s from '@/styles/ai-chat/chat.module.css'
 import { ArrowUp, Minus, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -16,6 +17,24 @@ const SUGGESTIONS = [
     'Generate a report based on timeline data and the associated Munich incident context. Assign a specific task to the Maintenance Engineer (User 3).',
     'Show energy report',
 ]
+
+// Helper to format text with emojis
+const formatMessageText = (text: string) => {
+    // Replace specific keywords/tags with emojis
+    let formatted = text
+        .replace(/\[FIX\]/g, '🛠️')
+        .replace(/\[CHECK\]/g, '✅')
+        .replace(/\[ALERT\]/g, '⚠️')
+        .replace(/\[INFO\]/g, 'ℹ️')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Simple bold support
+
+    // specific phrases replacement if needed
+    if (formatted.includes('Repair Task')) {
+        formatted = formatted.replace('Repair Task', '🛠️ Repair Task')
+    }
+
+    return <span dangerouslySetInnerHTML={{ __html: formatted }} />
+}
 
 function OpsFlowLogo({ className }: { className?: string }) {
     return (
@@ -51,7 +70,9 @@ export function AiChatBubble() {
         }
     }, [])
 
-    // ... (useEffect hooks)
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages, typing, scrollToBottom])
 
     const handleSend = useCallback((text?: string) => {
         const content = (text ?? input).trim()
@@ -75,8 +96,7 @@ export function AiChatBubble() {
                     : workOrders[workOrders.length - 1]
 
                 if (targetWo) {
-                    // 1. UPDATE RELIABILITY EXEC TASK (Current User's Task)
-                    // We assume the current user is the Reliability Engineer working on an open task
+                    // Update task logic
                     const reliabTask = targetWo.tasks.find(t =>
                         t.assignee.id === currentUser?.id && t.status !== 'completed'
                     )
@@ -105,8 +125,7 @@ export function AiChatBubble() {
                         })
                     }
 
-                    // 2. CREATE MAINTENANCE TASK
-                    // Find Maintenance Engineer (User 3 - Ahmed or similar)
+                    // Create task logic
                     const maintenanceEng = MOCK_TEAM.find(m => m.role.includes('Maintenance')) || MOCK_TEAM[2]
 
                     if (maintenanceEng) {
@@ -115,7 +134,7 @@ export function AiChatBubble() {
                             title: 'Replace Bearing Assembly (AI Generated)',
                             description: 'Based on the cross-facility analysis of the Munich incident, the bearing assembly shows 87% similarity in vibration patterns pre-failure. Immediate replacement recommended to prevent seizure.',
                             assignee: maintenanceEng,
-                            assignedBy: currentUser || MOCK_TEAM[0], // Current user or default
+                            assignedBy: currentUser || MOCK_TEAM[0],
                             priority: 'high'
                         })
 
@@ -162,48 +181,48 @@ export function AiChatBubble() {
         <>
             {/* Chat Popup */}
             {open && (
-                <div className="fixed bottom-20 right-5 z-[100] w-[400px] h-[520px] rounded-2xl border border-zinc-700/80 bg-zinc-900 shadow-2xl shadow-black/50 flex flex-col overflow-hidden animate-in">
+                <div className={s.chatContainer}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-zinc-200">OpsFlow AI</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-medium">Auto</span>
+                    <div className={s.header}>
+                        <div className={s.titleGroup}>
+                            <span className={s.titleText}>OpsFlow AI</span>
+                            <span className={s.autoBadge}>Auto</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className={s.headerControls}>
                             <button
                                 onClick={() => setOpen(false)}
-                                className="p-1 rounded hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                className={s.controlBtn}
                             >
-                                <Minus size={14} />
+                                <Minus size={16} />
                             </button>
                             <button
                                 onClick={() => { setOpen(false); setMessages([]) }}
-                                className="p-1 rounded hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                className={s.controlBtn}
                             >
-                                <X size={14} />
+                                <X size={16} />
                             </button>
                         </div>
                     </div>
 
                     {/* Messages */}
-                    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div ref={scrollRef} className={s.messagesArea}>
                         {isEmpty && !typing && (
-                            <div className="flex flex-col items-center justify-center h-full gap-4">
-                                <div className="h-10 w-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                                    <Sparkles size={20} className="text-cyan-400" />
+                            <div className="flex flex-col items-center justify-center h-full gap-4 opacity-70">
+                                <div className="h-12 w-12 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                                    <Sparkles size={24} className="text-cyan-500" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-sm font-semibold text-zinc-200">OpsFlow AI Assistant</p>
-                                    <p className="text-xs text-zinc-500 mt-1">Ask me anything about your facility</p>
+                                    <p className="text-sm font-semibold text-[#3A3A3A]">OpsFlow AI Assistant</p>
+                                    <p className="text-xs text-[#6B7280] mt-1">Ask me anything about your facility</p>
                                 </div>
                                 <div className="w-full space-y-1.5 mt-2">
-                                    {SUGGESTIONS.map((s) => (
+                                    {SUGGESTIONS.map((sug) => (
                                         <button
-                                            key={s}
-                                            onClick={() => handleSend(s)}
-                                            className="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                                            key={sug}
+                                            onClick={() => handleSend(sug)}
+                                            className="w-full text-left px-3 py-2 rounded-lg text-xs text-[#6B7280] hover:text-[#3A3A3A] hover:bg-[#F2F5FF] transition-colors"
                                         >
-                                            {s}
+                                            {sug}
                                         </button>
                                     ))}
                                 </div>
@@ -211,30 +230,42 @@ export function AiChatBubble() {
                         )}
 
                         {messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === 'user'
-                                    ? 'bg-cyan-500/15 text-cyan-100'
-                                    : 'bg-zinc-800 text-zinc-300'
-                                    }`}>
-                                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                            <div key={msg.id} className={`${s.messageRow} ${msg.role === 'user' ? s.user : ''}`}>
+                                {msg.role === 'assistant' && (
+                                    <div className={`${s.avatar} ${s.aiAvatar}`}>
+                                        <Sparkles size={14} />
+                                    </div>
+                                )}
+                                <div className={`${s.bubble} ${msg.role === 'user' ? s.userBubble : s.aiBubble}`}>
+                                    <div className={s.formattedText}>
+                                        {msg.role === 'assistant' ? formatMessageText(msg.content) : msg.content}
+                                    </div>
                                 </div>
+                                {msg.role === 'user' && (
+                                    <div className={`${s.avatar} ${s.userAvatar}`}>
+                                        <span className="text-[10px] font-bold">ME</span>
+                                    </div>
+                                )}
                             </div>
                         ))}
 
                         {typing && (
-                            <div className="flex justify-start">
-                                <div className="bg-zinc-800 rounded-xl px-3 py-2 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce [animation-delay:0ms]" />
-                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce [animation-delay:150ms]" />
-                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce [animation-delay:300ms]" />
+                            <div className={s.messageRow}>
+                                <div className={`${s.avatar} ${s.aiAvatar}`}>
+                                    <Sparkles size={14} />
+                                </div>
+                                <div className={`${s.bubble} ${s.aiBubble} flex items-center gap-1`}>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0ms]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:150ms]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:300ms]" />
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {/* Input */}
-                    <div className="p-3 border-t border-zinc-800">
-                        <div className="flex items-end gap-2 bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700 focus-within:border-cyan-500/50 transition-colors">
+                    <div className={s.inputContainer}>
+                        <div className={s.inputWrapper}>
                             <textarea
                                 ref={inputRef}
                                 value={input}
@@ -242,25 +273,21 @@ export function AiChatBubble() {
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask OpsFlow AI..."
                                 rows={1}
-                                className="flex-1 bg-transparent text-xs text-zinc-200 placeholder:text-zinc-500 resize-none outline-none max-h-20"
+                                className={s.textInput}
                             />
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim()}
-                                className={`p-1 rounded-lg transition-colors flex-shrink-0 ${input.trim()
-                                    ? 'bg-cyan-500 text-white hover:bg-cyan-400'
-                                    : 'bg-zinc-700 text-zinc-500'
-                                    }`}
+                                className={s.sendBtn}
                             >
-                                <ArrowUp size={14} />
+                                <ArrowUp size={16} />
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Floating Button */}
-            {/* Floating Button (Pencil Design: White Circle with Purple Stroke) */}
+            {/* Floating Button (Kept as is, but ensuring styles don't conflict) */}
             <button
                 onClick={() => setOpen(!open)}
                 className={`fixed bottom-6 right-6 z-[100] h-[60px] w-[60px] rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_4px_20px_rgba(145,153,200,0.3)] border-2 ${open
@@ -270,14 +297,6 @@ export function AiChatBubble() {
             >
                 {open ? <X size={24} /> : <OpsFlowLogo className="w-8 h-8" />}
             </button>
-
-            <style jsx global>{`
-                @keyframes animateIn {
-                    from { opacity: 0; transform: translateY(12px) scale(0.97); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-                .animate-in { animation: animateIn 0.2s ease-out; }
-            `}</style>
         </>
     )
 }
