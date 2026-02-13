@@ -1,6 +1,7 @@
 'use client'
 
 import { useOpshubStore } from '@/lib/store/opshub-store'
+import s from '@/styles/opshub/work-orders.module.css'
 import {
     AlertTriangle,
     ExternalLink,
@@ -33,39 +34,41 @@ export function ChangelogPanel() {
     }
 
     return (
-        <div className="h-full flex flex-col">
+        <div className={s.changelogContainer}>
             {/* Header */}
-            <div className="p-4 border-b border-zinc-800">
-                <h2 className="text-sm font-semibold text-zinc-200">
+            <div className={s.changelogHeader}>
+                <h2 className={s.changelogTitle}>
                     Latest from our changelog
                 </h2>
             </div>
 
             {/* Timeline */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="relative">
+            <div className={s.changelogTimeline}>
+                <div className={s.timelineWrapper}>
                     {/* Timeline line */}
-                    <div className="absolute left-1.5 top-2 bottom-0 w-px bg-zinc-800" />
+                    <div className={s.timelineLine} />
 
                     {/* Entries */}
-                    <ul className="space-y-4">
+                    <ul className={s.timelineList}>
                         {changelog.map((entry) => {
                             const config = typeConfig[entry.type] || typeConfig.improvement
+                            // Map tailwind colors to CSS variables or keep inline for dynamic colors if necessary
+                            // Using standard colors for now based on config
                             return (
-                                <li key={entry.id} className="relative pl-6">
+                                <li key={entry.id} className={s.timelineItem}>
                                     {/* Timeline dot */}
-                                    <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full ${config.color} ring-2 ring-zinc-950`} />
+                                    <div className={`${s.timelineDot} ${config.color}`} />
 
                                     {/* Content */}
-                                    <div className="group">
-                                        <p className="text-[10px] text-zinc-500">
+                                    <div className={s.timelineContent}>
+                                        <p className={s.timelineDate}>
                                             {formatDate(entry.date)}
                                         </p>
-                                        <p className="mt-0.5 text-sm text-zinc-300 font-medium line-clamp-2 group-hover:text-cyan-400 cursor-pointer transition">
+                                        <p className={s.timelineEntryTitle}>
                                             {entry.title}
                                         </p>
                                         {entry.factoryName && (
-                                            <p className="mt-0.5 text-[10px] text-zinc-500">
+                                            <p className={s.timelineFactory}>
                                                 {entry.factoryName}
                                             </p>
                                         )}
@@ -78,10 +81,10 @@ export function ChangelogPanel() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-zinc-800">
+            <div className={s.changelogFooter}>
                 <a
                     href="#"
-                    className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition"
+                    className={s.activityLogLink}
                 >
                     View activity log
                     <ExternalLink className="w-3 h-3" />

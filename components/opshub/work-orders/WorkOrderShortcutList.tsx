@@ -1,6 +1,7 @@
 'use client'
 
 import { useOpshubStore } from '@/lib/store/opshub-store'
+import s from '@/styles/opshub/work-orders.module.css'
 import { ClipboardList } from 'lucide-react'
 
 export function WorkOrderShortcutList() {
@@ -45,49 +46,45 @@ export function WorkOrderShortcutList() {
     }
 
     return (
-        <div className="mt-4">
+        <div className={s.shortcutContainer}>
             {/* Header */}
-            <div className="flex items-center gap-2 mb-3 px-2">
-                <ClipboardList className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-semibold text-zinc-300">Latest Work Orders</h3>
+            <div className={s.shortcutHeader}>
+                <ClipboardList className="w-4 h-4 text-[var(--tp-accent-cyan)]" />
+                <h3 className={s.shortcutTitle}>Latest Work Orders</h3>
             </div>
 
             {/* Work Order List */}
-            <div className="space-y-1">
+            <div className={s.shortcutList}>
                 {latestWorkOrders.length === 0 ? (
                     <div className="px-2 py-4 text-center">
-                        <p className="text-xs text-zinc-500">No work orders</p>
+                        <p className="text-xs text-[var(--tp-text-muted)]">No work orders</p>
                     </div>
                 ) : (
                     latestWorkOrders.map(wo => (
                         <button
                             key={wo.id}
                             onClick={() => setSelectedWorkOrderId(wo.id)}
-                            className="w-full px-2 py-2.5 text-left hover:bg-zinc-800/50 rounded-md transition-colors group border-b border-zinc-800/30 last:border-0"
+                            className={s.shortcutItem}
                         >
                             {/* WO-ID - status - priority */}
-                            <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mb-1 text-[10px] font-mono leading-tight">
-                                <span className="text-zinc-500 whitespace-nowrap">{wo.number}</span>
-                                <span className="text-zinc-700 hidden sm:inline">-</span>
-                                <span className={`font-medium whitespace-nowrap ${wo.status === 'open' ? 'text-emerald-400' :
-                                    wo.status === 'in-progress' ? 'text-cyan-400' :
-                                        wo.status === 'resolved' ? 'text-purple-400' :
-                                            'text-zinc-500'
-                                    }`}>
+                            <div className={s.shortcutMeta}>
+                                <span className={s.shortcutNumber}>{wo.number}</span>
+                                <span className={s.shortcutSeparator}>-</span>
+                                <span className={`${s.shortcutStatus} ${wo.status === 'open' ? s.statusOpenText :
+                                    wo.status === 'in-progress' ? s.statusProgressText :
+                                        wo.status === 'resolved' ? s.statusResolvedText :
+                                            s.statusClosedText // Need to define text variants or use inline colors if simpler, but user wants NO tailwind
+                                    }`} style={{ color: wo.status === 'open' ? 'var(--tp-accent-green)' : wo.status === 'in-progress' ? 'var(--tp-accent-blue)' : wo.status === 'resolved' ? 'var(--tp-accent-purple)' : 'var(--tp-text-muted)' }}>
                                     {wo.status.replace('-', '_')}
                                 </span>
-                                <span className="text-zinc-700 hidden sm:inline">-</span>
-                                <span className={`font-medium whitespace-nowrap ${wo.priority === 'critical' ? 'text-red-400' :
-                                    wo.priority === 'high' ? 'text-orange-400' :
-                                        wo.priority === 'medium' ? 'text-amber-400' :
-                                            'text-blue-400'
-                                    }`}>
+                                <span className={s.shortcutSeparator}>-</span>
+                                <span className={s.shortcutStatus} style={{ color: wo.priority === 'critical' ? 'var(--tp-accent-red)' : wo.priority === 'high' ? 'var(--tp-accent-orange)' : wo.priority === 'medium' ? 'var(--tp-accent-yellow)' : 'var(--tp-accent-blue)' }}>
                                     {wo.priority}
                                 </span>
                             </div>
 
                             {/* Title */}
-                            <p className="text-xs text-zinc-300 line-clamp-2 group-hover:text-white transition-colors">
+                            <p className={s.shortcutTitleText}>
                                 {wo.title}
                             </p>
                         </button>
@@ -99,7 +96,7 @@ export function WorkOrderShortcutList() {
             {latestWorkOrders.length > 0 && (
                 <button
                     onClick={handleViewAll}
-                    className="w-full mt-3 px-3 py-2 text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:bg-zinc-800 rounded-md transition-colors"
+                    className={s.viewAllBtn}
                 >
                     View All Work Orders →
                 </button>

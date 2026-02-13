@@ -51,7 +51,7 @@ export function WorkOrderList({ onSelectWorkOrder, onBack }: WorkOrderListProps)
                                 <ArrowLeft className="w-4 h-4" />
                             </button>
                         )}
-                        <ClipboardList className="w-5 h-5 text-cyan-600" />
+                        <ClipboardList className="w-5 h-5 text-[var(--tp-accent-cyan)]" />
                         <h1 className={s.title}>Work Orders</h1>
                         <span className={s.countBadge}>
                             {filtered.length}
@@ -91,7 +91,7 @@ export function WorkOrderList({ onSelectWorkOrder, onBack }: WorkOrderListProps)
                         No work orders match your search
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className={s.teamList}> {/* reusing vertical stack gap */}
                         {filtered.map(wo => (
                             <WorkOrderListCard
                                 key={wo.id}

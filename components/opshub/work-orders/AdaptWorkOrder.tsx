@@ -1,5 +1,6 @@
 'use client'
 
+import s from '@/styles/opshub/work-orders.module.css'
 import { ArrowLeft, Bot, RefreshCw, Zap } from 'lucide-react'
 import { useState } from 'react'
 
@@ -43,46 +44,46 @@ export function AdaptWorkOrder({ facilityName = 'Riyadh Terminal B', onBack, onA
     }
 
     return (
-        <div className="flex flex-col h-full bg-zinc-950">
+        <div className={s.adaptContainer}>
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800">
+            <div className={s.adaptHeader}>
                 {onBack && (
-                    <button onClick={onBack} className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition">
+                    <button onClick={onBack} className={s.backBtn}>
                         <ArrowLeft className="w-4 h-4" />
                     </button>
                 )}
-                <RefreshCw className="w-4 h-4 text-cyan-400" />
-                <h1 className="text-sm font-semibold text-zinc-100">Adapt for {facilityName}</h1>
+                <RefreshCw className="w-4 h-4 text-[var(--tp-accent-cyan)]" />
+                <h1 className={s.adaptTitle}>Adapt for {facilityName}</h1>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-2xl space-y-6">
+            <div className={s.adaptContent}>
+                <div className={s.adaptWrapper}>
                     {/* Workflow Adjustments */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                        <h3 className="text-sm font-bold text-zinc-100 mb-3 flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-cyan-400" />
+                    <div className={s.adaptSection}>
+                        <h3 className={s.adaptSectionTitle}>
+                            <Zap className="w-4 h-4 text-[var(--tp-accent-cyan)]" />
                             Workflow Threshold Adjustments
                         </h3>
-                        <div className="space-y-4">
+                        <div className={s.adaptFormList}>
                             {thresholds.map((t, i) => (
-                                <div key={t.parameter} className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-zinc-200">{t.parameter}</span>
-                                        <span className="text-xs text-zinc-600">
+                                <div key={t.parameter} className={s.thresholdItem}>
+                                    <div className={s.thresholdHeader}>
+                                        <span className={s.thresholdLabel}>{t.parameter}</span>
+                                        <span className={s.thresholdOriginal}>
                                             Original: {t.originalValue} {t.unit}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className={s.thresholdInputWrapper}>
                                         <input
                                             type="text"
                                             value={t.suggestedValue}
                                             onChange={e => handleThresholdChange(i, e.target.value)}
-                                            className="w-24 px-2 py-1 text-sm bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                            className={s.thresholdInput}
                                         />
-                                        <span className="text-xs text-zinc-500">{t.unit}</span>
+                                        <span className={s.thresholdUnit}>{t.unit}</span>
                                     </div>
-                                    <div className="flex items-start gap-1.5 text-[10px] text-violet-300/70">
+                                    <div className={s.aiSuggestion}>
                                         <Bot className="w-3 h-3 mt-0.5 flex-shrink-0" />
                                         <span>{t.aiSuggestion}</span>
                                     </div>
@@ -92,16 +93,16 @@ export function AdaptWorkOrder({ facilityName = 'Riyadh Terminal B', onBack, onA
                     </div>
 
                     {/* SOP Part Mapping */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                        <h3 className="text-sm font-bold text-zinc-100 mb-3">SOP Parts Mapping</h3>
-                        <div className="space-y-2">
+                    <div className={s.adaptSection}>
+                        <h3 className={s.adaptSectionTitle}>SOP Parts Mapping</h3>
+                        <div className={s.partMappingList}>
                             {MOCK_PARTS.map(p => (
-                                <div key={p.original} className="flex items-center justify-between p-2 bg-zinc-800/50 rounded">
+                                <div key={p.original} className={s.partMappingItem}>
                                     <div className="min-w-0">
-                                        <p className="text-xs text-zinc-500 line-through">{p.original}</p>
-                                        <p className="text-sm text-zinc-200">{p.mapped}</p>
+                                        <p className={s.partOriginal}>{p.original}</p>
+                                        <p className={s.partMapped}>{p.mapped}</p>
                                     </div>
-                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${p.available ? 'bg-emerald-900/40 text-emerald-400' : 'bg-red-900/40 text-red-400'}`}>
+                                    <span className={`${s.partAvailability} ${p.available ? s.partAvailable : s.partUnavailable}`}>
                                         {p.available ? 'Available' : 'Order Required'}
                                     </span>
                                 </div>
@@ -110,17 +111,17 @@ export function AdaptWorkOrder({ facilityName = 'Riyadh Terminal B', onBack, onA
                     </div>
 
                     {/* Currency Conversion */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                        <h3 className="text-sm font-bold text-zinc-100 mb-2">Cost Conversion</h3>
-                        <div className="flex items-center gap-4 text-sm">
+                    <div className={s.adaptSection}>
+                        <h3 className={s.adaptSectionTitle}>Cost Conversion</h3>
+                        <div className={s.costConversionRow}>
                             <div>
-                                <p className="text-[10px] text-zinc-500">Original (EUR)</p>
-                                <p className="text-zinc-400">EUR 1,930</p>
+                                <p className={s.costLabel}>Original (EUR)</p>
+                                <p className={s.costValueEUR}>EUR 1,930</p>
                             </div>
                             <span className="text-zinc-600">=</span>
                             <div>
-                                <p className="text-[10px] text-zinc-500">Local (SAR)</p>
-                                <p className="text-lg font-bold text-zinc-100">SAR 7,720</p>
+                                <p className={s.costLabel}>Local (SAR)</p>
+                                <p className={s.costValueLocal}>SAR 7,720</p>
                             </div>
                         </div>
                     </div>
@@ -128,7 +129,7 @@ export function AdaptWorkOrder({ facilityName = 'Riyadh Terminal B', onBack, onA
                     {/* Activate */}
                     <button
                         onClick={onActivate}
-                        className="w-full py-3 text-sm font-semibold text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition active:scale-[0.98]"
+                        className={s.activateBtn}
                     >
                         Activate for {facilityName}
                     </button>

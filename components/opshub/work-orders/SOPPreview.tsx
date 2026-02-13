@@ -1,5 +1,6 @@
 'use client'
 
+import s from '@/styles/opshub/work-orders.module.css'
 import { AlertTriangle, Clock, FileText, Wrench } from 'lucide-react'
 
 // TODO: import from opshub types when available
@@ -21,17 +22,17 @@ interface SOPPreviewProps {
 
 export function SOPPreview({ title, version, description, steps, requiredParts, requiredTools, totalDuration }: SOPPreviewProps) {
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+        <div className={s.sopContainer}>
             {/* Header */}
-            <div className="p-4 border-b border-zinc-800">
-                <div className="flex items-center gap-2 mb-1">
-                    <FileText className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-sm font-bold text-zinc-100">{title}</h3>
-                    <span className="px-1.5 py-0.5 text-[10px] bg-zinc-800 text-zinc-400 rounded font-mono">{version}</span>
+            <div className={s.sopHeader}>
+                <div className={s.sopTitleRow}>
+                    <FileText className="w-4 h-4 text-[var(--tp-accent-cyan)]" />
+                    <h3 className={s.sopTitle}>{title}</h3>
+                    <span className={s.sopVersionBadge}>{version}</span>
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">{description}</p>
+                <p className={s.sopDescription}>{description}</p>
                 {totalDuration && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-zinc-500">
+                    <div className={s.sopDuration}>
                         <Clock className="w-3 h-3" />
                         Estimated duration: {totalDuration}
                     </div>
@@ -39,19 +40,19 @@ export function SOPPreview({ title, version, description, steps, requiredParts, 
             </div>
 
             {/* Steps */}
-            <div className="p-4 space-y-3">
+            <div className={s.sopSteps}>
                 {steps.map((step, i) => (
-                    <div key={i} className="flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold text-zinc-400">{i + 1}</span>
+                    <div key={i} className={s.sopStepItem}>
+                        <div className={s.sopStepNumber}>
+                            <span className={s.sopStepNumberText}>{i + 1}</span>
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-zinc-200">{step.title}</span>
-                                <span className="text-[10px] text-zinc-600">{step.estimatedMinutes}min</span>
+                        <div className={s.sopStepContent}>
+                            <div className={s.sopStepTitleRow}>
+                                <span className={s.sopStepTitle}>{step.title}</span>
+                                <span className={s.sopStepDuration}>{step.estimatedMinutes}min</span>
                             </div>
                             {step.safetyNote && (
-                                <div className="flex items-center gap-1 mt-1 text-[10px] text-amber-400">
+                                <div className={s.sopSafetyNote}>
                                     <AlertTriangle className="w-2.5 h-2.5" />
                                     {step.safetyNote}
                                 </div>
@@ -63,21 +64,21 @@ export function SOPPreview({ title, version, description, steps, requiredParts, 
 
             {/* Required Parts/Tools */}
             {(requiredParts?.length || requiredTools?.length) && (
-                <div className="p-4 border-t border-zinc-800 flex gap-6">
+                <div className={s.sopFooter}>
                     {requiredParts && requiredParts.length > 0 && (
-                        <div>
-                            <h4 className="text-[10px] font-semibold text-zinc-500 uppercase mb-1 flex items-center gap-1">
+                        <div className={s.sopRequirementsColumn}>
+                            <h4>
                                 <Wrench className="w-3 h-3" /> Parts
                             </h4>
-                            <ul className="text-xs text-zinc-400 space-y-0.5">
+                            <ul className={s.sopRequirementsList}>
                                 {requiredParts.map(p => <li key={p}>{p}</li>)}
                             </ul>
                         </div>
                     )}
                     {requiredTools && requiredTools.length > 0 && (
-                        <div>
-                            <h4 className="text-[10px] font-semibold text-zinc-500 uppercase mb-1">Tools</h4>
-                            <ul className="text-xs text-zinc-400 space-y-0.5">
+                        <div className={s.sopRequirementsColumn}>
+                            <h4>Tools</h4>
+                            <ul className={s.sopRequirementsList}>
                                 {requiredTools.map(t => <li key={t}>{t}</li>)}
                             </ul>
                         </div>

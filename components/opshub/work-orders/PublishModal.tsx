@@ -1,5 +1,6 @@
 'use client'
 
+import s from '@/styles/opshub/work-orders.module.css'
 import { Check, Globe, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -42,56 +43,54 @@ export function PublishModal({ facilities = DEFAULT_FACILITIES, onConfirm, onCan
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl">
+        <div className={s.modalOverlay}>
+            <div className={s.modalContent}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-                    <div className="flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-cyan-400" />
-                        <h2 className="text-sm font-bold text-zinc-100">Publish to Facilities</h2>
+                <div className={s.modalHeader}>
+                    <div className={s.modalTitleWrapper}>
+                        <Globe className="w-5 h-5 text-[var(--tp-accent-cyan)]" />
+                        <h2 className={s.modalTitle}>Publish to Facilities</h2>
                     </div>
-                    <button onClick={onCancel} className="p-1 text-zinc-500 hover:text-zinc-300 transition">
+                    <button onClick={onCancel} className={s.modalCloseBtn}>
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* Facility list */}
-                <div className="p-5 space-y-2 max-h-80 overflow-y-auto">
+                <div className={s.modalBody}>
                     {facilities.map(f => (
                         <button
                             key={f.id}
                             onClick={() => toggle(f.id)}
-                            className={`flex items-center gap-3 w-full p-3 rounded-lg text-left transition ${
-                                selected.has(f.id)
-                                    ? 'bg-cyan-950/30 border border-cyan-800'
-                                    : 'bg-zinc-800/50 border border-zinc-800 hover:border-zinc-700'
-                            }`}
+                            className={`${s.facilityItem} ${selected.has(f.id)
+                                ? s.facilityItemSelected
+                                : s.facilityItemUnselected
+                                }`}
                         >
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                                selected.has(f.id) ? 'bg-cyan-600 border-cyan-600' : 'border-zinc-600'
-                            }`}>
+                            <div className={`${s.facilityCheckbox} ${selected.has(f.id) ? s.facilityCheckboxSelected : s.facilityCheckboxUnselected
+                                }`}>
                                 {selected.has(f.id) && <Check className="w-3 h-3 text-white" />}
                             </div>
-                            <div className="flex-1">
-                                <span className="text-sm text-zinc-200 font-medium">{f.name}</span>
-                                <span className="ml-2 text-xs text-zinc-500">{f.location}</span>
+                            <div className={s.facilityInfo}>
+                                <span className={s.facilityName}>{f.name}</span>
+                                <span className={s.facilityLocation}>{f.location}</span>
                             </div>
                             {f.aiRecommended && (
-                                <span className="px-1.5 py-0.5 text-[10px] bg-violet-900/40 text-violet-400 rounded font-medium">AI pick</span>
+                                <span className={s.facilityBadge}>AI pick</span>
                             )}
                         </button>
                     ))}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-zinc-800">
-                    <button onClick={onCancel} className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition">
+                <div className={s.modalFooter}>
+                    <button onClick={onCancel} className={s.modalCancelBtn}>
                         Cancel
                     </button>
                     <button
                         onClick={() => onConfirm(Array.from(selected))}
                         disabled={selected.size === 0}
-                        className="px-4 py-2 text-xs font-medium text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed rounded-lg transition"
+                        className={s.modalConfirmBtn}
                     >
                         Publish to {selected.size} {selected.size === 1 ? 'Facility' : 'Facilities'}
                     </button>
