@@ -14,7 +14,8 @@
     border-radius: var(--tp-radius-pill);
     background: var(--tp-bg-card);
     border: 2px solid #98A6D4;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
     height: 100%;
     display: flex;

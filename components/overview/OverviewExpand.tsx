@@ -71,7 +71,7 @@ export function OverviewExpand({
                 </div>
 
                 {/* Timeline Card */}
-                <div className={`${s.timelineCard} flex-grow`}>
+                <div className={`${s.timelineCard} flex-grow relative h-full w-full overflow-y-auto`}>
                     {/* @ts-ignore - Dynamic import props issue */}
                     <MultiLayerTimeline
                         autoTriggerAnomaly={autoTriggerAnomaly}

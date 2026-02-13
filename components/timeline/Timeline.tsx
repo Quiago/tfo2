@@ -35,6 +35,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { ChartDefs } from './ChartDefs';
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 const COMMON_Y_AXIS_WIDTH = 80;
@@ -365,6 +366,7 @@ function VideoFrameStrip({ data }: { data: SensorReading[] }) {
 }
 
 // ─── LAYER COMPONENTS ───────────────────────────────────────────────────────
+// ─── LAYER COMPONENTS ───────────────────────────────────────────────────────
 function SensorLayer({
     data,
     granularity,
@@ -407,8 +409,6 @@ function SensorLayer({
         }));
     }, [data, safePredictionStart]);
 
-    // YA NO NECESITAMOS anomalyPoints NI forecastAnomalyPoints SEPARADOS
-
     return (
         <div>
             <div className="flex w-full">
@@ -416,24 +416,25 @@ function SensorLayer({
                 <div className="w-[80%]">
                     <ResponsiveContainer width="100%" height={height}>
                         <ComposedChart
-                            data={historicalData} // El Scatter heredará esta data
+                            data={historicalData}
                             margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
                         >
-                            <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                            <ChartDefs />
+                            <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                             <XAxis
                                 dataKey="timestamp"
                                 tickFormatter={(v) => formatTimestamp(v, granularity)}
-                                tick={{ fontSize: 9, fill: '#71717a' }}
-                                axisLine={{ stroke: '#d1d5db' }}
+                                tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                                axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                                 tickLine={false}
                             />
                             <YAxis
-                                tick={{ fontSize: 9, fill: '#71717a' }}
+                                tick={{ fontSize: 9, fill: '#FFFFFF' }}
                                 axisLine={false}
                                 tickLine={false}
                                 domain={yDomain}
                                 width={COMMON_Y_AXIS_WIDTH}
-                                label={{ value: 'Norm', angle: -90, position: 'insideLeft', offset: -5, fontSize: 8 }}
+                                label={{ value: 'Norm', angle: -90, position: 'insideLeft', offset: -5, fontSize: 8, fill: '#98A6D4' }}
                             />
                             <Tooltip content={<SensorTooltip />} wrapperStyle={{ zIndex: 50 }} />
 
@@ -458,21 +459,18 @@ function SensorLayer({
                             )}
 
                             {/* Lines / Areas */}
-                            {visibleSensors.pressure && <Area type="monotone" dataKey="pressure_norm" fill="#06b6d422" stroke="none" />}
-                            {visibleSensors.temperature && <Line isAnimationActive={false} type="monotone" dataKey="temperature_norm" stroke="#34d399" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: '#34d399' }} />}
-                            {visibleSensors.vibration && <Line isAnimationActive={false} type="monotone" dataKey="vibration_norm" stroke="#f97316" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: '#f97316' }} />}
-                            {visibleSensors.humidity && <Line isAnimationActive={false} type="monotone" dataKey="humidity_norm" stroke="#60a5fa" strokeWidth={1} dot={false} />}
-                            {visibleSensors.pressure && <Line isAnimationActive={false} type="monotone" dataKey="pressure_norm" stroke="#8b5cf6" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: '#8b5cf6' }} />}
+                            {visibleSensors.pressure && <Area type="monotone" dataKey="pressure_norm" stroke="#A9FFB5" strokeWidth={3} fill="url(#gradient-pressure)" />}
+                            {visibleSensors.temperature && <Area type="monotone" dataKey="temperature_norm" stroke="#FFCEBD" strokeWidth={3} fill="url(#gradient-temperature)" />}
+                            {visibleSensors.vibration && <Area type="monotone" dataKey="vibration_norm" stroke="#F7E2FF" strokeWidth={3} fill="url(#gradient-vibration)" />}
+                            {visibleSensors.humidity && <Area type="monotone" dataKey="humidity_norm" stroke="#7BC3FF" strokeWidth={3} fill="url(#gradient-humidity)" />}
 
-                            {/* 2. SCATTER CORREGIDO */}
+                            {/* SCATTER */}
                             <Scatter
-                                dataKey="anomaly_y" // Usa la clave dentro de historicalData
+                                dataKey="anomaly_y"
                                 fill="#f59e0b"
-                                isAnimationActive={false} // IMPORTANTE: Desactivar animación para evitar 'ghosting' en streaming
+                                isAnimationActive={false}
                                 shape={(props: any) => {
-                                    // Protección extra: si el valor es null, no renderizar nada
                                     if (props.payload.anomaly_y === null) return null;
-
                                     return (
                                         <circle
                                             cx={props.cx}
@@ -490,9 +488,9 @@ function SensorLayer({
                 </div>
 
                 {/* Separator */}
-                <div className="w-[2px] bg-indigo-400 relative">
-                    <div className="absolute inset-0 border-l-2 border-dashed border-indigo-500" />
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
+                <div className="w-[2px] bg-[#98A6D4] relative opacity-30">
+                    <div className="absolute inset-0 border-l-2 border-dashed border-[#98A6D4]" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#98A6D4] text-[#171921] text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
                         NOW
                     </div>
                 </div>
@@ -504,24 +502,24 @@ function SensorLayer({
                             data={forecastData}
                             margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
                         >
-                            <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                            <ChartDefs />
+                            <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                             <XAxis
                                 dataKey="timestamp"
                                 tickFormatter={(v) => formatTimestamp(v, granularity)}
-                                tick={{ fontSize: 9, fill: '#71717a' }}
-                                axisLine={{ stroke: '#d1d5db' }}
+                                tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                                axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                                 tickLine={false}
                             />
                             <YAxis tick={false} axisLine={false} tickLine={false} domain={yDomain} width={0} />
                             <Tooltip content={<SensorTooltip />} wrapperStyle={{ zIndex: 50 }} />
 
-                            {visibleSensors.pressure && <Area type="monotone" dataKey="pressure_norm" fill="#06b6d415" stroke="none" />}
-                            {visibleSensors.temperature && <Line isAnimationActive={false} type="monotone" dataKey="temperature_norm" stroke="#34d399" strokeWidth={1.5} dot={false} strokeDasharray="6 3" />}
-                            {visibleSensors.vibration && <Line isAnimationActive={false} type="monotone" dataKey="vibration_norm" stroke="#f97316" strokeWidth={1.5} dot={false} strokeDasharray="6 3" />}
-                            {visibleSensors.humidity && <Line isAnimationActive={false} type="monotone" dataKey="humidity_norm" stroke="#60a5fa" strokeWidth={1} dot={false} strokeDasharray="4 2" />}
-                            {visibleSensors.pressure && <Line isAnimationActive={false} type="monotone" dataKey="pressure_norm" stroke="#8b5cf6" strokeWidth={1.5} dot={false} strokeDasharray="6 3" />}
+                            {/* Using Areas for forecast too, but maybe with dashed stroke if supported or less opacity */}
+                            {visibleSensors.pressure && <Area type="monotone" dataKey="pressure_norm" stroke="#A9FFB5" strokeWidth={2} strokeDasharray="4 4" fill="url(#gradient-pressure)" fillOpacity={0.5} />}
+                            {visibleSensors.temperature && <Area type="monotone" dataKey="temperature_norm" stroke="#FFCEBD" strokeWidth={2} strokeDasharray="4 4" fill="url(#gradient-temperature)" fillOpacity={0.5} />}
+                            {visibleSensors.vibration && <Area type="monotone" dataKey="vibration_norm" stroke="#F7E2FF" strokeWidth={2} strokeDasharray="4 4" fill="url(#gradient-vibration)" fillOpacity={0.5} />}
+                            {visibleSensors.humidity && <Area type="monotone" dataKey="humidity_norm" stroke="#7BC3FF" strokeWidth={2} strokeDasharray="4 4" fill="url(#gradient-humidity)" fillOpacity={0.5} />}
 
-                            {/* SCATTER DEL FUTURO (CORREGIDO) */}
                             <Scatter
                                 dataKey="anomaly_y"
                                 fill="#f59e0b"
@@ -586,36 +584,51 @@ function EnergyLayer({
                         data={historicalData}
                         margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="timestamp"
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         <YAxis
-                            tick={{ fontSize: 9, fill: '#71717a' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
                             axisLine={false}
                             tickLine={false}
                             width={COMMON_Y_AXIS_WIDTH}
                             domain={yDomain}
                         />
                         <Tooltip content={<EnergyTooltip />} wrapperStyle={{ zIndex: 50 }} />
-                        {/* Power draw line - solid */}
-                        <Line isAnimationActive={false} type="monotone" dataKey="powerDraw" stroke="#fbbf24" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: '#fbbf24' }} />
-                        {/* Cooling load (expanded only) */}
+                        <ChartDefs />
+                        {/* Power - Area with Neon Gradient */}
+                        <Area
+                            type="monotone"
+                            dataKey="powerDraw"
+                            stroke="#fbbf24"
+                            strokeWidth={2}
+                            fill="url(#gradient-power)"
+                            activeDot={{ r: 4, fill: '#fbbf24', stroke: '#fff', strokeWidth: 2 }}
+                        />
+                        {/* Cooling - Area with Neon Gradient (expanded only) */}
                         {expanded && (
-                            <Line isAnimationActive={false} type="monotone" dataKey="coolingLoad" stroke="#fb923c" strokeWidth={1} dot={false} strokeDasharray="3 3" />
+                            <Area
+                                type="monotone"
+                                dataKey="coolingLoad"
+                                stroke="#fb923c"
+                                strokeWidth={2}
+                                strokeDasharray="3 3"
+                                fill="url(#gradient-cooling)"
+                            />
                         )}
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
 
             {/* Dashed separator */}
-            <div className="w-[2px] bg-indigo-400 relative">
-                <div className="absolute inset-0 border-l-2 border-dashed border-indigo-500" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
+            <div className="w-[2px] bg-[#98A6D4] relative opacity-30">
+                <div className="absolute inset-0 border-l-2 border-dashed border-[#98A6D4]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#98A6D4] text-[#171921] text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
                     NOW
                 </div>
             </div>
@@ -627,26 +640,44 @@ function EnergyLayer({
                         data={forecastData}
                         margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="timestamp"
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         {/* Hidden Y-axis with same domain */}
                         <YAxis tick={false} axisLine={false} tickLine={false} width={0} domain={yDomain} />
                         <Tooltip content={<EnergyTooltip />} wrapperStyle={{ zIndex: 50 }} />
 
+                        <ChartDefs />
                         {/* Confidence bands */}
-                        <Area type="monotone" dataKey="upperBound" stroke="none" fill="#3b82f620" />
-                        <Area type="monotone" dataKey="lowerBound" stroke="none" fill="#f3f4f6" />
-                        {/* Predicted line - dashed */}
-                        <Line isAnimationActive={false} type="monotone" dataKey="predicted" stroke="#818cf8" strokeWidth={1.5} dot={false} strokeDasharray="5 3" />
+                        <Area type="monotone" dataKey="upperBound" stroke="none" fill="#3b82f610" />
+                        <Area type="monotone" dataKey="lowerBound" stroke="none" fill="#f3f4f610" />
+
+                        {/* Predicted Power - Area with lower opacity */}
+                        <Area
+                            type="monotone"
+                            dataKey="predicted"
+                            stroke="#818cf8"
+                            strokeWidth={2}
+                            strokeDasharray="4 4"
+                            fill="url(#gradient-power)"
+                            fillOpacity={0.5}
+                        />
                         {/* Cooling load - dashed (expanded only) */}
                         {expanded && (
-                            <Line isAnimationActive={false} type="monotone" dataKey="coolingLoad" stroke="#fb923c" strokeWidth={1} dot={false} strokeDasharray="4 2" />
+                            <Area
+                                type="monotone"
+                                dataKey="coolingLoad"
+                                stroke="#fb923c"
+                                strokeWidth={2}
+                                strokeDasharray="4 4"
+                                fill="url(#gradient-cooling)"
+                                fillOpacity={0.5}
+                            />
                         )}
                     </ComposedChart>
                 </ResponsiveContainer>
@@ -670,7 +701,7 @@ function ActionsLayer({
     lastTimestamp: number;
     firstTimestamp: number;
 }) {
-    const height = expanded ? 250 : 120;
+    const height = expanded ? 300 : 160; // Increased collapsed height from 120 to 160
 
     // BUG #4 FIX: Use forecastBoundaryTimestamp from hook instead of data.length * 0.8
     const historicalData = useMemo(() =>
@@ -690,53 +721,65 @@ function ActionsLayer({
     );
 
     return (
-        <div className="flex w-full">
+        <div className="flex w-full bg-[#171921]">
             {/* Historical Scatter - 80% */}
             <div className="w-[80%]">
                 <ResponsiveContainer width="100%" height={height}>
                     <ScatterChart
-                        margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
+                        margin={{ top: 5, right: 0, bottom: 20, left: 0 }}
                         syncId="actions-layer"
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="timestamp"
                             type="number"
                             domain={[firstTimestamp, forecastBoundaryTimestamp]}
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         <YAxis
                             type="number"
                             dataKey="categoryY"
-                            domain={[-0.5, 5.5]}
+                            domain={[-1, 6]} // Add padding for top/bottom
                             ticks={[0, 1, 2, 3, 4, 5]}
                             tickFormatter={(v: number) => ACTION_CATEGORIES[v] ?? ''}
-                            tick={{ fontSize: 8, fill: '#71717a' }}
+                            tick={{ fontSize: 8, fill: '#FFFFFF' }}
                             axisLine={false}
                             tickLine={false}
                             width={COMMON_Y_AXIS_WIDTH}
                         />
                         <Tooltip content={<ActionTooltip />} wrapperStyle={{ zIndex: 50 }} />
+                        <ChartDefs />
                         <Scatter
                             data={historicalData}
                             dataKey="categoryY"
                             shape={(props: any) => {
                                 const event = props.payload as ActionEvent & { categoryY: number };
-                                const color = '#6366f1';
+                                const color = event.isAI ? '#6366f1' : '#a855f7'; // AI: Indigo, Human: Purple
                                 if (event.isAI) {
                                     return (
                                         <polygon
-                                            points={`${props.cx},${props.cy - 5} ${props.cx + 5},${props.cy} ${props.cx},${props.cy + 5} ${props.cx - 5},${props.cy}`}
+                                            points={`${props.cx},${props.cy - 6} ${props.cx + 6},${props.cy} ${props.cx},${props.cy + 6} ${props.cx - 6},${props.cy}`}
                                             fill={color}
-                                            stroke="#1e293b"
+                                            stroke="#fff"
                                             strokeWidth={1}
+                                            filter="url(#neon-glow)"
                                         />
                                     );
                                 }
-                                return <circle cx={props.cx} cy={props.cy} r={5} fill={color} stroke="#1e293b" strokeWidth={1} />;
+                                return (
+                                    <circle
+                                        cx={props.cx}
+                                        cy={props.cy}
+                                        r={6}
+                                        fill={color}
+                                        stroke="#fff"
+                                        strokeWidth={1}
+                                        filter="url(#neon-glow)"
+                                    />
+                                );
                             }}
                         />
                     </ScatterChart>
@@ -744,9 +787,9 @@ function ActionsLayer({
             </div>
 
             {/* Dashed separator */}
-            <div className="w-[2px] bg-indigo-400 relative">
-                <div className="absolute inset-0 border-l-2 border-dashed border-indigo-500" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
+            <div className="w-[2px] bg-[#98A6D4] relative opacity-30">
+                <div className="absolute inset-0 border-l-2 border-dashed border-[#98A6D4]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#98A6D4] text-[#171921] text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
                     NOW
                 </div>
             </div>
@@ -755,18 +798,18 @@ function ActionsLayer({
             <div className="w-[20%]">
                 <ResponsiveContainer width="100%" height={height}>
                     <ScatterChart
-                        margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
+                        margin={{ top: 5, right: 20, bottom: 20, left: 0 }}
                         syncId="actions-layer"
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         {/* Explicit domain prevents empty chart collapse when no forecast actions exist */}
                         <XAxis
                             dataKey="timestamp"
                             type="number"
                             domain={[forecastBoundaryTimestamp, lastTimestamp]}
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         {/* Hidden Y-axis */}
@@ -781,24 +824,39 @@ function ActionsLayer({
                         />
                         <Tooltip content={<ActionTooltip />} wrapperStyle={{ zIndex: 50 }} />
 
+                        <ChartDefs />
                         <Scatter
                             data={forecastData}
                             dataKey="categoryY"
                             shape={(props: any) => {
                                 const event = props.payload as ActionEvent & { categoryY: number };
-                                const color = '#6366f1';
+                                const color = event.isAI ? '#6366f1' : '#a855f7';
                                 if (event.isAI) {
                                     return (
                                         <polygon
-                                            points={`${props.cx},${props.cy - 4} ${props.cx + 4},${props.cy} ${props.cx},${props.cy + 4} ${props.cx - 4},${props.cy}`}
+                                            points={`${props.cx},${props.cy - 5} ${props.cx + 5},${props.cy} ${props.cx},${props.cy + 5} ${props.cx - 5},${props.cy}`}
                                             fill={color}
-                                            stroke="#1e293b"
-                                            strokeWidth={1}
-                                            opacity={0.6}
+                                            fillOpacity={0.1}
+                                            stroke={color}
+                                            strokeWidth={2}
+                                            strokeDasharray="4 4"
+                                            filter="url(#neon-glow)"
                                         />
                                     );
                                 }
-                                return <circle cx={props.cx} cy={props.cy} r={4} fill={color} stroke="#1e293b" strokeWidth={1} opacity={0.6} />;
+                                return (
+                                    <circle
+                                        cx={props.cx}
+                                        cy={props.cy}
+                                        r={5}
+                                        fill={color}
+                                        fillOpacity={0.1}
+                                        stroke={color}
+                                        strokeWidth={2}
+                                        strokeDasharray="4 4"
+                                        filter="url(#neon-glow)"
+                                    />
+                                );
                             }}
                         />
                     </ScatterChart>
@@ -845,16 +903,16 @@ function ProductLayer({
                         data={historicalData}
                         margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="timestamp"
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         <YAxis
-                            tick={{ fontSize: 9, fill: '#71717a' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
                             axisLine={false}
                             tickLine={false}
                             width={50}
@@ -862,13 +920,21 @@ function ProductLayer({
                             tickFormatter={formatNumber}
                         />
                         <Tooltip content={<ProductTooltip />} wrapperStyle={{ zIndex: 50 }} />
+                        <ChartDefs />
                         {/* Target area - solid */}
                         <Area type="monotone" dataKey="target" fill="#a78bfa15" stroke="#a78bfa" strokeWidth={1} strokeDasharray="4 4" dot={false} />
-                        {/* Output line - solid */}
-                        <Line isAnimationActive={false} type="monotone" dataKey="output" stroke="#a78bfa" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: '#a78bfa' }} />
+                        {/* Output - Area with Neon Gradient */}
+                        <Area
+                            type="monotone"
+                            dataKey="output"
+                            stroke="#a78bfa"
+                            strokeWidth={2}
+                            fill="url(#gradient-product)"
+                            activeDot={{ r: 4, fill: '#a78bfa', stroke: '#fff', strokeWidth: 2 }}
+                        />
                         {/* Uptime (expanded only) */}
                         {expanded && (
-                            <YAxis yAxisId={1} orientation="right" tick={{ fontSize: 9, fill: '#71717a' }} axisLine={false} tickLine={false} width={35} tickFormatter={(v: number) => v + '%'} />
+                            <YAxis yAxisId={1} orientation="right" tick={{ fontSize: 9, fill: '#FFFFFF' }} axisLine={false} tickLine={false} width={35} tickFormatter={(v: number) => v + '%'} />
                         )}
                         {expanded && (
                             <Line isAnimationActive={false} type="monotone" dataKey="uptime" stroke="#4ade80" strokeWidth={1} dot={false} strokeDasharray="2 2" yAxisId={1} />
@@ -878,9 +944,9 @@ function ProductLayer({
             </div>
 
             {/* Dashed separator */}
-            <div className="w-[2px] bg-indigo-400 relative">
-                <div className="absolute inset-0 border-l-2 border-dashed border-indigo-500" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
+            <div className="w-[2px] bg-[#98A6D4] relative opacity-30">
+                <div className="absolute inset-0 border-l-2 border-dashed border-[#98A6D4]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#98A6D4] text-[#171921] text-[8px] px-1 py-0.5 rounded font-bold whitespace-nowrap">
                     NOW
                 </div>
             </div>
@@ -892,22 +958,31 @@ function ProductLayer({
                         data={forecastData}
                         margin={{ top: 5, right: 20, bottom: 0, left: 0 }}
                     >
-                        <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="2 4" stroke="#98A6D4" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="timestamp"
                             tickFormatter={(v) => formatTimestamp(v, granularity)}
-                            tick={{ fontSize: 9, fill: '#71717a' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                            tick={{ fontSize: 9, fill: '#FFFFFF' }}
+                            axisLine={{ stroke: '#98A6D4', strokeOpacity: 0.3 }}
                             tickLine={false}
                         />
                         {/* Hidden Y-axis with same domain */}
                         <YAxis tick={false} axisLine={false} tickLine={false} width={0} domain={yDomain} />
                         <Tooltip content={<ProductTooltip />} wrapperStyle={{ zIndex: 50 }} />
 
+                        <ChartDefs />
                         {/* Target area - forecast (lighter) */}
                         <Area type="monotone" dataKey="target" fill="#a78bfa10" stroke="#a78bfa" strokeWidth={1} strokeDasharray="4 4" dot={false} />
-                        {/* Output line - dashed for forecast */}
-                        <Line isAnimationActive={false} type="monotone" dataKey="output" stroke="#a78bfa" strokeWidth={2} dot={false} strokeDasharray="6 3" />
+                        {/* Output - Forecast Area */}
+                        <Area
+                            type="monotone"
+                            dataKey="output"
+                            stroke="#a78bfa"
+                            strokeWidth={2}
+                            strokeDasharray="4 4"
+                            fill="url(#gradient-product)"
+                            fillOpacity={0.5}
+                        />
                         {/* Uptime - dashed (expanded only) */}
                         {expanded && (
                             <YAxis yAxisId={1} orientation="right" tick={false} axisLine={false} tickLine={false} width={0} />
@@ -948,13 +1023,13 @@ function LayerHeader({
                 >
                     {config.name}
                 </span>
-                <span className="text-xs text-slate-600 hidden sm:inline">
+                <span className="text-xs text-[#98A6D4] hidden sm:inline">
                     {config.description}
                 </span>
             </div>
             <div className="flex items-center gap-3">
                 {stats}
-                <button className="p-1 rounded hover:bg-slate-200 text-slate-600 group-hover:text-slate-900 transition-colors">
+                <button className="p-1 rounded hover:bg-[#98A6D4]/20 text-[#98A6D4] group-hover:text-white transition-colors">
                     {expanded ? (
                         <Minimize2 size={14} />
                     ) : (
@@ -991,7 +1066,7 @@ function SensorFilterBar({
     setVisibleSensors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }) {
     return (
-        <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-50 border-b border-slate-100">
+        <div className="flex items-center gap-3 px-4 py-1.5 bg-[#171921] border-b border-[#98A6D4]/30">
             {[
                 { key: 'vibration', label: 'Vibration', color: '#f97316' },
                 { key: 'camera', label: 'Camera', color: '#64748b' },
@@ -1014,7 +1089,7 @@ function SensorFilterBar({
                         style={{ accentColor: color }}
                     />
                     <span className="w-2 h-0.5 inline-block" style={{ backgroundColor: color }} />
-                    <span className={visibleSensors[key] ? 'text-slate-700' : 'text-slate-400'}>
+                    <span className={visibleSensors[key] ? 'text-white' : 'text-[#98A6D4]'}>
                         {label}
                     </span>
                 </label>
@@ -1146,9 +1221,9 @@ export function MultiLayerTimeline({ autoTriggerAnomaly, onAnomalyTriggered }: M
     );
 
     return (
-        <div className="w-full min-h-screen bg-white text-slate-900">
+        <div className="w-full min-h-full bg-[#171921] text-white flex flex-col">
             {/* Header */}
-            <div className="border-b border-slate-200 px-6 py-4">
+            <div className="border-b border-[#98A6D4]/30 px-6 py-4">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -1167,7 +1242,7 @@ export function MultiLayerTimeline({ autoTriggerAnomaly, onAnomalyTriggered }: M
                             Multi-Layer Timeline
                             <LiveIndicator isStreaming={isStreaming} />
                         </h1>
-                        <p className="text-xs text-slate-600 mt-1 uppercase tracking-wide">
+                        <p className="text-xs text-[#98A6D4] mt-1 uppercase tracking-wide">
                             Zoom: {granularity} · {pointCount} data points · syncId: tripolar-timeline
                         </p>
                     </div>
@@ -1204,7 +1279,7 @@ export function MultiLayerTimeline({ autoTriggerAnomaly, onAnomalyTriggered }: M
             </div>
 
             {/* Layers */}
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-[#98A6D4]/30">
                 {/* Product Layer */}
                 <div
                     className={`transition-all duration-300 ${expandedLayer && expandedLayer !== 'product'
@@ -1375,8 +1450,8 @@ export function MultiLayerTimeline({ autoTriggerAnomaly, onAnomalyTriggered }: M
             </div>
 
             {/* Footer Legend */}
-            <div className="border-t border-slate-200 px-6 py-3 flex items-center justify-between bg-slate-50">
-                <div className="flex items-center gap-6 text-xs text-slate-600 flex-wrap">
+            <div className="border-t border-[#98A6D4]/30 px-6 py-3 flex items-center justify-between bg-[#171921]">
+                <div className="flex items-center gap-6 text-xs text-[#98A6D4] flex-wrap">
                     <span className="flex items-center gap-2">
                         <span className="w-6 h-px bg-orange-400 inline-block" /> Vibration
                     </span>
