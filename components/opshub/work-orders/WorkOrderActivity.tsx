@@ -1,6 +1,7 @@
 'use client'
 
 import { UserAvatar } from '@/components/shared/UserAvatar'
+import s from '@/styles/opshub/work-orders.module.css'
 
 // TODO: import from opshub types when available
 type ActivityAction =
@@ -51,33 +52,36 @@ function formatDate(iso: string): string {
 
 export function WorkOrderActivity() {
     return (
-        <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-zinc-800" />
+        <div className={s.tabContainer}>
+            <div className={s.tabSection}>
+                <div className={s.sectionTitle}>Activity Log</div>
+                <div className={s.activityTimeline}>
+                    {/* Vertical line */}
+                    <div className={s.timelineLine} />
 
-            <div className="space-y-4">
-                {MOCK_ACTIVITY.map(entry => (
-                    <div key={entry.id} className="flex gap-3 relative">
-                        {/* Dot */}
-                        <div className={`w-[10px] h-[10px] rounded-full mt-1.5 flex-shrink-0 z-10 ring-4 ring-zinc-950 ${actionDotColor[entry.action]}`}
-                            style={{ marginLeft: '10px' }}
-                        />
+                    <div className="space-y-4">
+                        {MOCK_ACTIVITY.map(entry => (
+                            <div key={entry.id} className={s.timelineItem}>
+                                {/* Dot */}
+                                <div className={`${s.timelineDot} ${actionDotColor[entry.action]}`} />
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0 pb-1">
-                            <div className="flex items-center gap-2">
-                                <UserAvatar initials={entry.actorInitials} color={entry.actorColor} size="sm" isAI={entry.isAI} />
-                                <span className="text-xs font-semibold text-zinc-300">{entry.actorName}</span>
-                                <span className="text-[10px] text-zinc-600">
-                                    {formatDate(entry.timestamp)} {formatTime(entry.timestamp)}
-                                </span>
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 pb-1">
+                                    <div className="flex items-center gap-2">
+                                        <UserAvatar initials={entry.actorInitials} color={entry.actorColor} size="sm" isAI={entry.isAI} />
+                                        <span className="text-xs font-semibold text-[var(--tp-text-body)]">{entry.actorName}</span>
+                                        <span className="text-[10px] text-[var(--tp-text-muted)]">
+                                            {formatDate(entry.timestamp)} {formatTime(entry.timestamp)}
+                                        </span>
+                                    </div>
+                                    <p className={`mt-1 text-sm leading-relaxed ${entry.isAI ? 'text-[var(--tp-accent-purple)]' : 'text-[var(--tp-text-subtle)]'}`}>
+                                        {entry.description}
+                                    </p>
+                                </div>
                             </div>
-                            <p className={`mt-1 text-sm leading-relaxed ml-8 ${entry.isAI ? 'text-violet-300/80' : 'text-zinc-400'}`}>
-                                {entry.description}
-                            </p>
-                        </div>
+                        ))}
                     </div>
-                ))}
+                </div>
             </div>
         </div>
     )

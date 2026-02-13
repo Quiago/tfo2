@@ -12,14 +12,14 @@ export function AvatarStack({ members, max = 4 }: AvatarStackProps) {
     const overflow = members.length - max
 
     return (
-        <div className="flex items-center -space-x-2">
+        <div className="avatar-stack-container">
             {visible.map((m, i) => (
-                <div key={i} className="ring-2 ring-zinc-900 rounded-full">
+                <div key={i} className="avatar-stack">
                     <UserAvatar initials={m.initials} color={m.color} size="sm" />
                 </div>
             ))}
             {overflow > 0 && (
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-700 text-zinc-300 text-[10px] font-medium ring-2 ring-zinc-900">
+                <div className="avatar-stack-overflow">
                     +{overflow}
                 </div>
             )}

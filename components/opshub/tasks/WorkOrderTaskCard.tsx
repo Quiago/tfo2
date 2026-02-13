@@ -1,6 +1,7 @@
 'use client'
 
 import { UserAvatar } from '@/components/shared/UserAvatar'
+import s from '@/styles/opshub/work-orders.module.css'
 import {
     CheckCircle,
     ClipboardCheck,
@@ -56,67 +57,66 @@ export function WorkOrderTaskCard({
     const sc = statusConfig[status]
 
     return (
-        <div className={`flex items-start gap-4 p-4 hover:bg-zinc-800/30 transition ${status === 'completed' ? 'opacity-60 bg-zinc-900/30' : ''}`}>
-            {/* Task number + type icon */}
-            <div className={`flex flex-col items-center gap-1.5 pt-0.5 ${typeColor[type]}`}>
-                <span className="text-xs font-mono font-bold">#{taskNumber}</span>
-                {typeIcon[type]}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm text-zinc-200 font-medium truncate">{title}</h4>
-                    {blockedBy && blockedBy.length > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] text-red-400 bg-red-900/20 border border-red-900/30 rounded font-medium">
-                            Blocked by #{blockedBy.join(', #')}
-                        </span>
-                    )}
+        <div className={s.card}>
+            <div className={s.cardHeader}>
+                <div className="flex items-center gap-3">
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-opacity-10 ${typeColor[type]?.replace('text-', 'bg-') || 'bg-gray-100'}`}>
+                        {typeIcon[type]}
+                    </div>
+                    <div>
+                        <div className={s.cardMetaLine}>
+                            <span className="font-bold">#{taskNumber}</span>
+                            <span className="uppercase text-[10px] tracking-wider opacity-70">{type}</span>
+                        </div>
+                        <h4 className={s.cardTitle}>{title}</h4>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs">
-                    <div className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-                        <span className="text-zinc-500">{sc.label}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                        <UserAvatar initials={assigneeInitials} color={assigneeColor} size="sm" />
-                        <span className="text-zinc-500">{assigneeName}</span>
+                <div className="flex items-center gap-2">
+                    {/* Status Badge */}
+                    <div className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide border ${status === 'completed' ? s.statusResolved :
+                        status === 'in-progress' ? s.statusProgress :
+                            status === 'blocked' ? 'border-red-200 bg-red-50 text-red-700' :
+                                s.statusClosed
+                        }`}>
+                        {sc.label}
                     </div>
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex-shrink-0 self-center flex items-center gap-2">
+            <div className={s.cardDetails}>
+                <div className={s.cardDetailItem}>
+                    <UserAvatar initials={assigneeInitials} color={assigneeColor} size="sm" />
+                    <span>{assigneeName}</span>
+                </div>
+
+                {blockedBy && blockedBy.length > 0 && (
+                    <div className={`${s.cardDetailItem} text-red-600`}>
+                        <ShieldCheck className="w-3 h-3" />
+                        <span>Blocked by #{blockedBy.join(', #')}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Actions Toolbar */}
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--tp-stroke-subtle)]">
                 {status === 'in-progress' && onCreateWorkflow && (
                     <button
                         onClick={onCreateWorkflow}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-900/50 hover:bg-amber-900/20 rounded-md transition"
-                        title="Create Workflow from Task"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--tp-accent-blue)] hover:bg-[var(--tp-bg-hover)] rounded transition"
                     >
                         <Settings className="w-3.5 h-3.5" /> Workflow
                     </button>
                 )}
                 {status === 'pending' && onStart && (
-                    <button onClick={onStart} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-900/50 hover:bg-cyan-900/20 rounded-md transition">
+                    <button onClick={onStart} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--tp-accent-blue)] hover:bg-[var(--tp-bg-hover)] rounded transition">
                         <Play className="w-3.5 h-3.5" /> Start
                     </button>
                 )}
                 {status === 'in-progress' && onComplete && (
-                    <button onClick={onComplete} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/20 rounded-md transition">
-                        <CheckCircle className="w-3.5 h-3.5" /> Done
+                    <button onClick={onComplete} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--tp-accent-green)] hover:bg-[var(--tp-bg-hover)] rounded transition">
+                        <CheckCircle className="w-3.5 h-3.5" /> Mark Done
                     </button>
-                )}
-                {status === 'completed' && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-500 bg-emerald-900/10 rounded-md border border-emerald-900/20">
-                        <CheckCircle className="w-3.5 h-3.5" /> Completed
-                    </div>
-                )}
-                {status === 'blocked' && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-900/10 rounded-md border border-red-900/20">
-                        Blocked
-                    </div>
                 )}
             </div>
         </div>

@@ -1,7 +1,8 @@
 'use client'
 
-import { UserAvatar } from '@/components/shared/UserAvatar'
 import { MentionInput } from '@/components/shared/MentionInput'
+import { UserAvatar } from '@/components/shared/UserAvatar'
+import s from '@/styles/opshub/work-orders.module.css'
 import { Send } from 'lucide-react'
 import { useState } from 'react'
 
@@ -84,50 +85,55 @@ export function WorkOrderDiscussion() {
     }
 
     return (
-        <div className="space-y-4">
+        <div className={s.tabContainer}>
             {/* Comments */}
-            <div className="space-y-4">
-                {comments.map(comment => (
-                    <div key={comment.id} className="flex gap-3">
-                        <UserAvatar
-                            initials={comment.authorInitials}
-                            color={comment.authorColor}
-                            size="md"
-                            isAI={comment.isAI}
-                        />
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-semibold text-zinc-200">{comment.authorName}</span>
-                                {comment.isAI && (
-                                    <span className="px-1.5 py-0.5 text-[10px] bg-violet-900/40 text-violet-400 rounded font-medium">AI</span>
-                                )}
-                                <span className="text-xs text-zinc-600">{timeAgo(comment.createdAt)}</span>
-                            </div>
-                            <div className={`text-sm leading-relaxed p-3 rounded-lg ${comment.isAI ? 'bg-violet-950/20 border border-violet-900/30 text-violet-200' : 'bg-zinc-900 border border-zinc-800 text-zinc-300'}`}>
-                                {highlightMentions(comment.content)}
+            <div className={s.tabSection}>
+                <div className={s.sectionTitle}>Conversation</div>
+                <div className="space-y-4">
+                    {comments.map(comment => (
+                        <div key={comment.id} className="flex gap-3">
+                            <UserAvatar
+                                initials={comment.authorInitials}
+                                color={comment.authorColor}
+                                size="md"
+                                isAI={comment.isAI}
+                            />
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-semibold text-zinc-200">{comment.authorName}</span>
+                                    {comment.isAI && (
+                                        <span className="px-1.5 py-0.5 text-[10px] bg-violet-900/40 text-violet-400 rounded font-medium">AI</span>
+                                    )}
+                                    <span className="text-xs text-zinc-600">{timeAgo(comment.createdAt)}</span>
+                                </div>
+                                <div className={`${s.messageBubble} ${comment.isAI ? s.messageBubbleAI : s.messageBubbleUser}`}>
+                                    {highlightMentions(comment.content)}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
 
             {/* Input */}
-            <div className="border-t border-zinc-800 pt-4">
-                <MentionInput
-                    value={newComment}
-                    onChange={setNewComment}
-                    placeholder="Add a comment... (@ to mention, Ctrl+Enter to submit)"
-                    members={TEAM_MEMBERS}
-                    onSubmit={handleSubmit}
-                />
-                <div className="flex justify-end mt-2">
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!newComment.trim()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed rounded transition"
-                    >
-                        <Send className="w-3 h-3" /> Comment
-                    </button>
+            <div className={s.tabSection}>
+                <div className={s.inputContainer}>
+                    <MentionInput
+                        value={newComment}
+                        onChange={setNewComment}
+                        placeholder="Add a comment... (@ to mention, Ctrl+Enter to submit)"
+                        members={TEAM_MEMBERS}
+                        onSubmit={handleSubmit}
+                    />
+                    <div className="flex justify-end mt-2">
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!newComment.trim()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--tp-accent-blue)] hover:bg-[var(--tp-accent-blue-light)] disabled:opacity-50 disabled:cursor-not-allowed rounded transition"
+                        >
+                            <Send className="w-3 h-3" /> Comment
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

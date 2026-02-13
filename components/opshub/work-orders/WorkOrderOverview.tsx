@@ -45,17 +45,21 @@ function formatDate(iso: string): string {
     })
 }
 
+import s from '@/styles/opshub/work-orders.module.css'
+
+// ... existing imports
+
 export function WorkOrderOverview({ workOrder }: WorkOrderOverviewProps) {
     return (
-        <div className="space-y-6">
+        <div className={s.overviewContainer}>
             {/* Dates & Meta */}
-            <div className="flex items-center gap-4 text-xs text-zinc-500 border-b border-zinc-800/50 pb-4">
-                <div className="flex items-center gap-1.5">
+            <div className={s.metaRow}>
+                <div className={s.metaItem}>
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>Created <strong className="text-zinc-300">{formatDate(workOrder.createdAt)}</strong></span>
+                    <span>Created <strong className={s.metaValue}>{formatDate(workOrder.createdAt)}</strong></span>
                 </div>
                 {workOrder.resolvedAt && (
-                    <div className="flex items-center gap-1.5 text-emerald-500">
+                    <div className={`${s.metaItem} text-emerald-600`}>
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span>Resolved <strong>{formatDate(workOrder.resolvedAt)}</strong></span>
                     </div>
@@ -64,54 +68,52 @@ export function WorkOrderOverview({ workOrder }: WorkOrderOverviewProps) {
 
             {/* Equipment Info */}
             <div>
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Equipment Context</h3>
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-md p-4">
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                        <div className="flex items-start gap-3">
-                            <Cog className="w-4 h-4 text-zinc-500 mt-0.5" />
+                <h3 className={s.sectionTitle}>Equipment Context</h3>
+                <div className={s.infoCard}>
+                    <div className={s.infoGrid}>
+                        <div className={s.infoItem}>
+                            <Cog className="w-4 h-4 text-zinc-400 mt-0.5" />
                             <div>
-                                <p className="text-zinc-500 text-xs mb-0.5">Asset Name</p>
-                                <p className="text-zinc-200 font-medium">{workOrder.equipmentName}</p>
+                                <p className={s.infoLabel}>Asset Name</p>
+                                <p className={s.infoValue}>{workOrder.equipmentName}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                            <Box className="w-4 h-4 text-zinc-500 mt-0.5" />
+                        <div className={s.infoItem}>
+                            <Box className="w-4 h-4 text-zinc-400 mt-0.5" />
                             <div>
-                                <p className="text-zinc-500 text-xs mb-0.5">Asset ID</p>
-                                <p className="text-zinc-200 font-mono text-xs">{workOrder.equipmentId}</p>
+                                <p className={s.infoLabel}>Asset ID</p>
+                                <p className={`${s.infoValue} font-mono text-xs`}>{workOrder.equipmentId}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                            <MapPin className="w-4 h-4 text-zinc-500 mt-0.5" />
+                        <div className={s.infoItem}>
+                            <MapPin className="w-4 h-4 text-zinc-400 mt-0.5" />
                             <div>
-                                <p className="text-zinc-500 text-xs mb-0.5">Location</p>
-                                <p className="text-zinc-200">{workOrder.location}</p>
+                                <p className={s.infoLabel}>Location</p>
+                                <p className={s.infoValue}>{workOrder.location}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                            <MapPin className="w-4 h-4 text-zinc-500 mt-0.5" />
+                        <div className={s.infoItem}>
+                            <MapPin className="w-4 h-4 text-zinc-400 mt-0.5" />
                             <div>
-                                <p className="text-zinc-500 text-xs mb-0.5">Facility</p>
-                                <p className="text-zinc-200">{workOrder.factoryName}</p>
+                                <p className={s.infoLabel}>Facility</p>
+                                <p className={s.infoValue}>{workOrder.factoryName}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-zinc-800/50">
-                        <button className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition hover:underline">
-                            <Box className="w-3.5 h-3.5" /> Locate in Digital Twin
-                        </button>
-                    </div>
+                    <button className={s.locateBtn}>
+                        <Box className="w-3.5 h-3.5" /> Locate in Digital Twin
+                    </button>
                 </div>
             </div>
 
             {/* Root Cause */}
             {workOrder.rootCause && (
                 <div>
-                    <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Root Cause Analysis</h3>
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-md p-4">
+                    <h3 className={s.sectionTitle}>Root Cause Analysis</h3>
+                    <div className={s.infoCard}>
                         <div className="flex gap-3">
-                            <Search className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-zinc-300 leading-relaxed">{workOrder.rootCause}</p>
+                            <Search className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-zinc-700 leading-relaxed">{workOrder.rootCause}</p>
                         </div>
                     </div>
                 </div>
@@ -120,25 +122,25 @@ export function WorkOrderOverview({ workOrder }: WorkOrderOverviewProps) {
             {/* Spare Parts */}
             {workOrder.spareParts && workOrder.spareParts.length > 0 && (
                 <div>
-                    <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Required Parts</h3>
-                    <div className="border border-zinc-800 rounded-md overflow-hidden bg-zinc-900/50">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-zinc-900 border-b border-zinc-800 text-xs font-medium text-zinc-500 uppercase">
+                    <h3 className={s.sectionTitle}>Required Parts</h3>
+                    <div className={s.tableContainer}>
+                        <table className={s.table}>
+                            <thead className={s.tableHeader}>
                                 <tr>
-                                    <th className="px-4 py-2">Part Name</th>
-                                    <th className="px-4 py-2">Part #</th>
-                                    <th className="px-4 py-2 text-right">Qty</th>
-                                    <th className="px-4 py-2">Availability</th>
+                                    <th>Part Name</th>
+                                    <th>Part #</th>
+                                    <th className="text-right">Qty</th>
+                                    <th>Availability</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800/50">
+                            <tbody>
                                 {workOrder.spareParts.map(part => (
-                                    <tr key={part.partNumber} className="hover:bg-zinc-800/20">
-                                        <td className="px-4 py-2.5 text-zinc-200">{part.name}</td>
-                                        <td className="px-4 py-2.5 font-mono text-xs text-zinc-500">{part.partNumber}</td>
-                                        <td className="px-4 py-2.5 text-zinc-400 text-right">{part.quantity}</td>
-                                        <td className="px-4 py-2.5">
-                                            <span className={`text-xs ${part.inStock ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <tr key={part.partNumber} className={s.tableRow}>
+                                        <td className={s.tableCell}>{part.name}</td>
+                                        <td className={`${s.tableCell} font-mono text-xs text-zinc-500`}>{part.partNumber}</td>
+                                        <td className={`${s.tableCell} text-right`}>{part.quantity}</td>
+                                        <td className={s.tableCell}>
+                                            <span className={`text-xs ${part.inStock ? 'text-emerald-600 font-medium' : 'text-red-500 font-medium'}`}>
                                                 {part.inStock ? 'In Stock' : 'On Order'}
                                             </span>
                                         </td>

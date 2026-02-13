@@ -3,7 +3,6 @@
 import { MOCK_TEAM, useOpshubMockData } from '@/lib/hooks/useOpshubMockData'
 import { useOpshubStore } from '@/lib/store/opshub-store'
 import { CreateWorkOrderForm, type WorkOrderFormData } from './CreateWorkOrderForm'
-import { OpshubHome } from './feed/OpshubHome'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
 import { WorkOrderList } from './work-orders/WorkOrderList'
 
@@ -24,7 +23,7 @@ export function OpshubLayout() {
 
     if (pendingCreateWorkOrder) {
         return (
-            <div className="flex flex-col h-full w-full bg-zinc-950 overflow-y-auto">
+            <div className="flex flex-col h-full w-full overflow-y-auto">
                 <CreateWorkOrderForm
                     initialData={pendingCreateWorkOrder} // Pass auto-fill data
                     prefillEquipment={pendingCreateWorkOrder.equipmentName}
@@ -65,7 +64,7 @@ export function OpshubLayout() {
     // Priority 2: Viewing a specific work order detail
     if (selectedWorkOrderId) {
         return (
-            <div className="flex flex-col h-full w-full bg-zinc-950">
+            <div className="flex flex-col h-full w-full">
                 <WorkOrderDetail
                     workOrderId={selectedWorkOrderId}
                     onBack={() => {
@@ -77,22 +76,14 @@ export function OpshubLayout() {
         )
     }
 
-    // Priority 3: Work orders list view
-    if (activeTab === 'work-orders') {
-        return (
-            <div className="flex flex-col h-full w-full bg-zinc-950">
-                <WorkOrderList
-                    onSelectWorkOrder={setSelectedWorkOrderId}
-                    onBack={() => setActiveTab('home')}
-                />
-            </div>
-        )
-    }
-
-    // Default: Feed / Home view
+    // Default: Work Orders Panel (All Work Orders)
+    // Replaces the previous Feed view as the main entry point per user request
     return (
-        <div className="flex flex-col h-full w-full bg-zinc-950">
-            <OpshubHome />
+        <div className="flex flex-col h-full w-full">
+            <WorkOrderList
+                onSelectWorkOrder={setSelectedWorkOrderId}
+            // No onBack prop since this is now the root view
+            />
         </div>
     )
 }
