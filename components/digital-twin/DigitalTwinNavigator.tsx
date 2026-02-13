@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useThree } from '@react-three/fiber'
-import { Activity, AlertTriangle, ClipboardPlus, Maximize2, Thermometer, Zap } from 'lucide-react'
+import { Activity, AlertTriangle, Thermometer, Zap } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { CameraSystemHandle } from './CameraSystem'
@@ -10,6 +10,7 @@ import { FactoryScene } from './FactoryScene'
 import { InfoBar } from './InfoBar'
 import { LoadingScreen } from './LoadingScreen'
 import type { AnomalyAlert } from './MachineInspector'
+import { MachineOverlay } from './MachineOverlay'
 import type { CameraPreset } from './camera-presets'
 import { getMachineInfo } from './machine-data'
 
@@ -267,59 +268,27 @@ export function DigitalTwinNavigator({
             {/* ── OVERLAY BUTTONS at click position ── */}
             {overlay && viewMode !== 'details' && (
                 <div
-                    className="absolute z-50 flex flex-col items-center gap-2 animate-overlay-in"
+                    className="absolute z-50 flex flex-col items-center animate-overlay-in"
                     style={{
                         left: `${overlayLeft}px`,
                         top: `${overlayTop}px`,
                         transform: 'translate(-50%, -100%)',
                     }}
                 >
-                    {/* Alert card — shown above buttons when anomaly */}
-                    {overlay.anomaly && (
-                        <div className="w-64 rounded-xl border border-red-500/40 bg-red-950/80 backdrop-blur-md p-3 mb-1 shadow-lg shadow-red-500/10">
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <AlertTriangle size={14} className="text-red-400" />
-                                <span className="text-xs font-semibold text-red-300">{overlay.anomaly.type}</span>
-                            </div>
-                            <p className="text-[11px] text-red-200/80 leading-relaxed mb-2">{overlay.anomaly.message}</p>
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-red-300">Value: <span className="font-mono font-bold">{overlay.anomaly.value}</span></span>
-                                <span className="text-red-400/60">Threshold: {overlay.anomaly.threshold}</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Machine name label */}
-                    <span className="text-[10px] text-zinc-400 font-medium tracking-wide mb-0.5">{overlay.machineName}</span>
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => {
-                                onCreateWorkOrder?.(overlay.meshName)
-                                setOverlay(null)
-                            }}
-                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-zinc-800/90 backdrop-blur-sm text-zinc-200 border border-zinc-600/50 hover:bg-zinc-700 hover:border-zinc-500 transition-all shadow-lg"
-                        >
-                            <ClipboardPlus size={14} />
-                            Create Work Order
-                        </button>
-                        <button
-                            onClick={() => {
-                                const name = overlay.meshName
-                                const isAnomaly = !!overlay.anomaly
-                                setOverlay(null)
-                                onExpandClick?.(name, isAnomaly)
-                            }}
-                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-cyan-500/20 backdrop-blur-sm text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 hover:border-cyan-400/60 transition-all shadow-lg"
-                        >
-                            <Maximize2 size={14} />
-                            Expand
-                        </button>
-                    </div>
-
-                    {/* Pointer triangle */}
-                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-zinc-700/80" />
+                    <MachineOverlay
+                        title={overlay.machineName}
+                        meshName={overlay.meshName}
+                        anomaly={overlay.anomaly}
+                        onClose={() => setOverlay(null)}
+                        onCreateWorkOrder={(name) => {
+                            onCreateWorkOrder?.(name)
+                            setOverlay(null)
+                        }}
+                        onExpand={(name, isAnomaly) => {
+                            setOverlay(null)
+                            onExpandClick?.(name, isAnomaly)
+                        }}
+                    />
                 </div>
             )}
 

@@ -2120,6 +2120,8 @@
     margin: 0 auto;
     padding: 24px;
     width: 100%;
+    background-color: var(--tp-bg-surface);
+    border-radius: var(--tp-radius-lg); 
 }
 
 .createHeader {
