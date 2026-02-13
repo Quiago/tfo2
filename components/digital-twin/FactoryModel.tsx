@@ -32,6 +32,34 @@ const HIGHLIGHT_EMISSIVE = new THREE.Color(0x442200)
 const ALERT_RED = new THREE.Color(0xff0000)
 const ALERT_DARK = new THREE.Color(0x330000)
 
+/**
+ * Checks if a mesh name belongs to a KUKA robot arm.
+ * Based on GLB analysis: 86 robot meshes out of 451 total share these name patterns.
+ * Excludes KRC4 controller cabinets (they are NOT robot arms).
+ */
+function isKukaRobotMesh(name: string): boolean {
+    // Explicit robot model identifiers
+    if (name.includes('KR300') || name.includes('KR120') || name.includes('KR210')) return true
+    // Robot base/box parts
+    if (name.includes('K_U2D_Box__KR')) return true
+    // Robot axis components (a2, a3 body segments)
+    if (name.includes('_U2E_rf__ez__a2') || name.includes('_U2E_rf__ez__a3')) return true
+    // Robot arm segments
+    if (name.includes('_U2E_rf__Arm_U2E')) return true
+    // Robot wrist/link parts
+    if (name.includes('__Link__Arm__')) return true
+    return false
+}
+
+/** Maps any KUKA robot mesh name to a friendly display name */
+function getKukaRobotName(meshName: string): string {
+    if (meshName.includes('KR300')) return 'KUKA KR300'
+    if (meshName.includes('KR210')) return 'KUKA KR210'
+    if (meshName.includes('KR120') || meshName.includes('K_U2D_Box__KR')) return 'KUKA KR120'
+    // Shared arm/axis parts — classify by context clues or default
+    return 'KUKA Robot Arm'
+}
+
 /** Exact mesh names (from GLB) for each alertable robot */
 const ALERT_TARGETS: Record<string, string[]> = {
     'kuka-kr120-right': [
@@ -229,6 +257,9 @@ export function FactoryModel({
             const mesh = e.object as THREE.Mesh
             if (!mesh.isMesh) return
 
+            // Only KUKA robot meshes are interactive
+            if (!isKukaRobotMesh(mesh.name)) return
+
             // Don't override alert flash materials
             if (alertMeshesRef.current.includes(mesh)) return
 
@@ -258,6 +289,9 @@ export function FactoryModel({
             const mesh = e.object as THREE.Mesh
             if (!mesh.isMesh) return
 
+            // Only KUKA robot meshes are interactive
+            if (!isKukaRobotMesh(mesh.name)) return
+
             if (alertMeshesRef.current.includes(mesh)) return
 
             document.body.style.cursor = 'auto'
@@ -278,16 +312,11 @@ export function FactoryModel({
             const mesh = e.object as THREE.Mesh
             if (!mesh.isMesh || !onMeshClick) return
 
-            const SKIP_NAMES = new Set(['Scene', 'DefaultScene', 'RootNode', 'Root'])
-            let bestName = ''
-            let current: THREE.Object3D | null = mesh
-            while (current && !SKIP_NAMES.has(current.name)) {
-                if (current.name && current.name.length > 1) {
-                    bestName = current.name
-                }
-                current = current.parent
-            }
-            const name = bestName || mesh.name || `Mesh_${mesh.id}`
+            // Only KUKA robot meshes are clickable
+            if (!isKukaRobotMesh(mesh.name)) return
+
+            // Use the friendly KUKA robot name instead of raw mesh name
+            const name = getKukaRobotName(mesh.name)
 
             onMeshClick({
                 meshName: name,

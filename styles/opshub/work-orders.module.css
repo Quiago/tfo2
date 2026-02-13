@@ -2111,3 +2111,325 @@
 .packageSourceValue {
     color: var(--tp-text-body);
 }
+/* ─── Create Work Order Form ─── */
+.createContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    width: 100%;
+}
+
+.createHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+}
+
+.backBtn {
+    padding: 8px;
+    color: var(--tp-text-muted);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+}
+
+.backBtn:hover {
+    color: var(--tp-text-body);
+    background: var(--tp-bg-hover);
+}
+
+.createTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--tp-text-heading);
+    letter-spacing: -0.01em;
+}
+
+.createBody {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 24px;
+}
+
+.createSection {
+    background: var(--tp-bg-card);
+    border: 1px solid var(--tp-stroke);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.createSectionLeft {
+    flex: 3;
+}
+
+.createSectionRight {
+    flex: 2;
+}
+
+.sectionAccent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.accentCyan {
+    background: rgba(6, 182, 212, 0.3);
+}
+
+.accentAmber {
+    background: rgba(245, 158, 11, 0.3);
+}
+
+.createSectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--tp-stroke);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tp-text-body);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.sectionNumber {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.numCyan {
+    background: rgba(6, 182, 212, 0.1);
+    color: var(--tp-accent-cyan);
+}
+
+.numAmber {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--tp-accent-warning);
+}
+
+.formContent {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.formLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--tp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-left: 2px;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+    width: 100%;
+    background: var(--tp-bg-surface);
+    border: 1px solid var(--tp-stroke);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--tp-text-body);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+    border-color: var(--tp-accent-blue);
+    box-shadow: 0 0 0 2px var(--tp-accent-blue-line-light);
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+    color: var(--tp-text-subtle);
+}
+
+.formError {
+    border-color: var(--tp-accent-red-error);
+}
+
+.formErrorText {
+    font-size: 11px;
+    color: var(--tp-accent-red-error);
+    margin-top: 4px;
+    margin-left: 2px;
+}
+
+.priorityGroup {
+    display: flex;
+    gap: 8px;
+}
+
+.priorityBtn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--tp-stroke);
+    background: transparent;
+    color: var(--tp-text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.priorityBtn:hover {
+    border-color: var(--tp-text-muted);
+    color: var(--tp-text-body);
+}
+
+.priorityDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.bgZinc { background: #52525b; }
+.bgBlue { background: #3b82f6; }
+.bgAmber { background: #f59e0b; }
+.bgRed { background: #ef4444; }
+
+.priorityBtnActive {
+    background: var(--tp-bg-surface-highlight);
+    border-color: currentColor;
+}
+
+.priorityActiveLow { color: #a1a1aa; border-color: #52525b; background: rgba(82, 82, 91, 0.1); }
+.priorityActiveMedium { color: #60a5fa; border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.priorityActiveHigh { color: #fbbf24; border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+.priorityActiveCritical { color: #f87171; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+.tagContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.tagItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--tp-bg-surface);
+    border: 1px solid var(--tp-stroke);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--tp-text-body);
+}
+
+.removeTagBtn {
+    display: flex;
+    color: var(--tp-text-muted);
+    cursor: pointer;
+}
+
+.removeTagBtn:hover {
+    color: var(--tp-accent-red);
+}
+
+.createActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--tp-stroke);
+}
+
+.cancelActionBtn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tp-text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelActionBtn:hover {
+    color: var(--tp-text-body);
+    background: var(--tp-bg-hover);
+}
+
+.submitActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    background: var(--tp-accent-blue);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.submitActionBtn:hover {
+    background: var(--tp-accent-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15), 0 3px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Scrollbar for form content */
+.formContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+.formContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.formContent::-webkit-scrollbar-thumb {
+    background: var(--tp-stroke);
+    border-radius: 3px;
+}
+
+.formContent::-webkit-scrollbar-thumb:hover {
+    background: var(--tp-text-muted);
+}

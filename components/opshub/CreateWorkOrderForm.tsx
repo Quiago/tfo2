@@ -4,6 +4,7 @@ import { MOCK_TEAM } from '@/lib/hooks/useOpshubMockData'
 import type { TaskPriority } from '@/lib/types/opshub'
 import { ArrowLeft, ClipboardPlus, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import styles from '../../styles/opshub/work-orders.module.css'
 
 export interface WorkOrderFormData {
     title: string
@@ -104,70 +105,84 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
         )
     }, [title, description, equipmentName, priority, facility, tags, assigneeId, taskInstructions, onSubmit])
 
-    const inputClass = 'w-full px-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 text-zinc-100 placeholder:text-zinc-600'
-    const labelClass = 'block text-[10px] font-medium text-zinc-400 mb-1'
+    // ... inside CreateWorkOrderForm component ...
+
+    const getPriorityColorClass = (p: string) => {
+        switch (p) {
+            case 'low': return styles.bgZinc
+            case 'medium': return styles.bgBlue
+            case 'high': return styles.bgAmber
+            case 'critical': return styles.bgRed
+            default: return styles.bgZinc
+        }
+    }
+
+    const getPriorityActiveClass = (p: string) => {
+        switch (p) {
+            case 'low': return styles.priorityActiveLow
+            case 'medium': return styles.priorityActiveMedium
+            case 'high': return styles.priorityActiveHigh
+            case 'critical': return styles.priorityActiveCritical
+            default: return ''
+        }
+    }
 
     return (
-        <div className="flex flex-col h-full max-w-6xl mx-auto p-4">
+        <div className={styles.createContainer}>
             {/* Header */}
-            <div className="flex items-center gap-3 mb-4 flex-none">
-                <button
-                    onClick={onCancel}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
-                >
+            <div className={styles.createHeader}>
+                <button onClick={onCancel} className={styles.backBtn}>
                     <ArrowLeft size={18} />
                 </button>
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                        <ClipboardPlus className="w-5 h-5 text-cyan-400" />
-                        <h1 className="text-lg font-bold text-zinc-100">Create Work Order</h1>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <ClipboardPlus className="w-5 h-5 text-cyan-400" />
+                    <h1 className={styles.createTitle}>Create Work Order</h1>
                 </div>
             </div>
 
             {/* Content - Side by Side */}
-            <div className="flex-1 min-h-0 flex gap-4">
+            <div className={styles.createBody}>
 
                 {/* LEFT: Work Order Context (60%) */}
-                <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 relative overflow-hidden flex flex-col">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500/30"></div>
-                    <h2 className="text-xs font-semibold text-zinc-300 mb-3 pb-2 border-b border-zinc-800/50 flex items-center gap-2 flex-none">
-                        <span className="w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-[10px] text-center font-bold">1</span>
+                <div className={`${styles.createSection} ${styles.createSectionLeft}`}>
+                    <div className={`${styles.sectionAccent} ${styles.accentCyan}`}></div>
+                    <h2 className={styles.createSectionHeader}>
+                        <span className={`${styles.sectionNumber} ${styles.numCyan}`}>1</span>
                         Order Context
                     </h2>
 
-                    <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className={`${styles.formContent} custom-scrollbar`}>
                         {/* Title */}
-                        <div>
-                            <label className={labelClass}>Title</label>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Title</label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: '' })) }}
                                 placeholder="Order Title"
-                                className={`${inputClass} ${errors.title ? 'border-red-500/50 ring-1 ring-red-500/30' : ''}`}
+                                className={`${styles.formInput} ${errors.title ? styles.formError : ''}`}
                             />
-                            {errors.title && <span className="text-[10px] text-red-400 mt-0.5">{errors.title}</span>}
+                            {errors.title && <span className={styles.formErrorText}>{errors.title}</span>}
                         </div>
 
                         {/* Equipment & Facility */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className={labelClass}>Equipment</label>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Equipment</label>
                                 <input
                                     type="text"
                                     value={equipmentName}
                                     onChange={(e) => { setEquipmentName(e.target.value); setErrors((p) => ({ ...p, equipmentName: '' })) }}
-                                    className={`${inputClass} ${errors.equipmentName ? 'border-red-500/50 ring-1 ring-red-500/30' : ''}`}
+                                    className={`${styles.formInput} ${errors.equipmentName ? styles.formError : ''}`}
                                 />
-                                {errors.equipmentName && <span className="text-[10px] text-red-400 mt-0.5">{errors.equipmentName}</span>}
+                                {errors.equipmentName && <span className={styles.formErrorText}>{errors.equipmentName}</span>}
                             </div>
-                            <div>
-                                <label className={labelClass}>Facility</label>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Facility</label>
                                 <select
                                     value={facility}
                                     onChange={(e) => setFacility(e.target.value)}
-                                    className={inputClass}
+                                    className={styles.formSelect}
                                 >
                                     {FACILITIES.map((f) => (
                                         <option key={f} value={f}>{f}</option>
@@ -177,19 +192,16 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
                         </div>
 
                         {/* Priority */}
-                        <div>
-                            <label className={labelClass}>Priority</label>
-                            <div className="flex gap-1.5">
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Priority</label>
+                            <div className={styles.priorityGroup}>
                                 {PRIORITIES.map((p) => (
                                     <button
                                         key={p.value}
                                         onClick={() => setPriority(p.value)}
-                                        className={`flex-1 py-1.5 text-[10px] font-medium rounded-md border transition-all ${priority === p.value
-                                            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
-                                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
-                                            }`}
+                                        className={`${styles.priorityBtn} ${priority === p.value ? `${styles.priorityBtnActive} ${getPriorityActiveClass(p.value)}` : ''}`}
                                     >
-                                        <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${p.color}`} />
+                                        <span className={`${styles.priorityDot} ${getPriorityColorClass(p.value)}`} />
                                         {p.label}
                                     </button>
                                 ))}
@@ -197,21 +209,21 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
                         </div>
 
                         {/* Description */}
-                        <div>
-                            <label className={labelClass}>Description</label>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Description</label>
                             <textarea
                                 value={description}
                                 onChange={(e) => { setDescription(e.target.value); setErrors((p) => ({ ...p, description: '' })) }}
                                 placeholder="Describe the issue..."
                                 rows={4}
-                                className={`${inputClass} resize-none ${errors.description ? 'border-red-500/50 ring-1 ring-red-500/30' : ''}`}
+                                className={`${styles.formTextarea} resize-none ${errors.description ? styles.formError : ''}`}
                             />
-                            {errors.description && <span className="text-[10px] text-red-400 mt-0.5">{errors.description}</span>}
+                            {errors.description && <span className={styles.formErrorText}>{errors.description}</span>}
                         </div>
 
                         {/* Tags */}
-                        <div>
-                            <label className={labelClass}>Tags</label>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Tags</label>
                             <div className="flex items-center gap-2 mb-2">
                                 <input
                                     type="text"
@@ -219,17 +231,14 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
                                     onChange={(e) => setTagInput(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
                                     placeholder="Add tag..."
-                                    className={`${inputClass}`}
+                                    className={styles.formInput}
                                 />
                             </div>
-                            <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+                            <div className={styles.tagContainer}>
                                 {tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-zinc-800 text-zinc-400 rounded-md"
-                                    >
+                                    <span key={tag} className={styles.tagItem}>
                                         {tag}
-                                        <button onClick={() => removeTag(tag)} className="text-zinc-600 hover:text-zinc-300">
+                                        <button onClick={() => removeTag(tag)} className={styles.removeTagBtn}>
                                             <X size={10} />
                                         </button>
                                     </span>
@@ -240,22 +249,22 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
                 </div>
 
                 {/* RIGHT: Initial Task (40%) */}
-                <div className="w-[40%] bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 relative overflow-hidden flex flex-col">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/30"></div>
-                    <h2 className="text-xs font-semibold text-zinc-300 mb-3 pb-2 border-b border-zinc-800/50 flex items-center gap-2 flex-none">
-                        <span className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 text-[10px] text-center font-bold">2</span>
+                <div className={`${styles.createSection} ${styles.createSectionRight}`}>
+                    <div className={`${styles.sectionAccent} ${styles.accentAmber}`}></div>
+                    <h2 className={styles.createSectionHeader}>
+                        <span className={`${styles.sectionNumber} ${styles.numAmber}`}>2</span>
                         Initial Task
                     </h2>
 
-                    <div className="space-y-3 flex-1 flex flex-col">
+                    <div className={`${styles.formContent} custom-scrollbar`}>
                         {/* Assignee */}
-                        <div className="flex-none">
-                            <label className={labelClass}>Assign To</label>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Assign To</label>
                             <div className="relative">
                                 <select
                                     value={assigneeId}
                                     onChange={(e) => setAssigneeId(e.target.value)}
-                                    className={`${inputClass} appearance-none`}
+                                    className={`${styles.formSelect} appearance-none`}
                                 >
                                     <option value="" disabled>Select...</option>
                                     {availableAssignees.map(m => (
@@ -264,39 +273,39 @@ export function CreateWorkOrderForm({ initialData, prefillEquipment, onSubmit, o
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute right-3 top-2.5 pointer-events-none text-zinc-500">
+                                <div className="absolute right-3 top-3 pointer-events-none text-zinc-500">
                                     <User size={14} />
                                 </div>
                             </div>
-                            {errors.assignee && <span className="text-[10px] text-red-400 mt-0.5">{errors.assignee}</span>}
+                            {errors.assignee && <span className={styles.formErrorText}>{errors.assignee}</span>}
                         </div>
 
                         {/* Instructions */}
-                        <div className="flex-1 flex flex-col mt-2">
-                            <label className={labelClass}>Instructions</label>
+                        <div className={`${styles.formGroup} flex-1`}>
+                            <label className={styles.formLabel}>Instructions</label>
                             <textarea
                                 value={taskInstructions}
                                 onChange={(e) => { setTaskInstructions(e.target.value); setErrors((p) => ({ ...p, instructions: '' })) }}
                                 placeholder="Task instructions..."
-                                className={`${inputClass} resize-none flex-1 ${errors.instructions ? 'border-red-500/50 ring-1 ring-red-500/30' : ''}`}
+                                className={`${styles.formTextarea} resize-none flex-1 min-h-[120px] ${errors.instructions ? styles.formError : ''}`}
                             />
-                            {errors.instructions && <span className="text-[10px] text-red-400 mt-0.5">{errors.instructions}</span>}
+                            {errors.instructions && <span className={styles.formErrorText}>{errors.instructions}</span>}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 flex-none">
+            <div className={styles.createActions}>
                 <button
                     onClick={onCancel}
-                    className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
+                    className={styles.cancelActionBtn}
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleSubmit}
-                    className="flex items-center gap-2 px-5 py-2 text-xs font-medium bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors shadow-lg shadow-cyan-500/20"
+                    className={styles.submitActionBtn}
                 >
                     <ClipboardPlus size={14} />
                     Create Order & Assign
