@@ -2,6 +2,7 @@
 
 
 import { DigitalTwinNavigator } from '@/components/digital-twin/DigitalTwinNavigator'
+import { MiniDigitalTwin } from '@/components/digital-twin/MiniDigitalTwin'
 import { CAMERA_PRESETS } from '@/components/digital-twin/camera-presets'
 import { Navbar } from '@/components/layout/Navbar'
 import { OverviewExpand } from '@/components/overview/OverviewExpand'
@@ -164,32 +165,34 @@ export default function TFODashboard() {
                             : 'top-4 left-4 w-[calc(20%-1rem)] h-[35%] rounded-[var(--tp-radius-pill)] overflow-hidden border-2 border-[#98A6D4] shadow-lg bg-[var(--tp-bg-card)]'
                         }`}
                 >
-                    {/* We need to render the DigitalTwinNavigator directly for props to work */}
-                    <SuspendedDigitalTwin
-                        viewMode={viewMode}
-                        isolatedMeshName={selectedAsset}
-                        onExpandClick={(meshName, isAnomaly) => {
-                            setSelectedAsset(meshName)
-                            setViewMode('details')
-                            if (isAnomaly) {
-                                setAutoTriggerAnomaly(true)
-                            }
-                        }}
-                        onCreateWorkOrder={(meshName) => {
-                            // Demo Simulation: Pre-fill context
-                            setPendingCreateWorkOrder({
-                                equipmentName: meshName,
-                                meshName,
-                                title: `${meshName} - Anomaly Check`,
-                                description: 'Investigate vibration deviation similar to Munich incident. Check bearing assembly for signs of wear or misalignment.',
-                                priority: 'high',
-                                facility: 'Dubai Plant',
-                                tags: ['Predictive', 'AI-Detected']
-                            })
-                            setActiveModule('opshub')
-                        }}
-                        onTriggerAnomaly={() => setAutoTriggerAnomaly(true)}
-                    />
+                    {viewMode === 'overview' ? (
+                        <SuspendedDigitalTwin
+                            viewMode={viewMode}
+                            isolatedMeshName={null}
+                            onExpandClick={(meshName, isAnomaly) => {
+                                setSelectedAsset(meshName)
+                                setViewMode('details')
+                                if (isAnomaly) {
+                                    setAutoTriggerAnomaly(true)
+                                }
+                            }}
+                            onCreateWorkOrder={(meshName) => {
+                                setPendingCreateWorkOrder({
+                                    equipmentName: meshName,
+                                    meshName,
+                                    title: `${meshName} - Anomaly Check`,
+                                    description: 'Investigate vibration deviation. Check bearing assembly.',
+                                    priority: 'high',
+                                    facility: 'Dubai Plant',
+                                    tags: ['Predictive', 'AI-Detected']
+                                })
+                                setActiveModule('opshub')
+                            }}
+                            onTriggerAnomaly={() => setAutoTriggerAnomaly(true)}
+                        />
+                    ) : (
+                        <MiniDigitalTwin />
+                    )}
                 </div>
 
                 <OverviewExpand
@@ -282,9 +285,15 @@ function SuspendedDigitalTwin({
     onCreateWorkOrder: (name: string) => void
     onTriggerAnomaly: () => void
 }) {
+    // When in details/expand mode, show the Kuka robot model specifically
+    const targetModel = viewMode === 'details' ? '/models/kuka.glb' : '/models/factory.glb'
+
+    // When showing the Kuka model, we don't need isolation (it's already the isolated object)
+    const effectiveIsolatedMesh = viewMode === 'details' ? null : isolatedMeshName
+
     return (
         <DigitalTwinNavigator
-            modelUrl="/models/factory.glb"
+            modelUrl={targetModel}
             presets={CAMERA_PRESETS}
             initialPreset="overview"
             devMode={false}
@@ -293,7 +302,7 @@ function SuspendedDigitalTwin({
             showHotspots={viewMode === 'overview'}
             className="w-full h-full"
             viewMode={viewMode}
-            isolatedMeshName={isolatedMeshName}
+            isolatedMeshName={effectiveIsolatedMesh}
             onExpandClick={onExpandClick}
             onCreateWorkOrder={onCreateWorkOrder}
             onTriggerAnomaly={onTriggerAnomaly}
